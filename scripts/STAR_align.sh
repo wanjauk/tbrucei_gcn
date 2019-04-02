@@ -16,4 +16,4 @@ for fastq in $(ls ~/tbrucei_gcn/data/raw_data/*.fastq); do
         --runThreadN 4 \
         --genomeDir $GENOME_INDEX \
         --readFilesIn $fastq \
-        --outFileNamePrefix ../results/STAR_align_ouput/$basename
+        --outFileNamePrefix ../results/STAR_align_ouput/$basename.
