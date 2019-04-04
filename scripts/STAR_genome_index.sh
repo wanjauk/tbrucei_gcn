@@ -14,8 +14,8 @@ ANNOTATION_FILE=$2
 
 /opt/apps/star/2.7.0e/bin/STAR --runThreadN 4 \
 --runMode genomeGenerate \
---genomeDir $INDEX_DIR \
---genomeFastaFiles $GENOME_DIR \
---sjdbGTFfile $ANNOTATION_FILE \
+--genomeDir ${INDEX_DIR} \
+--genomeFastaFiles ${GENOME_DIR} \
+--sjdbGTFfile ${ANNOTATION_FILE} \
 --sjdbOverhang 74 \
 --sjdbGTFtagExonParentTranscript Parent #GFF file being used instead of GTF
