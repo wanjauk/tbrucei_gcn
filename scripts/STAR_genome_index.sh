@@ -12,7 +12,7 @@ INDEX_DIR=~/tbrucei_gcn/data/STAR_genome/
 GENOME_DIR=$1
 ANNOTATION_FILE=$2
 
-STAR --runThreadN 4 \
+/opt/apps/star/2.7.0e/bin/STAR --runThreadN 4 \
 --runMode genomeGenerate \
 --genomeDir $INDEX_DIR \
 --genomeFastaFiles $GENOME_DIR \
