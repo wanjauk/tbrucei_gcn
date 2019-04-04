@@ -18,7 +18,7 @@ for samfile in $(ls ../results/STAR_align_output/*.??); do
         --stranded=?? \
         --type=exon \ #feature type
         --idattr=Parent \
-        --samout=$basename.count \
+        --samout=${basename}.count \
         $samfile \
-        ${GFF_FILE}
+        $GFF_FILE
 done
