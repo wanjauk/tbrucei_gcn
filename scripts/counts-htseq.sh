@@ -6,19 +6,18 @@
 #
 module load htseq/0.11.2
 
-mkdir -p ../results/HTSeq_count_results
+mkdir -p ~/tbrucei_gcn/results/HTSeq_count_results
 
 GFF_FILE=$1
 
-for samfile in $(ls ../results/STAR_align_output/*.??); do
-    basename=$(echo $samfile | cut -f1 -d '.') #check the naming of .sam files
+for sam_file in $(ls ~/tbrucei_gcn/data/raw_data/*.sam); do
+    sam_file_name=$(echo $sam_file | cut -f1 -d '.')
     
-    htseq \
-        --format=sam \
-        --stranded=?? \
-        --type=exon \ #feature type
-        --idattr=Parent \
-        --samout=${basename}.count \
-        $samfile \
-        $GFF_FILE
+        htseq-count \
+            --format=sam \
+            --stranded=yes \ #TODO: check whether stranded or not.
+            --type=exon \ #feature type
+            --idattr=Parent \
+            $sam_file \
+            $GFF_FILE > ${sam_file_name}.counts.txt
 done
