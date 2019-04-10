@@ -15,9 +15,10 @@ for sam_file in  ~/tbrucei_gcn/data/raw_data/*.sam; do
     
         python /opt/apps/htseq/0.11.2/bin/htseq-count \
             -f sam \
-            -s no \ #TODO: check whether stranded or not.
-            -t exon \ #feature type
+            -s no \
+            -t exon \
             -i Parent \
             $sam_file \
-            $GFF_FILE > ${sam_file_name}.counts.txt
+            $GFF_FILE \
+            > ${sam_file_name}.counts.txt
 done
