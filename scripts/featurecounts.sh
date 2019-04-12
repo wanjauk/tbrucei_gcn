@@ -5,21 +5,25 @@
 #
 #Created April 10, 2019 by Kennedy Mwangi
 #
-#NOTE: featureCounts program needs to be installed on the HPC and
-#the path to the program added to PATH
-#
-SAM_FILES=~/tbrucei_gcn/data/processed_data/*.sam
+#Create output directory if it doesn't exist
+mkdir -p ../results/featureCounts_results
+
+SAM_FILES=../data/processed_data/*.sam
 
 ANNOTATION_FILE=$1
 
 for sam_file in $SAM_FILES; do
     sam_file_name=$(echo $sam_file | cut -f1 -d '.')
 
-    /home/wanjau/subread-1.6.4-Linux-x86_64/bin/featureCounts \
+    featureCounts \
         -a $ANNOTATION_FILE \
         -t exon \
         -g Parent \
-        -T 1 \
+        -T 8 \
         -o ${sam_file_name}.txt \
         $sam_file
 done
+
+#move output files to results directory
+#TODO: integrate the path in commandline option -o.
+mv ../data/processed_data/SRR*.txt ../results/featureCounts_results/

@@ -5,15 +5,17 @@
 #
 module load star/2.7.0e
 
-mkdir -p ~/tbrucei_gcn/results/STAR_align_output
+#Create output directory if it doesn't exist
+mkdir -p ../results/STAR_align_output
 
-GENOME_INDEX=$1 #path to genome index directory.
+GENOME_INDEX=$1 #path to STAR genome index directory.
 
-for fastq in $(ls ~/tbrucei_gcn/data/raw_data/*.fastq); do
+for fastq in ../data/raw_data/*.fastq; do
     basename=$(echo $fastq | cut -f1 -d '.')
 
-    STAR \
-        --runThreadN 4 \
+    /opt/apps/star/2.7.0e/bin/STAR \
+        --runThreadN 10 \
         --genomeDir $GENOME_INDEX \
         --readFilesIn $fastq \
         --outFileNamePrefix ../results/STAR_align_ouput/${basename}
+done
