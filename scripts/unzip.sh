@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 #Script to decompress fastq.gz files
 #Created March 28,2019 by Kennedy Mwangi

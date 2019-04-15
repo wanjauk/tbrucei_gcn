@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 #Script to run FastQC reports using the FastQC tool
 #Written on March 28, 2019 by Kennedy Mwangi
