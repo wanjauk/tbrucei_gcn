@@ -1,30 +1,80 @@
 ---
-title: "analysis"
+title: "*T. brucei* co-expression network analysis"
 author: "Kennedy Mwangi"
 date: "March 26, 2019"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Introduction
+This document contains the workflow used in the analysis of T. brucei gene co-expression network analysis. It contains code used in each step of the analysis.
 
-## R Markdown
+## Data acquisition and quality assessment
+The first step involves downloading the RNASeq data and checking its quality through the FASTQC tool.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Here, RNASeq data is downloaded from ENA database using FTP.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{bash}
+cat ../scripts/fastq_download.sh
 ```
 
-## Including Plots
+Some of the downstream tools require that FASTQ files downloaded in zipped form are unzipped.
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{bash}
+cat ../scripts/unzip.sh
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Next, the quality of the FASTQ files is checked through the FASTQC tool whose output is a report in HTML format.
+
+```{bash}
+cat ../scripts/fastqc_reports.sh
+```
+
+## Downloading *T. brucei* genome and GFF files
+
+After determining that the data is of good quality and that no trimming is required, the reads are aligned on the *T. brucei* genome obtained from TriTryDB database.
+
+The genome and the Gene Feature Format (GFF) files are downloaded from the TriTryDB database as follows:
+
+```{bash}
+#Downloading the genome
+
+#wget https://tritrypdb.org/common/downloads/release-42/TbruceiTREU927/fasta/data/\
+#TriTrypDB-42_TbruceiTREU927_Genome.fasta -P ../data/tbrucei_genome/
+
+
+#Downloading the GFF file
+#wget https://tritrypdb.org/common/downloads/release-42/TbruceiTREU927/gff/data/\
+#TriTrypDB-42_TbruceiTREU927.gff -P ../data/genome_annotations_GFF/
+```
+
+## Alignment of reads on the genome
+
+Here, HISAT2 is used to align reads on the *T. brucei* genome. The first step is indexing the genome using HISAT2 followed by alignment of the reads. The output is SAM files.
+
+### Indexing the genome
+
+```{bash}
+cat ../scripts/hisat2_index.sh
+```
+
+### Aligning the reads to the genome
+
+```{bash}
+cat ../scripts/hisat2_align.sh
+```
+
+## Reads quantification
+
+HTSeq tool is used to count reads that aligned to the *T. brucei* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
+
+```{bash}
+cat ../scripts/htseq_counts.sh
+```
+
