@@ -3,8 +3,6 @@
 #Script to counts reads that aligned to T. brucei genome using 
 #featureCounts program from Subread package.
 #
-#Created April 10, 2019 by Kennedy Mwangi
-#
 #Create output directory if it doesn't exist
 mkdir -p ../results/featureCounts_results
 

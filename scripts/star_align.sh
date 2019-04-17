@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 #Script to align reads on the reference genome
-#Created April 1, 2019 by Kennedy Mwangi
 #
 module load star/2.7.0e
 

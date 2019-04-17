@@ -2,8 +2,6 @@
 #
 #Script to create T. brucei genome index using STAR.
 #
-#Created on March 29, 2019 by Kennedy Mwangi
-#
 #Create required genome directory if not exists.
 mkdir -p ../data/STAR_genome
 

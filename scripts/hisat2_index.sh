@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 #Script to index T. brucei genome using HISAT2
-#Created April 8, 2019 by Kennedy Mwangi
 #
 module load hisat/2-2.1.0
 

@@ -2,7 +2,6 @@
 #
 #Script to counts the number of reads aligned to T. brucei genome using HTSeq.
 #Resource: HTSeq documentation https://htseq.readthedocs.io/en/latest/count.html
-#Created on April 2, 2019 by Kennedy Mwangi
 #
 module load htseq/0.11.2
 
