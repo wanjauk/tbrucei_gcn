@@ -1,10 +1,10 @@
 ---
 title: "*T. brucei* co-expression network analysis"
 author: "Kennedy Mwangi"
-date: "March 26, 2019"
+date: "April 15, 2019"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 editor_options: 
   chunk_output_type: inline
 ---
@@ -13,12 +13,44 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ## Introduction
-This document contains the workflow used in the analysis of T. brucei gene co-expression network analysis. It contains code used in each step of the analysis.
+This document contains the workflow used in the analysis of *T. brucei* gene co-expression network analysis. It contains code used in each step of the analysis.
 
-## Data acquisition and quality assessment
-The first step involves downloading the RNASeq data and checking its quality through the FASTQC tool.
+## Data acquisition
+Data used in this study is obtained from European Nucleotide Archive under accession number SRP002243.
 
-Here, RNASeq data is downloaded from ENA database using FTP.
+First, metadata for the data is obtained from EBI as follows:
+
+```{r echo=TRUE, results='hide', eval=FALSE}
+#Obtain metadata information for the data used in this study from ENA and SRA databases.
+
+# ENA metadata
+# code adopted from: https://wiki.bits.vib.be/index.php/Download_read_information_and_FASTQ_data_from_the_SRA
+accession <- "SRP002243"
+ena.url <- paste("http://www.ebi.ac.uk/ena/data/warehouse/filereport?accession=",
+                 accession,
+                 "&result=read_run",
+                 "&fields=run_accession,library_name,",
+                 "read_count,fastq_ftp,fastq_aspera,",
+                 "fastq_galaxy,sra_ftp,sra_aspera,sra_galaxy,",
+                 "&download=text",
+                 sep="")
+ENA.metadata <- read.table(url(ena.url), header=TRUE, sep="\t")
+
+# SRA metadata
+SRA.metadata <- read.table("../data/SraRunTable.metadata.txt", header = TRUE, sep = "\t")
+
+# Obtain sample metadata to be used later in analysis.
+matches <- c("Run","Library_Name","Sample_Name")
+sample.metadata <- SRA.metadata[grepl(paste(matches, collapse="|"), names(SRA.metadata))]
+
+# create a text file with urls to fastq files in ENA database
+fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
+write.csv(fastq.urls, file="../data/fastq.urls.txt", eol = "\r\n", quote = FALSE, row.names = FALSE)
+
+```
+
+
+Next, RNASeq data is downloaded from EBI database's FTP site.
 
 ```{bash}
 cat ../scripts/fastq_download.sh
@@ -30,7 +62,8 @@ Some of the downstream tools require that FASTQ files downloaded in zipped form 
 cat ../scripts/unzip.sh
 ```
 
-Next, the quality of the FASTQ files is checked through the FASTQC tool whose output is a report in HTML format.
+## Data quality assessment
+After downloading the RNASeq data, its quality is checked through the FASTQC tool whose output is a report in HTML format.
 
 ```{bash}
 cat ../scripts/fastqc_reports.sh
@@ -38,9 +71,9 @@ cat ../scripts/fastqc_reports.sh
 
 ## Downloading *T. brucei* genome and GFF files
 
-After determining that the data is of good quality and that no trimming is required, the reads are aligned on the *T. brucei* genome obtained from TriTryDB database.
+After determining that the data is of good quality and that no trimming is required, the reads are aligned on the *T. brucei* genome obtained from TriTrypDB database.
 
-The genome and the Gene Feature Format (GFF) files are downloaded from the TriTryDB database as follows:
+The genome and the Gene Feature Format (GFF) files are downloaded from the TriTrypDB database as follows:
 
 ```{bash}
 #Downloading the genome
@@ -77,4 +110,38 @@ HTSeq tool is used to count reads that aligned to the *T. brucei* genome. The ou
 ```{bash}
 cat ../scripts/htseq_counts.sh
 ```
+
+## Generating MultiQC report
+
+MultiQC aggregates results from FASTQC, HISAT2 and HTSeq analysis into an HTML formatted single report for better visualization.
+
+```{bash}
+#change directory to results
+cd ../results
+
+#Run multiqc
+#multiqc .
+```
+
+
+## Analysis in R
+
+### Setting up R for the analysis
+
+```{r message=TRUE}
+# Loading required R packages
+library(edgeR)
+```
+
+### Importing samples count data into R
+
+For further analysis, samples read counts are read into R.
+
+```{bash}
+cat ../scripts/htseq-combine_all.R
+```
+
+
+
+
 
