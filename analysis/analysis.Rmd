@@ -24,7 +24,7 @@ First, metadata for the data is obtained from EBI as follows:
 #Obtain metadata information for the data used in this study from ENA and SRA databases.
 
 # ENA metadata
-# code adopted from: https://wiki.bits.vib.be/index.php/Download_read_information_and_FASTQ_data_from_the_SRA
+# code adapted from: https://wiki.bits.vib.be/index.php/Download_read_information_and_FASTQ_data_from_the_SRA
 accession <- "SRP002243"
 ena.url <- paste("http://www.ebi.ac.uk/ena/data/warehouse/filereport?accession=",
                  accession,
@@ -129,8 +129,17 @@ cd ../results
 ### Setting up R for the analysis
 
 ```{r message=TRUE}
+# Ensure results are reproducible
+set.seed(1)
+
 # Loading required R packages
-library(edgeR)
+library("limma")
+library("edgeR")
+library("RColorBrewer")
+library("ggplot2")
+library("gplots")
+library("reshape2")
+library("ggfortify")
 ```
 
 ### Importing samples count data into R
@@ -140,6 +149,59 @@ For further analysis, samples read counts are read into R.
 ```{bash}
 cat ../scripts/htseq-combine_all.R
 ```
+
+### Sample quality check
+
+The quality of the samples is checked before further analysis to check for outlier and batch effects.
+
+```{r results='hide', eval=FALSE, echo=TRUE}
+sample_category <- nlevels(sample.metadata$Sample_Name)
+colour.palette <- colorRampPalette(brewer.pal(sample_category, "Set2"))(sample_category)
+sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
+
+png(filename = "../figures/raw_sample_heatmap.png", res = 90)
+
+heatmap.2(cor(data.all), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+
+dev.off()
+```
+
+![raw sample heatmap](../figures/raw_sample_heatmap.png)
+
+Checking further...
+
+```{r echo=TRUE, eval=FALSE, results='hide'}
+log.counts <- log2(data.all + 1)
+
+png("../figures/raw_sample_density.png", res = 90)
+
+x <- melt(as.matrix(log.counts))
+colnames(x) <- c('gene_id', 'sample', 'value')
+ggplot(x, aes(x=value, color=sample)) + geom_density()
+
+dev.off()
+```
+
+![raw sample density](../figures/raw_sample_density.png)
+
+**Principle Component Analysis (PCA)**
+
+```{r eval=FALSE, results='hide'}
+# PCA
+pca.log.counts <- prcomp(t(log.counts))
+
+png(filename = "../figures/raw_samples_PCA.png", res = 90)
+autoplot(pca.log.counts,
+         data = sample.metadata,
+         colour="Sample_Name",
+         size=3)
+dev.off()
+```
+
+![raw sample PCA](../figures/raw_samples_PCA.png)
+
+
+### Filter out low-expressed and Non-expressed genes
 
 
 
