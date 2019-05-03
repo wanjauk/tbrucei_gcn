@@ -10,7 +10,11 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+               fig.pos = 'h',
+               fig.align = 'center',
+               fig.show='hold')
+
 ```
 ## Introduction
 This document contains the workflow used in the analysis of *T. brucei* gene co-expression network analysis. It contains code used in each step of the analysis.
@@ -39,14 +43,24 @@ ENA.metadata <- read.table(url(ena.url), header=TRUE, sep="\t")
 # SRA metadata
 SRA.metadata <- read.table("../data/SraRunTable.metadata.txt", header = TRUE, sep = "\t")
 
-# Obtain sample metadata to be used later in analysis.
+# obtain sample metadata to be used later in analysis.
 matches <- c("Run","Library_Name","Sample_Name")
 sample.metadata <- SRA.metadata[grepl(paste(matches, collapse="|"), names(SRA.metadata))]
+
+# create grouping factor that will place each sample in the one of three tissues i.e.
+# midgut (MG), proventriculus(PV) and salivary glands (SG)
+tissue <- factor(c("MG", "MG", "MG", "MG", "MG", "PV", "PV", "SG", "SG", "SG", "SG", "MG", "MG", "PV", "SG", "SG", "PV"))
+
+# append factor to sample.metadata to group samples
+sample.metadata["Tissue"] <- tissue
 
 # create a text file with urls to fastq files in ENA database
 fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
 write.csv(fastq.urls, file="../data/fastq.urls.txt", eol = "\r\n", quote = FALSE, row.names = FALSE)
-
+```
+```{r, eval=TRUE, echo=TRUE}
+# print out the sample metadata table
+kable(sample.metadata)
 ```
 
 
@@ -128,9 +142,12 @@ cd ../results
 
 ### Setting up R for the analysis
 
-```{r message=TRUE}
+```{r results='hide'}
 # Ensure results are reproducible
 set.seed(1)
+
+# Other settings
+options(digits = 4)
 
 # Loading required R packages
 library("limma")
@@ -144,7 +161,7 @@ library("ggfortify")
 
 ### Importing samples count data into R
 
-For further analysis, samples read counts are read into R.
+For further analysis, samples read counts are read into R. To read the sample counta data into R using the script below, simply type `source("../scripts/htseq-combine_all.R") ` in the R console and hit enter.
 
 ```{bash}
 cat ../scripts/htseq-combine_all.R
@@ -154,26 +171,55 @@ cat ../scripts/htseq-combine_all.R
 
 The quality of the samples is checked before further analysis to check for outlier and batch effects.
 
-```{r results='hide', eval=FALSE, echo=TRUE}
+```{r eval=FALSE}
+# Create a DGEList object
+counts <- DGEList(data.all, group = sample.metadata$Tissue)
+
+# filter out Non-expressed genes and those with low expression values.
+# keep genes with at least 1 read per million in n samples, where n is minimum number of replicates which is 3 in this case
+
+keep <- rowSums(cpm(counts)>1) >= 3
+
+# retain genes above the cpm value
+filtered.counts <- counts[keep, , keep.lib.sizes=FALSE]
+```
+
+Various plots are made for the samples before and after filtering the low-expressed genes and non-expressed genes.
+
+**Samples heatmap**
+```{r results='hide', eval=FALSE}
 sample_category <- nlevels(sample.metadata$Sample_Name)
 colour.palette <- colorRampPalette(brewer.pal(sample_category, "Set2"))(sample_category)
 sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
 
-png(filename = "../figures/raw_sample_heatmap.png", res = 90)
+# Raw counts data (before filtering)
+# png(filename = "../figures/raw_sample_heatmap.png", res = 90, type = "cairo")
 
-heatmap.2(cor(data.all), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+# heatmap.2(cor(data.all), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+
+# Filtered counts data
+png(filename = "../figures/filtered_sample_heatmap.png", res = 90, type = "cairo")
+
+heatmap.2(cor(log2(filtered.data.all + 1)), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
 dev.off()
 ```
+```{r fig.cap="Filtered sample heatmap"}
 
-![raw sample heatmap](../figures/raw_sample_heatmap.png)
+include_graphics("../figures/filtered_sample_heatmap.png")
+```
 
-Checking further...
+\newpage
+ **Samples density plot**
+```{r eval=FALSE, results='hide'}
+# Checking further using sample density plot
+# raw data
+#log.counts <- log2(data.all + 1)
+#png("../figures/raw_sample_density.png", res = 90, type = "cairo")
 
-```{r echo=TRUE, eval=FALSE, results='hide'}
-log.counts <- log2(data.all + 1)
-
-png("../figures/raw_sample_density.png", res = 90)
+# filtered data
+log.counts <- log2(filtered.data.all + 1)
+png("../figures/filtered_sample_density.png", res = 90, type = "cairo")
 
 x <- melt(as.matrix(log.counts))
 colnames(x) <- c('gene_id', 'sample', 'value')
@@ -181,29 +227,48 @@ ggplot(x, aes(x=value, color=sample)) + geom_density()
 
 dev.off()
 ```
+```{r fig.cap="Filtered sample heatmap"}
 
-![raw sample density](../figures/raw_sample_density.png)
+include_graphics("../figures/filtered_sample_density.png")
+```
 
-**Principle Component Analysis (PCA)**
-
+\newpage
+ **Principal component analysis**
 ```{r eval=FALSE, results='hide'}
 # PCA
 pca.log.counts <- prcomp(t(log.counts))
 
-png(filename = "../figures/raw_samples_PCA.png", res = 90)
+#png(filename = "../figures/raw_samples_PCA.png", res = 90, type = "cairo")
+png(filename = "../figures/filtered_sample_PCA.png", res = 90, type = "cairo")
 autoplot(pca.log.counts,
          data = sample.metadata,
          colour="Sample_Name",
          size=3)
 dev.off()
 ```
+```{r fig.cap="Filtered sample heatmap"}
 
-![raw sample PCA](../figures/raw_samples_PCA.png)
+include_graphics("../figures/filtered_sample_PCA.png")
+```
 
+\newpage
+ **Boxplot**
+```{r, eval=FALSE}
+png(filename = "../figures/filtered_sample_boxplot.png", res =90, type = "cairo")
+boxplot(log.counts)
+dev.off()
+```
+```{r fig.cap="Filtered sample boxplot"}
 
-### Filter out low-expressed and Non-expressed genes
+include_graphics("../figures/filtered_sample_boxplot.png")
+``` 
 
+\newpage
+ **Mean-Difference plots (MD plots)**
+```{r}
 
+```
+ 
 
 
 
