@@ -10,7 +10,8 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
+library("knitr")
+opts_chunk$set(echo = TRUE,
                fig.pos = 'h',
                fig.align = 'center',
                fig.show='hold')
@@ -58,7 +59,7 @@ sample.metadata["Tissue"] <- tissue
 fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
 write.csv(fastq.urls, file="../data/fastq.urls.txt", eol = "\r\n", quote = FALSE, row.names = FALSE)
 ```
-```{r, eval=TRUE, echo=TRUE}
+```{r, eval=FALSE, echo=TRUE}
 # print out the sample metadata table
 kable(sample.metadata)
 ```
@@ -161,7 +162,7 @@ library("ggfortify")
 
 ### Importing samples count data into R
 
-For further analysis, samples read counts are read into R. To read the sample counta data into R using the script below, simply type `source("../scripts/htseq-combine_all.R") ` in the R console and hit enter.
+For further analysis, samples read counts are read into R. To read the sample counta data into R using the script below, simply type `source("../scripts/htseq-combine_all.R")` on the R console and hit enter.
 
 ```{bash}
 cat ../scripts/htseq-combine_all.R
@@ -182,6 +183,13 @@ keep <- rowSums(cpm(counts)>1) >= 3
 
 # retain genes above the cpm value
 filtered.counts <- counts[keep, , keep.lib.sizes=FALSE]
+
+# Normalize for composition bias using TMM
+filtered.counts <- calcNormFactors(filtered.counts, method = 'TMM')
+
+# get logcpm normalized counts
+logcpm.norm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normalized.lib.sizes = TRUE)
+
 ```
 
 Various plots are made for the samples before and after filtering the low-expressed genes and non-expressed genes.
@@ -198,9 +206,9 @@ sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
 # heatmap.2(cor(data.all), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
 # Filtered counts data
-png(filename = "../figures/filtered_sample_heatmap.png", res = 90, type = "cairo")
+png(filename = "../figures/norm.filt_sample_heatmap.png", res = 90, type = "cairo")
 
-heatmap.2(cor(log2(filtered.data.all + 1)), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
 dev.off()
 ```
@@ -218,10 +226,10 @@ include_graphics("../figures/filtered_sample_heatmap.png")
 #png("../figures/raw_sample_density.png", res = 90, type = "cairo")
 
 # filtered data
-log.counts <- log2(filtered.data.all + 1)
-png("../figures/filtered_sample_density.png", res = 90, type = "cairo")
+#log.counts <- log2(filtered.data.all + 1)
+png("../figures/norm.filt_sample_density.png", res = 90, type = "cairo")
 
-x <- melt(as.matrix(log.counts))
+x <- melt(as.matrix(logcpm.norm.counts))
 colnames(x) <- c('gene_id', 'sample', 'value')
 ggplot(x, aes(x=value, color=sample)) + geom_density()
 
@@ -236,10 +244,10 @@ include_graphics("../figures/filtered_sample_density.png")
  **Principal component analysis**
 ```{r eval=FALSE, results='hide'}
 # PCA
-pca.log.counts <- prcomp(t(log.counts))
+pca.log.counts <- prcomp(t(logcpm.norm.counts))
 
 #png(filename = "../figures/raw_samples_PCA.png", res = 90, type = "cairo")
-png(filename = "../figures/filtered_sample_PCA.png", res = 90, type = "cairo")
+png(filename = "../figures/norm.filt_sample_PCA.png", res = 90, type = "cairo")
 autoplot(pca.log.counts,
          data = sample.metadata,
          colour="Sample_Name",
@@ -254,8 +262,8 @@ include_graphics("../figures/filtered_sample_PCA.png")
 \newpage
  **Boxplot**
 ```{r, eval=FALSE}
-png(filename = "../figures/filtered_sample_boxplot.png", res =90, type = "cairo")
-boxplot(log.counts)
+png(filename = "../figures/norm.filt_sample_boxplot.png", res =90, type = "cairo")
+boxplot(logcpm.norm.counts)
 dev.off()
 ```
 ```{r fig.cap="Filtered sample boxplot"}
@@ -268,7 +276,61 @@ include_graphics("../figures/filtered_sample_boxplot.png")
 ```{r}
 
 ```
- 
+\newpage 
+### Identify differentially expressed genes
+
+```{r eval=FALSE}
+# Apply sample grouping based on Tissue from which the sample was derived
+design <- model.matrix(~0+sample.metadata$Tissue)
+colnames(design) <- levels(sample.metadata$Tissue)
+
+# Estimate dispersions for tags
+filtered.counts <- estimateDisp(filtered.counts, design)
+
+# Fit a generalized likelihood model to the DGELIST using sample grouping
+fit <- glmFit(filtered.counts,design)
+
+#################################################################
+# code in this section adapted from https://github.com/iscb-dc-rsg/2016-summer-workshop
+# generate a list of all possible pairwise contrasts
+condition_pairs <- t(combn(levels(sample.metadata$Tissue), 2))
+
+comparisons <- list()
+for (i in 1:nrow(condition_pairs)) {
+  comparisons[[i]] <- as.character(condition_pairs[i,])
+}
+
+# vector to store differentially expressed genes
+sig_genes <- c()
+
+# iterate over the contrasts, and perform a differential expression test for
+# each pair
+for (conds in comparisons) {
+    # generate string contrast formula
+    contrast_formula <- paste(conds, collapse=' - ')
+
+    contrast_mat <- makeContrasts(contrasts=contrast_formula, levels=design)
+    contrast_lrt <- glmLRT(fit, contrast=contrast_mat)
+    topGenes <- topTags(contrast_lrt, n=Inf, p.value=0.005)
+    
+    # Grab highly ranked genes
+    sig_genes <- union(sig_genes, rownames(topGenes$table))
+}
+
+# Filter out genes which were not differentially expressed for any contrast
+de.genes <- filtered.counts[rownames(filtered.counts) %in% sig_genes,]
+################################################################
+
+# Likelihood ratio test to identify DEGs
+#lrt <- glmLRT(fit,coef = 2)
+
+# Genes with most significant differences
+#topTags(lrt)
+#topGenes <- topTags(lrt, n=Inf)
+
+# DE genes at 5% FDR
+#de.genes <- decideTestsDGE(lrt, adjust.method = "BH", p.value = 0.05)
+```
 
 
 
