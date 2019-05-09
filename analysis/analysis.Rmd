@@ -3,8 +3,8 @@ title: "*T. brucei* co-expression network analysis"
 author: "Kennedy Mwangi"
 date: "April 15, 2019"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 editor_options: 
   chunk_output_type: inline
 ---
@@ -84,27 +84,42 @@ After downloading the RNASeq data, its quality is checked through the FASTQC too
 cat ../scripts/fastqc_reports.sh
 ```
 
-## Downloading *T. brucei* genome and GFF files
+Following the high rate of unaligned and duplicate reads, further analysis is done to ascertain their cause. The reads are aligned to *Glossina morsitans* genome to determine whether reads from the vector were also present in the sample during sequencing. Duplicate reads are assessed whether they are artifacts from PCR (PCR duplicates).
 
-After determining that the data is of good quality and that no trimming is required, the reads are aligned on the *T. brucei* genome obtained from TriTrypDB database.
+## Downloading *T. brucei* and *G. morsitans* genome and annotation files
 
-The genome and the Gene Feature Format (GFF) files are downloaded from the TriTrypDB database as follows:
+The genome and annotation files are downloaded from the TriTrypDB and vectorbase databases as follows:
 
 ```{bash}
-#Downloading the genome
+#Downloading T. brucei genome
 
-#wget https://tritrypdb.org/common/downloads/release-42/TbruceiTREU927/fasta/data/\
-#TriTrypDB-42_TbruceiTREU927_Genome.fasta -P ../data/tbrucei_genome/
-
+#wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/fasta/data/TriTrypDB-43_TbruceiTREU927_Genome.fasta -P ../data/tbrucei_genome/
 
 #Downloading the GFF file
-#wget https://tritrypdb.org/common/downloads/release-42/TbruceiTREU927/gff/data/\
-#TriTrypDB-42_TbruceiTREU927.gff -P ../data/genome_annotations_GFF/
+#wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/gff/data/TriTrypDB-43_TbruceiTREU927.gff -P ../data/tbrucei_genome_annotations_GFF/
+
+# Downloading Glossina genome
+#wget https://www.vectorbase.org/download/glossina-morsitans-yalescaffoldsgmory1fagz -P ../data/glossina_genome_scaffolds/
+
+# Downloading GTF file
+#wget https://www.vectorbase.org/download/glossina-morsitans-yalebasefeaturesgmory19gff3gz -P ../data/glossina_annonations_GTF/
+
 ```
+
+Next, *T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads.
+
+```{bash}
+# make a directory to store the concatenated genomes
+# mkdir -P ../data/brucei-morsitans
+
+# move the genomes to the created directory and concatenate them
+# cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
+```
+
 
 ## Alignment of reads on the genome
 
-Here, HISAT2 is used to align reads on the *T. brucei* genome. The first step is indexing the genome using HISAT2 followed by alignment of the reads. The output is SAM files.
+Here, HISAT2 is used to align reads on the *T. brucei* and *G. morsitans* genomes. The first step is indexing the genome using HISAT2 followed by alignment of the reads. The output is SAM files.
 
 ### Indexing the genome
 
@@ -117,6 +132,54 @@ cat ../scripts/hisat2_index.sh
 ```{bash}
 cat ../scripts/hisat2_align.sh
 ```
+
+## Assessment of the duplication rate
+At this point, quality control to assess the duplication rate can be performed.
+First, the SAM files are converted to sorted BAM files required by dupRadar tool.
+
+```{bash}
+cat ../scripts/sam-to-bam.sh
+```
+
+The BAM files are then sorted using samtools
+
+```{bash}
+cat ../scripts/sam-to-bam.sh
+```
+
+Next, duplicates are marked in the BAM files using Picard.
+
+```{bash}
+cat ../scripts/mark_dupes.sh
+```
+
+At this point, dupRadar tool is used to perform quality control in R.
+
+```{r eval=FALSE}
+library(dupRadar)
+library(Rsubread)
+
+# Parameters
+bam_file <- "../data/processed_data/bru-mor_bam/SRR039378.dupMarked.bam"
+gtf_file <- "../data/brucei-morsitans/brucei-morsitans_annotations.gtf"
+stranded <- 0
+paired <- FALSE
+Threads <- 8
+
+# Duplication rate ananlysis
+dm <- analyzeDuprates(bam_file, gtf_file, stranded, paired, Threads)
+
+#Plots
+png(filename = "../figures/duplicate_rate_SRR039378.png")
+par(mfrow=c(1,2))
+duprateExpDensPlot(DupMat=dm)
+title("SRR039378")
+dev.off()
+
+# Boxplot
+duprateExpBoxplot(DupMat=dm)
+```
+
 
 ## Reads quantification
 
@@ -143,7 +206,7 @@ cd ../results
 
 ### Setting up R for the analysis
 
-```{r results='hide'}
+```{r results='hide', eval=FALSE}
 # Ensure results are reproducible
 set.seed(1)
 
@@ -212,7 +275,7 @@ heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', m
 
 dev.off()
 ```
-```{r fig.cap="Filtered sample heatmap"}
+```{r fig.cap="Filtered sample heatmap", eval=FALSE}
 
 include_graphics("../figures/filtered_sample_heatmap.png")
 ```
@@ -235,7 +298,7 @@ ggplot(x, aes(x=value, color=sample)) + geom_density()
 
 dev.off()
 ```
-```{r fig.cap="Filtered sample heatmap"}
+```{r fig.cap="Filtered sample heatmap", eval=FALSE}
 
 include_graphics("../figures/filtered_sample_density.png")
 ```
@@ -254,7 +317,7 @@ autoplot(pca.log.counts,
          size=3)
 dev.off()
 ```
-```{r fig.cap="Filtered sample heatmap"}
+```{r fig.cap="Filtered sample heatmap", eval=FALSE}
 
 include_graphics("../figures/filtered_sample_PCA.png")
 ```
@@ -266,7 +329,7 @@ png(filename = "../figures/norm.filt_sample_boxplot.png", res =90, type = "cairo
 boxplot(logcpm.norm.counts)
 dev.off()
 ```
-```{r fig.cap="Filtered sample boxplot"}
+```{r fig.cap="Filtered sample boxplot", eval=FALSE}
 
 include_graphics("../figures/filtered_sample_boxplot.png")
 ``` 
