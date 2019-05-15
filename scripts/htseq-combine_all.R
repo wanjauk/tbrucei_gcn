@@ -8,7 +8,7 @@
 basedir <- "../results"
 setwd(basedir)
 
-cntdir <- paste(basedir, "HTSeq_count_results", sep="/")
+cntdir <- paste(basedir, "brucei_HTSeq_count_results", sep="/")
 pat <- ".counts.txt"
 hisat2.all <- list.files(path = cntdir,
                          pattern = pat,
@@ -69,7 +69,7 @@ data.all.summary
 t(data.all.summary)
 
 # write summary to file
-write.csv(data.all.summary, file = "htseq_counts_all-summary.csv")
+write.csv(data.all.summary, file = "brucei_htseq_counts_all-summary.csv")
 
 ####################################
 # take all data rows to a new table
@@ -80,7 +80,7 @@ data.all <- data[grep("^Tb|^tmp", rownames(data), perl=TRUE, invert=FALSE), ]
 head(data.all, 3)
 
 # write data to file
-write.table(data.all, file = "htseq_counts_all.txt", quote = FALSE, sep = "\t")
+write.table(data.all, file = "brucei_htseq_counts_all.txt", quote = FALSE, sep = "\t")
 
 # cleanup intermediate objects
 rm(y, z, i, DT)

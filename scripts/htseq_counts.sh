@@ -6,19 +6,19 @@
 module load htseq/0.11.2
 
 #create output directory if it doesn't exist
-mkdir -p ../results/HTSeq_count_results
+mkdir -p ../results/brucei_HTSeq_count_results
 
 GFF_FILE=$1
 
-for sam_file in ../data/processed_data/*.sam; do
-    sam_file_name=$(echo $sam_file | cut -f1 -d '.')
+for bam_file in ../data/processed_data/bru-mor_bam/*.bam; do
+    bam_file_name=$(echo $bam_file | cut -f1 -d '.')
     
         python /opt/apps/htseq/0.11.2/bin/htseq-count \
-            -f sam \
+            -f bam \
             -s no \
             -t exon \
             -i Parent \
-            $sam_file \
+            $bam_file \
             $GFF_FILE \
-            > ../results/HTSeq_count_results/${sam_file_name}.counts.txt
+            > ../results/brucei_HTSeq_count_results/${bam_file_name}.counts.txt
 done
