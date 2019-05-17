@@ -221,6 +221,7 @@ library("ggplot2")
 library("gplots")
 library("reshape2")
 library("ggfortify")
+library("xlsx")
 ```
 
 ### Importing samples count data into R
@@ -258,6 +259,8 @@ logcpm.norm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normaliz
 
 Various plots are made for the samples before and after filtering the low-expressed genes and non-expressed genes.
 
+\newpage
+
 **Samples heatmap**
 ```{r results='hide', eval=FALSE}
 sample_category <- nlevels(sample.metadata$Sample_Name)
@@ -276,7 +279,14 @@ heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', m
 
 dev.off()
 ```
-```{r fig.cap="Normalized sample correlation heatmap"}
+
+
+```{r fig.cap="sample correlation heatmap", echo=FALSE}
+include_graphics("../figures/raw_sample_heatmap.png")
+```
+
+\newpage
+```{r fig.cap="Normalized sample correlation heatmap", echo=FALSE}
 
 include_graphics("../figures/norm.filt_sample_heatmap.png")
 ```
@@ -300,7 +310,14 @@ ggplot(x, aes(x=value, color=sample)) + geom_density()
 
 dev.off()
 ```
-```{r fig.cap="Normalized sample density plot"}
+
+
+```{r fig.cap="Raw sample density plot", echo=FALSE}
+include_graphics("../figures/raw_sample_density.png")
+```
+
+\newpage
+```{r fig.cap="Normalized sample density plot", echo=FALSE}
 
 include_graphics("../figures/norm.filt_sample_density.png")
 ```
@@ -320,11 +337,17 @@ autoplot(pca.log.counts,
          size=3)
 dev.off()
 ```
-```{r fig.cap="Normalized sample heatmap"}
+
+
+```{r fig.cap="Raw Sample heatmap", echo=FALSE}
+include_graphics("../figures/raw_samples_PCA.png")
+```
+
+\newpage
+```{r fig.cap="Normalized sample PCA", echo=FALSE}
 
 include_graphics("../figures/norm.filt_sample_PCA.png")
 ```
-
 \newpage
  **Boxplot**
 ```{r, eval=FALSE}
@@ -335,16 +358,18 @@ png(filename = "../figures/norm.filt_sample_boxplot.png", res =90, type = "cairo
 boxplot(logcpm.norm.counts)
 dev.off()
 ```
-```{r fig.cap="Normalized sample boxplot"}
+
+
+```{r fig.cap="Raw Sample boxplot", echo=FALSE}
+include_graphics("../figures/raw_sample_boxplot.png")
+```
+
+\newpage
+```{r fig.cap="Normalized sample boxplot", echo=FALSE}
 
 include_graphics("../figures/norm.filt_sample_boxplot.png")
 ``` 
 
-\newpage
- **Mean-Difference plots (MD plots)**
-```{r}
-
-```
 \newpage 
 ### Identify differentially expressed genes
 
@@ -450,10 +475,32 @@ summary(PV_vs_MG_de.genes)
 dim(subset(PV_vs_MG_de.genes, PV_vs_MG_de.genes == 1)) + dim(subset(PV_vs_MG_de.genes, PV_vs_MG_de.genes == -1))
 #2701
 
-# TODO: Add columns such as logFC, FDR e.t.c from topTags to the above object and rename first column. write out csv file of upregulated and downregulated genes and create volcano plot and MA plot to interpret results.
+# create a dataframe with data on PV and SG differential gene expression
+PV_data <- topGenes_PV$table
+SG_data <- topGenes_SG$table
+
+# append status of regulation for each gene (either upregulated, 1 or downregulated, -1)
+PV_data$RegulationStatus <- PV_vs_MG_de.genes[rownames(PV_vs_MG_de.genes) %in% rownames(PV_data),]
+SG_data$RegulationStatus <- SG_vs_PV_de.genes[rownames(SG_vs_PV_de.genes) %in% rownames(SG_data),]
+
+# obtain upregulated and downregulated genes and write out to excel
+PV_DownReg <- PV_data[order(PV_data$logFC),]
+PV_UpReg <- PV_data[order(PV_data$logFC, decreasing = TRUE),]
+
+SG_DownReg <- SG_data[order(SG_data$logFC),]
+SG_UpReg <- SG_data[order(SG_data$logFC, decreasing = TRUE),]
+
+write.xlsx(PV_DownReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Down-regulated Proventriculus")
+write.xlsx(PV_UpReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Up-regulated Proventriculus", append = TRUE)
+write.xlsx(SG_DownReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Down-regulated Salivary glands", append = TRUE)
+write.xlsx(SG_UpReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Up-regulated Salivary glands", append = TRUE)
 ```
-\newpage
-Plotting to visually interpret differential gene expression results.
+
+Plotting to visually inspect differential gene expression results.
 
 ```{r, eval=FALSE}
 # Differential expression analysis - plots
@@ -470,7 +517,6 @@ par(mar = c(5, 4, 4, 4))
 png("../figures/SG-PV_DEG_volcanoplot.png", res=90, type = "cairo")
 plot(tab, pch = 16, cex = 0.6, xlab = expression(log[2]~fold~change),
 ylab = expression(-log[10]~pvalue), main = "SG vs PV differentially expressed genes")
-#dev.off()
 
 ## Log2 fold change and p-value cutoffs
 lfc = 2
@@ -489,13 +535,13 @@ cex = 0.8, line = 0.5)
 
 dev.off()
 ```
-\newpage
-```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut"}
+
+```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE}
 # Genes differentially expressed in proventriculus compared to midgut (above p<0.05)
 include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
 ```
 \newpage
-```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus"}
+```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus", echo=FALSE}
 # Genes differentially expressed in salivary gland compared to proventriculus (above p<0.05)
 include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 ```
