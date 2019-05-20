@@ -546,3 +546,21 @@ include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
 include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 ```
 
+\newpage
+### Weighted gene co-expression analysis
+```{r}
+# load package
+library("WGCNA")
+
+# required settings
+options(stringsAsFactors = FALSE)
+
+# obtain the required counts data (WGCNA input)
+
+
+# determine the soft-thresholding power to use
+
+
+# create the similarity matrix
+```
+
