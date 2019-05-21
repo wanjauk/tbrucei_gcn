@@ -548,19 +548,242 @@ include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 
 \newpage
 ### Weighted gene co-expression analysis
-```{r}
+```{r, eval=FALSE}
 # load package
 library("WGCNA")
+library("flashClust")
+
+#working directory
+setwd("~/tbrucei_gcn/analysis")
 
 # required settings
 options(stringsAsFactors = FALSE)
 
-# obtain the required counts data (WGCNA input)
+########################################################################
+## Constructing the network
+########################################################################
 
+# obtain the required counts data (WGCNA input)
+gene.ids <- rownames(de.genes$counts)
+network.counts <- de.genes$counts
+#network.counts <- network.counts * 1.0 # convert to float
+
+# WGCNA requires genes to be in columns
+network.counts <- t(network.counts)
 
 # determine the soft-thresholding power to use
+powers <- c(c(1:10), seq(from = 12, to=20, by=2))
+sft <- pickSoftThreshold(network.counts, powerVector = powers, verbose = 5)
+
+# results
+#sizeGrWindow(9, 5)
+par(mfrow = c(1,2))
+
+cex1 <- 0.9
+
+# Scale-free topology fit index as a function of the soft-thresholding power
+png(filename = "../results/soft-thresholding_power.png", res = 90, type='cairo')
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], xlab="Soft Threshold (power)", 
+     ylab="Scale Free Topology Model Fit,signed R~2",type="n", main = paste("Scale independence"));
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels=powers,cex=cex1,col="red");
+
+# The red line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+dev.off()
+
+# Mean connectivity as a function of the soft-thresholding power
+png(filename = "../results/mean_connectivity.png", res = 90, type='cairo')
+plot(sft$fitIndices[,1], sft$fitIndices[,5], xlab="Soft Threshold (power)", 
+     ylab="Mean Connectivity", type="n", main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+dev.off()
+
+# construct adjacency matrix
+softpower <- ?
+adjacency.matrix <- adjacency(network.counts, power=softpower,
+                                             type = "signed", corFnc = "cor")
+
+#set diagonal to 0 to remove uninformative correlations
+diag(adjacency.matrix) <- 0
+
+# Turn the adjacency matrix to topologicaal overlap matrix to minimize
+# the effects of noise and spurious associations
+TOM <- TOMsimilarity(adjacency.matrix, TOMType = "signed")
+dissTOM <- 1 - TOM
+
+# Adjacency matrix heatmap plot / network heatmap of selected genes
+heatmap_indices <- sample(nrow(dissTOM), 500) # sub-sample for visualization purposes
+
+png(filename = "../results/adjacency_matrix_heatmap.png", res = 90, type='cairo')
+heatmap.2(t(dissTOM[heatmap_indices, heatmap_indices]),
+            col=redgreen(75),
+            labRow=NA, labCol=NA, 
+            trace='none', dendrogram='row',
+            xlab='Gene', ylab='Gene',
+            main='Adjacency matrix',
+            density.info='none', revC=TRUE)
+dev.off()
+
+################################################################
+## Detecting co-expression modules in R
+################################################################
+
+# view the dendrogram based on hierachical clustering of genes
+gene.tree <- flashClust(as.dist(dissTOM), method = "average")
+
+# plot the gene tree
+png(filename = "../results/gene_tree.png", res = 90, type='cairo')
+#sizeGrWindow(12,9) #open graphical window
+plot(gene.tree, xlab="", sub="", main = "Gene clustering based on TOM dissimilarity", 
+     labels = FALSE) #hang = 0.04)
+dev.off()
+
+# identify the modules
+min.module.size <- 15
+module.labels <- cutreeDynamicTree(gene.tree, deepSplit = TRUE, 
+                                   minModuleSize =min.module.size)
+
+#view
+#table(module.labels)
+
+# convert labels to colours
+module.colours <- labels2colors(module.labels)
+
+# visualize the gene tree and TOM matrix together using TOM plot
+# raise dissTOM to a power to make moderately strong connection more visible in heatmap
+png(filename = "../results/gene_tree&TOM.png", res = 90, type = "cairo")
+TOMplot(dissTOM^4, gene.tree, as.character(module.colours))
+dev.off()
 
 
-# create the similarity matrix
+# plot gene dendrogram
+png(filename = "../results/gene_tree&colours.png", res = 90, type='cairo')
+#sizeGrWindow(8,6) #open graphical window
+plotDendroAndColors(gene.tree, module.colours, "Dynamic Tree Cut", dendroLabels = FALSE,
+                    hang = 0.03, addGuide = TRUE, guideHang = 0.05,
+                    main = "Gene dendrogram and module colours")
+dev.off()
+
+# --------------------------------------------------------------------------------------------
+# merge modules with very similar expression profiles as their genes are highly co-expressed
+# get the module eigengenes
+module.eigengenes <- moduleEigengenes(network.counts, colors = module.colours)$eigengenes
+
+# calculate dissimilarity of module eigengenes using correlations
+module.eigengenes.diss <- 1 - cor(module.eigengenes)
+
+# cluster module eigengenes
+module.eigengenes.tree <- flashClust(as.dist(module.eigengenes.diss), method = "average")
+
+# choose height at which to cut the tree for merge i.e. the threshold
+module.eigengenes.thresh <- 0.25
+
+# create plots for the results
+png(filename = "../results/module_eigengenes_cluster.png", res = 90, type = "cairo")
+#sizeGrWindow(7, 6)
+plot(METree, main = "Clustering of module eigengenes", xlab = "", sub = "")
+abline(h=module.eigengenes.thresh. col="red")
+
+dev.off()
+
+# merge the modules
+module.eigengenes.merge <- mergeCloseModules(network.counts, module.colours, 
+                                             cutHeight = module.eigengenes.thresh)
+
+# merged module colours
+merged.module.colours <- module.eigengenes.merge$colors
+
+# eigengenes of new merged modules
+merged.module.eigengenes <- module.eigengenes.merge$newMEs
+
+# plot the dendrogram with original and merged colours underneath
+#sizeGrWindow(12, 9)
+png(filename = "../results/merged-original_colours-original_dendro.png", res = 90, type = "cairo")
+plotDendroAndColors(gene.tree, cbind(dynamicColors, mergedColors), 
+                    c("Dynamic Tree Cut", "Merged dynamic"), 
+                    dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
+dev.off()
+
+# plot heatmap of eigengenes (orginal before merge)
+png(filename = "../results/eigengenes_heatmap.png", res = 90, type = "cairo")
+plotEigengeneNetworks(module.eigengenes, "Eigengenes heatmap", marHeatmap = c(3,4,2,2),
+                      plotDendrograms = FALSE, xLabelsAngle = 90)
+dev.off()
+
+# rename some variables based on the module eigengene analysis for later use
+# module colours
+module.colours <- merged.module.colours
+
+# construct numerical labels corresponding to the colours
+colorOrder <- c("grey", standardColors(50))
+module.labels <- match(module.colours, colorOrder)-1
+
+# module eigengenes
+#module.eigengenes <- merged.module.eigengenes
+
+
+##############################################################################
+## Network export to cytoscape
+##############################################################################
+
+# select modules of interest
+interesting.modules <- c('Red', 'brown') # add more
+
+# select module genes
+inModules <- is.finite(match(module.colours, interesting.modules))
+modGenes <- gene.ids[inModules]
+
+# select the corresponding dissTOM based on module genes
+modTOM <- dissTOM[inModules, inModules]
+dimnames(modTOM) <- list(modGenes, modGenes)
+
+# Export the network into edge and node list files Cytoscape can read
+cyt <- exportNetworkToCytoscape(modTOM, 
+                                edgeFile = paste("CytoscapeInput-edges-", 
+                                                 paste(interesting.modules, collapse="-"), ".txt",
+                                                 sep=""), 
+                                nodeFile = paste("CytoscapeInput-nodes-", 
+                                                 paste(interesting.modules, collapse="-"), ".txt",
+                                                 sep=""), 
+                                weighted = TRUE, 
+                                threshold = 0.02, 
+                                nodeNames = modGenes, 
+                                nodeAttr = module.colours[inModules]);
+
+
+# Also, export the network as graphml format
+# use export_network_to_graphml function
+source("../scripts/network_export_graphml.R")
+
+# the whole network
+entire.network <- export_network_to_graphml(dissTOM, 
+                                            filename = "../results/entire_network.graphml",
+                                            threshold = 0, nodeAttr = gene.ids)
+# network modules
+# create a dataframe with node attributes
+node.attributes <- cbind(modGenes, module=module.colours)
+
+# Add RGB versions of colour modules
+node.attributes$colourRGB <- col2hex(node.attributes$module)
+
+modules.network <- export_network_to_graphml(modTOM, 
+                                             filename = "../results/modules_network.graphml",
+                                             threshold = 0.02,
+                                             nodeAttrDataFrame = node.attributes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```
 
