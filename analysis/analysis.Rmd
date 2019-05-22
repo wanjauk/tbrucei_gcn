@@ -540,13 +540,13 @@ dev.off()
 # Genes differentially expressed in proventriculus compared to midgut (above p<0.05)
 include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
 ```
-\newpage
+
 ```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus", echo=FALSE}
 # Genes differentially expressed in salivary gland compared to proventriculus (above p<0.05)
 include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 ```
 
-\newpage
+
 ### Weighted gene co-expression analysis
 ```{r, eval=FALSE}
 # load package
@@ -583,9 +583,12 @@ cex1 <- 0.9
 
 # Scale-free topology fit index as a function of the soft-thresholding power
 png(filename = "../results/soft-thresholding_power.png", res = 90, type='cairo')
-plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], xlab="Soft Threshold (power)", 
-     ylab="Scale Free Topology Model Fit,signed R~2",type="n", main = paste("Scale independence"));
-text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels=powers,cex=cex1,col="red");
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], 
+     xlab="Soft Threshold (power)", 
+     ylab="Scale Free Topology Model Fit,signed R~2",type="n", 
+     main = paste("Scale independence"));
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red");
 
 # The red line corresponds to using an R^2 cut-off of h
 abline(h=0.90,col="red")
@@ -593,8 +596,10 @@ dev.off()
 
 # Mean connectivity as a function of the soft-thresholding power
 png(filename = "../results/mean_connectivity.png", res = 90, type='cairo')
-plot(sft$fitIndices[,1], sft$fitIndices[,5], xlab="Soft Threshold (power)", 
-     ylab="Mean Connectivity", type="n", main = paste("Mean connectivity"))
+plot(sft$fitIndices[,1], sft$fitIndices[,5], 
+     xlab="Soft Threshold (power)", 
+     ylab="Mean Connectivity", type="n", 
+     main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 dev.off()
 
