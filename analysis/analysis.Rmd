@@ -726,6 +726,9 @@ module.labels <- match(module.colours, colorOrder)-1
 # module eigengenes
 #module.eigengenes <- merged.module.eigengenes
 
+# get hub genes
+# use the WGCNA function
+
 
 ##############################################################################
 ## Network export to cytoscape
