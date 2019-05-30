@@ -3,8 +3,8 @@ title: "*T. brucei* co-expression network analysis"
 author: "Kennedy Mwangi"
 date: "April 15, 2019"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 editor_options: 
   chunk_output_type: inline
 ---
@@ -273,7 +273,8 @@ sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
 # heatmap.2(cor(data.all), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
 # Filtered counts data
-png(filename = "../figures/norm.filt_sample_heatmap.png", res = 90, type = "cairo")
+png(filename = "../figures/norm.filt_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 4, pointsize = 10)
 
 heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
@@ -286,7 +287,7 @@ include_graphics("../figures/raw_sample_heatmap.png")
 ```
 
 \newpage
-```{r fig.cap="Normalized sample correlation heatmap", echo=FALSE}
+```{r fig.cap="Normalized sample correlation heatmap", echo=FALSE, out.width="75%"}
 
 include_graphics("../figures/norm.filt_sample_heatmap.png")
 ```
@@ -298,11 +299,14 @@ include_graphics("../figures/norm.filt_sample_heatmap.png")
 
 # raw data
 #log.counts <- log2(data.all + 1)
-#png("../figures/raw_sample_density.png", res = 90, type = "cairo")
+#png("../figures/raw_sample_density.png", res =1200, type = "cairo", units = 'in',
+#    width = 6, height = 6, pointsize = 10)
 #x <- melt(as.matrix(log.counts))
 
 # filtered and normalized sample data
-png("../figures/norm.filt_sample_density.png", res = 90, type = "cairo")
+#pdf(file = "../figures/norm.filt_sample_density.pdf")
+png("../figures/norm.filt_sample_density.png", res =1200, type = "cairo", units = 'in',
+    width = 6, height = 4, pointsize = 10)
 x <- melt(as.matrix(logcpm.norm.counts))
 
 colnames(x) <- c('gene_id', 'sample', 'value')
@@ -354,7 +358,9 @@ include_graphics("../figures/norm.filt_sample_PCA.png")
 #png(filename = "../figures/raw_sample_boxplot.png", res =90, type = "cairo")
 #boxplot(log.counts)
 
-png(filename = "../figures/norm.filt_sample_boxplot.png", res =90, type = "cairo")
+#pdf(file = "../figures/norm.filt_sample_boxplot.pdf")
+png(filename = "../figures/norm.filt_sample_boxplot.png", res =1200, type = "cairo", units = 'in',
+    width = 6, height = 4, pointsize = 6)
 boxplot(logcpm.norm.counts)
 dev.off()
 ```
