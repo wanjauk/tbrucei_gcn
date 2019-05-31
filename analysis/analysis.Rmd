@@ -565,6 +565,9 @@ setwd("~/tbrucei_gcn/analysis")
 # required settings
 options(stringsAsFactors = FALSE)
 
+# set number of threads to allow
+allowWGCNAThreads(nThreads=20)
+
 ########################################################################
 ## Constructing the network
 ########################################################################
@@ -588,20 +591,22 @@ par(mfrow = c(1,2))
 cex1 <- 0.9
 
 # Scale-free topology fit index as a function of the soft-thresholding power
-png(filename = "../results/soft-thresholding_power.png", res = 90, type='cairo')
+png(filename = "../figures/soft-thresholding_power.png", res =1200, type = "cairo", units = 'in',
+    width = 4, height = 4, pointsize = 10)
 plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], 
      xlab="Soft Threshold (power)", 
-     ylab="Scale Free Topology Model Fit,signed R~2",type="n", 
+     ylab="Scale Free Topology Model Fit,signed R^2",type="n", 
      main = paste("Scale independence"));
 text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      labels=powers,cex=cex1,col="red");
 
 # The red line corresponds to using an R^2 cut-off of h
-abline(h=0.90,col="red")
+abline(h=0.80,col="red")
 dev.off()
 
 # Mean connectivity as a function of the soft-thresholding power
-png(filename = "../results/mean_connectivity.png", res = 90, type='cairo')
+png(filename = "../figures/mean_connectivity.png", res =1200, type = "cairo", units = 'in',
+    width = 4, height = 5, pointsize = 10)
 plot(sft$fitIndices[,1], sft$fitIndices[,5], 
      xlab="Soft Threshold (power)", 
      ylab="Mean Connectivity", type="n", 
@@ -610,7 +615,7 @@ text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 dev.off()
 
 # construct adjacency matrix
-softpower <- ?
+softpower <- 16
 adjacency.matrix <- adjacency(network.counts, power=softpower,
                                              type = "signed", corFnc = "cor")
 
@@ -622,10 +627,15 @@ diag(adjacency.matrix) <- 0
 TOM <- TOMsimilarity(adjacency.matrix, TOMType = "signed")
 dissTOM <- 1 - TOM
 
+# remove adjacency matrix to free up memory
+rm(adjacency.matrix)
+gc()
+
 # Adjacency matrix heatmap plot / network heatmap of selected genes
 heatmap_indices <- sample(nrow(dissTOM), 500) # sub-sample for visualization purposes
 
-png(filename = "../results/adjacency_matrix_heatmap.png", res = 90, type='cairo')
+png(filename = "../figures/adjacency_matrix_heatmap.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 5, pointsize = 10)
 heatmap.2(t(dissTOM[heatmap_indices, heatmap_indices]),
             col=redgreen(75),
             labRow=NA, labCol=NA, 
@@ -643,7 +653,8 @@ dev.off()
 gene.tree <- flashClust(as.dist(dissTOM), method = "average")
 
 # plot the gene tree
-png(filename = "../results/gene_tree.png", res = 90, type='cairo')
+png(filename = "../figures/gene_tree.png", res =1200, type = "cairo", units = 'in',
+    width = 7, height = 8, pointsize = 10)
 #sizeGrWindow(12,9) #open graphical window
 plot(gene.tree, xlab="", sub="", main = "Gene clustering based on TOM dissimilarity", 
      labels = FALSE) #hang = 0.04)
@@ -655,20 +666,25 @@ module.labels <- cutreeDynamicTree(gene.tree, deepSplit = TRUE,
                                    minModuleSize =min.module.size)
 
 #view
-#table(module.labels)
+table(module.labels)
 
 # convert labels to colours
 module.colours <- labels2colors(module.labels)
 
+# view
+table(module.colours)
+
 # visualize the gene tree and TOM matrix together using TOM plot
 # raise dissTOM to a power to make moderately strong connection more visible in heatmap
-png(filename = "../results/gene_tree&TOM.png", res = 90, type = "cairo")
+png(filename = "../figures/gene_tree&TOM.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 6, pointsize = 10)
 TOMplot(dissTOM^4, gene.tree, as.character(module.colours))
 dev.off()
 
 
 # plot gene dendrogram
-png(filename = "../results/gene_tree&colours.png", res = 90, type='cairo')
+png(filename = "../figures/gene_tree&colours.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 6, pointsize = 10)
 #sizeGrWindow(8,6) #open graphical window
 plotDendroAndColors(gene.tree, module.colours, "Dynamic Tree Cut", dendroLabels = FALSE,
                     hang = 0.03, addGuide = TRUE, guideHang = 0.05,
@@ -690,10 +706,11 @@ module.eigengenes.tree <- flashClust(as.dist(module.eigengenes.diss), method = "
 module.eigengenes.thresh <- 0.25
 
 # create plots for the results
-png(filename = "../results/module_eigengenes_cluster.png", res = 90, type = "cairo")
+png(filename = "../figures/module_eigengenes_cluster.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 6, pointsize = 10)
 #sizeGrWindow(7, 6)
-plot(METree, main = "Clustering of module eigengenes", xlab = "", sub = "")
-abline(h=module.eigengenes.thresh. col="red")
+plot(module.eigengenes.tree, main = "Clustering of module eigengenes", xlab = "", sub = "")
+abline(h=module.eigengenes.thresh, col="red")
 
 dev.off()
 
@@ -704,23 +721,29 @@ module.eigengenes.merge <- mergeCloseModules(network.counts, module.colours,
 # merged module colours
 merged.module.colours <- module.eigengenes.merge$colors
 
+# view
+table(merged.module.colours)
+
 # eigengenes of new merged modules
 merged.module.eigengenes <- module.eigengenes.merge$newMEs
 
 # plot the dendrogram with original and merged colours underneath
 #sizeGrWindow(12, 9)
-png(filename = "../results/merged-original_colours-original_dendro.png", res = 90, type = "cairo")
-plotDendroAndColors(gene.tree, cbind(dynamicColors, mergedColors), 
+png(filename = "../figures/merged-original_colours-original_dendro.png", res =1200, type = "cairo", 
+    units = 'in', width = 5, height = 6, pointsize = 10)
+plotDendroAndColors(gene.tree, cbind(module.colours, merged.module.colours), 
                     c("Dynamic Tree Cut", "Merged dynamic"), 
                     dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
 dev.off()
 
 # plot heatmap of eigengenes (orginal before merge)
-png(filename = "../results/eigengenes_heatmap.png", res = 90, type = "cairo")
+png(filename = "../figures/eigengenes_heatmap.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 6, pointsize = 10)
 plotEigengeneNetworks(module.eigengenes, "Eigengenes heatmap", marHeatmap = c(3,4,2,2),
                       plotDendrograms = FALSE, xLabelsAngle = 90)
 dev.off()
 
+#-----------------------------------------------------------------------------------------
 # rename some variables based on the module eigengene analysis for later use
 # module colours
 module.colours <- merged.module.colours
@@ -741,7 +764,8 @@ module.labels <- match(module.colours, colorOrder)-1
 ##############################################################################
 
 # select modules of interest
-interesting.modules <- c('Red', 'brown') # add more
+interesting.modules <- c('black', 'cyan', 'grey','ivory',
+                         'midnightblue','paleturquoise','plum1','tan') # add more
 
 # select module genes
 inModules <- is.finite(match(module.colours, interesting.modules))
@@ -753,10 +777,10 @@ dimnames(modTOM) <- list(modGenes, modGenes)
 
 # Export the network into edge and node list files Cytoscape can read
 cyt <- exportNetworkToCytoscape(modTOM, 
-                                edgeFile = paste("CytoscapeInput-edges-", 
+                                edgeFile = paste("../results/CytoscapeInput-edges-", 
                                                  paste(interesting.modules, collapse="-"), ".txt",
                                                  sep=""), 
-                                nodeFile = paste("CytoscapeInput-nodes-", 
+                                nodeFile = paste("../results/CytoscapeInput-nodes-", 
                                                  paste(interesting.modules, collapse="-"), ".txt",
                                                  sep=""), 
                                 weighted = TRUE, 
@@ -764,6 +788,10 @@ cyt <- exportNetworkToCytoscape(modTOM,
                                 nodeNames = modGenes, 
                                 nodeAttr = module.colours[inModules]);
 
+
+
+# remove the cytoscape network
+rm(cyt)
 
 # Also, export the network as graphml format
 # use export_network_to_graphml function
