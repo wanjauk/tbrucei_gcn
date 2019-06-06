@@ -20,6 +20,38 @@ opts_chunk$set(echo = TRUE,
 ## Introduction
 This document contains the workflow used in the analysis of *T. brucei* gene co-expression network analysis. It contains code used in each step of the analysis.
 
+### Setting up R for the analysis
+
+```{r results='hide', eval=FALSE}
+# set working directory
+setwd("~/tbrucei_gcn/analysis")
+
+# ensure results are reproducible
+set.seed(1)
+
+# other settings
+options(digits = 4)
+options(stringsAsFactors = FALSE)
+
+# loading required R packages
+library("dupRadar")
+library("Rsubread")
+library("limma")
+library("edgeR")
+library("RColorBrewer")
+library("ggplot2")
+library("gplots")
+library("reshape2")
+library("ggfortify")
+library("xlsx")
+library("WGCNA")
+library("flashClust")
+library("igraph")
+
+# set number of threads to allow in WGCNA analysis
+allowWGCNAThreads(nThreads=20)
+```
+
 ## Data acquisition
 Data used in this study is obtained from European Nucleotide Archive under accession number SRP002243.
 
@@ -71,7 +103,7 @@ Next, RNASeq data is downloaded from EBI database's FTP site.
 cat ../scripts/fastq_download.sh
 ```
 
-Some of the downstream tools require that FASTQ files downloaded in zipped form are unzipped.
+Some of the downstream tools require that FASTQ files that were downloaded in zipped form are unzipped.
 
 ```{bash}
 cat ../scripts/unzip.sh
@@ -84,7 +116,7 @@ After downloading the RNASeq data, its quality is checked through the FASTQC too
 cat ../scripts/fastqc_reports.sh
 ```
 
-Following the high rate of unaligned and duplicate reads, further analysis is done to ascertain their cause. The reads are aligned to *Glossina morsitans* genome to determine whether reads from the vector were also present in the sample during sequencing. Duplicate reads are assessed whether they are artifacts from PCR (PCR duplicates).
+Following the high rate of unaligned and duplicate reads (after FASTQC analysis and alignment to *T. brucei* genome), further analysis is done to ascertain their cause. The reads are aligned to *Glossina morsitans* genome to determine whether reads from the vector were also present in the sample during sequencing. Duplicate reads are assessed whether they are artifacts from PCR (PCR duplicates).
 
 ## Downloading *T. brucei* and *G. morsitans* genome and annotation files
 
@@ -156,9 +188,6 @@ cat ../scripts/mark_dupes.sh
 At this point, dupRadar tool is used to perform quality control in R.
 
 ```{r eval=FALSE}
-library(dupRadar)
-library(Rsubread)
-
 # Parameters
 bam_file <- "../data/processed_data/bru-mor_bam/SRR039378.dupMarked.bam"
 gtf_file <- "../data/brucei-morsitans/brucei-morsitans_annotations.gtf"
@@ -183,7 +212,7 @@ duprateExpBoxplot(DupMat=dm)
 
 ## Reads quantification
 
-HTSeq tool is used to count reads that aligned to the *T. brucei* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
+HTSeq tool is used to count reads that aligned to the *T. brucei* genome. *T. brucei* annonation file is used and therefore HTSeq excludes counting *G. morsitans* reads that aligned to *Glossina* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
 
 ```{bash}
 cat ../scripts/htseq_counts.sh
@@ -204,26 +233,6 @@ cd ../results
 
 ## Analysis in R
 
-### Setting up R for the analysis
-
-```{r results='hide', eval=FALSE}
-# Ensure results are reproducible
-set.seed(1)
-
-# Other settings
-options(digits = 4)
-
-# Loading required R packages
-library("limma")
-library("edgeR")
-library("RColorBrewer")
-library("ggplot2")
-library("gplots")
-library("reshape2")
-library("ggfortify")
-library("xlsx")
-```
-
 ### Importing samples count data into R
 
 For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source("../scripts/htseq-combine_all.R")` on the R console and hit enter.
@@ -243,7 +252,6 @@ counts <- DGEList(data.all, group = sample.metadata$Tissue)
 # filter out Non-expressed genes and those with low expression values.
 # keep genes with at least 1 read per million in n samples, where n 
 # is minimum number of replicates which is 3 in this case
-
 keep <- rowSums(cpm(counts)>1) >= 3
 
 # retain genes above the cpm value
@@ -252,7 +260,7 @@ filtered.counts <- counts[keep, , keep.lib.sizes=FALSE]
 # Normalize for composition bias using TMM
 filtered.counts <- calcNormFactors(filtered.counts, method = 'TMM')
 
-# get logcpm normalized counts
+# Convert counts per million per gene to log counts per million for further downstream analysis.
 logcpm.norm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normalized.lib.sizes = TRUE)
 
 ```
@@ -269,13 +277,11 @@ sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
 
 # Raw counts data (before filtering and normalization)
 # png(filename = "../figures/raw_sample_heatmap.png", res = 90, type = "cairo")
-
 # heatmap.2(cor(data.all), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
 # Filtered counts data
 png(filename = "../figures/norm.filt_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 4, pointsize = 10)
-
 heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
 dev.off()
@@ -463,10 +469,6 @@ summary(SG_vs_PV_de.genes)
 #NotSig       5474
 #Up           2018
 
-# Total upregulated and downregulated genes
-dim(subset(SG_vs_PV_de.genes, SG_vs_PV_de.genes == 1)) + dim(subset(SG_vs_PV_de.genes, SG_vs_PV_de.genes == -1))
-#3777
-
 # PV compared to MG
 PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05)
 
@@ -477,15 +479,17 @@ summary(PV_vs_MG_de.genes)
 #NotSig       6550
 #Up           1254
 
-# Total upregulated and downregulated genes
-dim(subset(PV_vs_MG_de.genes, PV_vs_MG_de.genes == 1)) + dim(subset(PV_vs_MG_de.genes, PV_vs_MG_de.genes == -1))
-#2701
+# DE genes in the PV that are common to both comparisons
+de.common <- which(PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
+length(de.common)
+#1543
 
 # create a dataframe with data on PV and SG differential gene expression
 PV_data <- topGenes_PV$table
 SG_data <- topGenes_SG$table
 
 # append status of regulation for each gene (either upregulated, 1 or downregulated, -1)
+## appending result was erroneous; status (+ or -) did not coincide with logFC sign (+ or -). why?
 PV_data$RegulationStatus <- PV_vs_MG_de.genes[rownames(PV_vs_MG_de.genes) %in% rownames(PV_data),]
 SG_data$RegulationStatus <- SG_vs_PV_de.genes[rownames(SG_vs_PV_de.genes) %in% rownames(SG_data),]
 
@@ -504,6 +508,9 @@ write.xlsx(SG_DownReg, file = "../results/Significant_differentially_expressed_g
            sheetName = "Down-regulated Salivary glands", append = TRUE)
 write.xlsx(SG_UpReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
            sheetName = "Up-regulated Salivary glands", append = TRUE)
+
+# create a venn diagram to show distribution of the number DEGs between stages
+vennDiagram(PV_vs_MG_de.genes==1, SG_vs_PV_de.genes==1, circle.col=c("turquoise", "salmon"))
 ```
 
 Plotting to visually inspect differential gene expression results.
@@ -555,19 +562,6 @@ include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 
 ### Weighted gene co-expression analysis
 ```{r, eval=FALSE}
-# load package
-library("WGCNA")
-library("flashClust")
-
-#working directory
-setwd("~/tbrucei_gcn/analysis")
-
-# required settings
-options(stringsAsFactors = FALSE)
-
-# set number of threads to allow
-allowWGCNAThreads(nThreads=20)
-
 ########################################################################
 ## Constructing the network
 ########################################################################
