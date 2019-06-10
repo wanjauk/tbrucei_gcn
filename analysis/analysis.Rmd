@@ -3,8 +3,8 @@ title: "*T. brucei* co-expression network analysis"
 author: "Kennedy Mwangi"
 date: "April 15, 2019"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 editor_options: 
   chunk_output_type: inline
 ---
@@ -249,10 +249,19 @@ The quality of the samples is checked before further analysis to check for outli
 # Create a DGEList object
 counts <- DGEList(data.all, group = sample.metadata$Tissue)
 
+# check the number of genes with no expression in all samples
+table(rowSums(counts$counts==0)==17)
+# FALSE  TRUE 
+# 10060  1772
+
 # filter out Non-expressed genes and those with low expression values.
 # keep genes with at least 1 read per million in n samples, where n 
 # is minimum number of replicates which is 3 in this case
 keep <- rowSums(cpm(counts)>1) >= 3
+
+# Alternative filtering function that filters better (Law et al 2016)
+#keep.exprs <- filterByExpr(counts, group=sample.metadata$Sample_Name)
+#filtered.counts <- counts[keep.exprs,, keep.lib.sizes=FALSE]
 
 # retain genes above the cpm value
 filtered.counts <- counts[keep, , keep.lib.sizes=FALSE]
@@ -315,8 +324,8 @@ png("../figures/norm.filt_sample_density.png", res =1200, type = "cairo", units 
     width = 6, height = 4, pointsize = 10)
 x <- melt(as.matrix(logcpm.norm.counts))
 
-colnames(x) <- c('gene_id', 'sample', 'value')
-ggplot(x, aes(x=value, color=sample)) + geom_density()
+colnames(x) <- c('gene_id', 'sample', 'logcpm')
+ggplot(x, aes(x=logcpm, color=sample)) + geom_density()
 
 dev.off()
 ```
@@ -340,7 +349,8 @@ include_graphics("../figures/norm.filt_sample_density.png")
 pca.log.counts <- prcomp(t(logcpm.norm.counts)) #normalized & filtered
 
 #png(filename = "../figures/raw_samples_PCA.png", res = 90, type = "cairo")
-png(filename = "../figures/norm.filt_sample_PCA.png", res = 90, type = "cairo")
+png(filename = "../figures/norm.filt_sample_PCA.png", res =1200, type = "cairo", units = 'in',
+    width = 6, height = 4, pointsize = 10)
 autoplot(pca.log.counts,
          data = sample.metadata,
          colour="Sample_Name",
@@ -366,8 +376,13 @@ include_graphics("../figures/norm.filt_sample_PCA.png")
 
 #pdf(file = "../figures/norm.filt_sample_boxplot.pdf")
 png(filename = "../figures/norm.filt_sample_boxplot.png", res =1200, type = "cairo", units = 'in',
-    width = 6, height = 4, pointsize = 6)
-boxplot(logcpm.norm.counts)
+    width = 4, height = 4, pointsize = 6)
+#par(mar=c(6,3,1,1))
+#boxplot(logcpm.norm.counts, las=2)
+y <- melt(as.matrix(logcpm.norm.counts))
+
+colnames(y) <- c('gene_id', 'sample', 'logcpm')
+ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() + theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 dev.off()
 ```
 
@@ -479,7 +494,7 @@ summary(PV_vs_MG_de.genes)
 #NotSig       6550
 #Up           1254
 
-# DE genes in the PV that are common to both comparisons
+# DE genes in the PV that are common in both comparisons
 de.common <- which(PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
 length(de.common)
 #1543
@@ -509,8 +524,6 @@ write.xlsx(SG_DownReg, file = "../results/Significant_differentially_expressed_g
 write.xlsx(SG_UpReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
            sheetName = "Up-regulated Salivary glands", append = TRUE)
 
-# create a venn diagram to show distribution of the number DEGs between stages
-vennDiagram(PV_vs_MG_de.genes==1, SG_vs_PV_de.genes==1, circle.col=c("turquoise", "salmon"))
 ```
 
 Plotting to visually inspect differential gene expression results.
@@ -520,23 +533,27 @@ Plotting to visually inspect differential gene expression results.
 #
 # Volcano plots
 
-# PV compared to MG
 #table with negative log to base 10 transformed p-values and logFC
-tab <- data.frame(logFC = topGenes_SG$table$logFC, negLogPval = -log10(topGenes_SG$table$PValue))
+# create a plot for each comparison PV-MG and SG-PV one at a time.
+tab <- data.frame(logFC = topGenes_PV$table$logFC, 
+                  negLogPval = -log10(topGenes_PV$table$PValue)) # PV compared to MG
+
+tab <- data.frame(logFC = topGenes_SG$table$logFC, 
+                  negLogPval = -log10(topGenes_SG$table$PValue)) # SG compared to PV
 
 # generating the plot
+png("../figures/PV-MG_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
+    width = 4, height = 4, pointsize = 8)
 par(mar = c(5, 4, 4, 4))
-
-png("../figures/SG-PV_DEG_volcanoplot.png", res=90, type = "cairo")
 plot(tab, pch = 16, cex = 0.6, xlab = expression(log[2]~fold~change),
-ylab = expression(-log[10]~pvalue), main = "SG vs PV differentially expressed genes")
+ylab = expression(-log[10]~pvalue), main = "PV vs MG differentially expressed genes")
 
 ## Log2 fold change and p-value cutoffs
-lfc = 2
-pval = 0.05
+lfc <- 2
+pval <- 0.05
 
-## Selecting interest genes
-signGenes = (abs(tab$logFC) > lfc & tab$negLogPval > -log10(pval))
+## Select interesting genes
+signGenes <- (abs(tab$logFC) > lfc & tab$negLogPval > -log10(pval))
 
 ## Identifying the selected genes
 points(tab[signGenes, ], pch = 16, cex = 0.8, col = "red")
@@ -547,6 +564,8 @@ mtext(c(paste("-", lfc, "fold"), paste("+", lfc, "fold")), side = 3, at = c(-lfc
 cex = 0.8, line = 0.5)
 
 dev.off()
+
+# create a venn diagram to show distribution of the number DEGs between stages
 ```
 
 ```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE}
@@ -569,7 +588,7 @@ include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 # obtain the required counts data (WGCNA input)
 gene.ids <- rownames(de.genes$counts)
 network.counts <- de.genes$counts
-#network.counts <- network.counts * 1.0 # convert to float
+#network.counts <- network.counts * 1.0 # convert to float; necessary for cor function. (Inbar et al)
 
 # WGCNA requires genes to be in columns
 network.counts <- t(network.counts)
@@ -651,13 +670,12 @@ png(filename = "../figures/gene_tree.png", res =1200, type = "cairo", units = 'i
     width = 7, height = 8, pointsize = 10)
 #sizeGrWindow(12,9) #open graphical window
 plot(gene.tree, xlab="", sub="", main = "Gene clustering based on TOM dissimilarity", 
-     labels = FALSE) #hang = 0.04)
+     labels = FALSE, hang = 0.04)
 dev.off()
 
 # identify the modules
-min.module.size <- 15
-module.labels <- cutreeDynamicTree(gene.tree, deepSplit = TRUE, 
-                                   minModuleSize =min.module.size)
+module.labels <- cutreeDynamicTree(gene.tree, deepSplit = FALSE, 
+                                   minModuleSize = 30)
 
 #view
 table(module.labels)
@@ -684,6 +702,10 @@ plotDendroAndColors(gene.tree, module.colours, "Dynamic Tree Cut", dendroLabels 
                     hang = 0.03, addGuide = TRUE, guideHang = 0.05,
                     main = "Gene dendrogram and module colours")
 dev.off()
+
+# get hub genes
+module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours, 
+                                             power = 16,type = "signed") #use softhresholding power
 
 # --------------------------------------------------------------------------------------------
 # merge modules with very similar expression profiles as their genes are highly co-expressed
@@ -740,7 +762,7 @@ dev.off()
 #-----------------------------------------------------------------------------------------
 # rename some variables based on the module eigengene analysis for later use
 # module colours
-module.colours <- merged.module.colours
+#module.colours <- merged.module.colours
 
 # construct numerical labels corresponding to the colours
 colorOrder <- c("grey", standardColors(50))
@@ -750,7 +772,10 @@ module.labels <- match(module.colours, colorOrder)-1
 #module.eigengenes <- merged.module.eigengenes
 
 # get hub genes
-# use the WGCNA function
+merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
+                                                    merged.module.colours,
+                                                    power = 16,
+                                                    type = "signed")#use softhresholding power
 
 
 ##############################################################################
