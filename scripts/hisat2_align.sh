@@ -2,7 +2,7 @@
 #
 #Script to align reads to the indexed genome using HISAT2
 #
-for fastq in ~/tbrucei_gcn/data/raw_data/*.fastq; do
+for fastq in ../data/raw_data/*.fastq; do
     fqname=$(echo $fastq | cut -f1 -d '.')
 
 		hisat2 \
@@ -13,3 +13,12 @@ for fastq in ~/tbrucei_gcn/data/raw_data/*.fastq; do
 		--summary-file ${fqname}.txt \
 		--new-summary
 done
+
+#move the output sam files to a new directory
+
+#create directory if not exists
+mkdir -P ../data/processed_data/bru-mor_sam
+
+#move the sam files
+mv ../data/raw_data/*.sam ../data/processed_data/bru-mor_sam/
+

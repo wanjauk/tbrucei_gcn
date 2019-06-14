@@ -2,7 +2,7 @@
 #
 #Script to mark duplicates in BAM files using picard
 #
-for bam_file in ~/tbrucei_gcn/data/processed_data/bru-mor_bam/*.sorted.bam; do
+for bam_file in ../data/processed_data/bru-mor_bam/*.sorted.bam; do
     bam_file_name=$(echo $bam_file | cut -f1 -d '.')
 
 		/opt/apps/picard-tools/1.119/bin/MarkDuplicates \

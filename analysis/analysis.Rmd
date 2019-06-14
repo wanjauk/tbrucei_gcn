@@ -24,7 +24,7 @@ This document contains the workflow used in the analysis of *T. brucei* gene co-
 
 ```{r results='hide', eval=FALSE}
 # set working directory
-setwd("~/tbrucei_gcn/analysis")
+setwd("./tbrucei_gcn/analysis")
 
 # ensure results are reproducible
 set.seed(1)
@@ -87,6 +87,9 @@ tissue <- factor(c("MG", "MG", "MG", "MG", "MG", "PV", "PV", "SG", "SG", "SG", "
 # append factor to sample.metadata to group samples
 sample.metadata["Tissue"] <- tissue
 
+# remove a sample with less than 10M reads from the analysis
+#sample.metadata <- sample.metadata[-15,] #keep commented to avoid accidentally running
+
 # create a text file with urls to fastq files in ENA database
 fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
 write.csv(fastq.urls, file="../data/fastq.urls.txt", eol = "\r\n", quote = FALSE, row.names = FALSE)
@@ -116,7 +119,7 @@ After downloading the RNASeq data, its quality is checked through the FASTQC too
 cat ../scripts/fastqc_reports.sh
 ```
 
-Following the high rate of unaligned and duplicate reads (after FASTQC analysis and alignment to *T. brucei* genome), further analysis is done to ascertain their cause. The reads are aligned to *Glossina morsitans* genome to determine whether reads from the vector were also present in the sample during sequencing. Duplicate reads are assessed whether they are artifacts from PCR (PCR duplicates).
+Following the high rate of unaligned and duplicate reads after FASTQC analysis, further analysis is done to ascertain their cause. The reads are aligned to *Glossina morsitans* genome to determine whether reads from the vector were also present in the sample during sequencing. Duplicate reads are assessed whether they are artifacts from PCR (PCR duplicates).
 
 ## Downloading *T. brucei* and *G. morsitans* genome and annotation files
 
@@ -130,6 +133,12 @@ The genome and annotation files are downloaded from the TriTrypDB and vectorbase
 #Downloading the GFF file
 #wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/gff/data/TriTrypDB-43_TbruceiTREU927.gff -P ../data/tbrucei_genome_annotations_GFF/
 
+# convert the tbrucei gene annotation from GFF format to GTF (required by some downstream tools)
+# uses gffread from cufflinks
+#mkdir -P ../data/tbrucei_genome_annotations_GTF
+
+#gffread ../data/tbrucei_genome_annotations_GFF/TriTrypDB-43_TbruceiTREU927.gff -T -o ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf
+
 # Downloading Glossina genome
 #wget https://www.vectorbase.org/download/glossina-morsitans-yalescaffoldsgmory1fagz -P ../data/glossina_genome_scaffolds/
 
@@ -138,13 +147,15 @@ The genome and annotation files are downloaded from the TriTrypDB and vectorbase
 
 ```
 
-Next, *T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads.
+Next, *T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads. This ensures no cross-mapping of reads take place.
 
 ```{bash}
 # make a directory to store the concatenated genomes
 # mkdir -P ../data/brucei-morsitans
 
-# move the genomes to the created directory and concatenate them
+# copy the genome files to the created directory and concatenate them
+#cp ../data/glossina_genome_scaffolds/glossina-* ../data/brucei-morsitans/
+#cp ../data/tbrucei_genome/*.fasta ../data/brucei-morsitans/
 # cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
 ```
 
@@ -186,6 +197,20 @@ cat ../scripts/mark_dupes.sh
 ```
 
 At this point, dupRadar tool is used to perform quality control in R.
+Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_exprement.py` module is used in this case.
+
+First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_exprement.py` to verify strandedness using a few samples.
+
+```{bash}
+# convert GTF genome annotation to BED format using a custom script from:
+#https://github.com/ExpressionAnalysis/ea-utils/tree/master/clipper
+
+#./gtf2bed.pl ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf > ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
+
+#infer_experiment.py -i ../data/processed_data/bru-mor_bam/SRR039381.bam -r ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
+```
+
+The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not stranded.
 
 ```{r eval=FALSE}
 # Parameters
@@ -193,14 +218,13 @@ bam_file <- "../data/processed_data/bru-mor_bam/SRR039378.dupMarked.bam"
 gtf_file <- "../data/brucei-morsitans/brucei-morsitans_annotations.gtf"
 stranded <- 0
 paired <- FALSE
-Threads <- 8
+Threads <- 12
 
 # Duplication rate ananlysis
 dm <- analyzeDuprates(bam_file, gtf_file, stranded, paired, Threads)
 
 #Plots
-png(filename = "../figures/duplicate_rate_SRR039378.png")
-par(mfrow=c(1,2))
+png(filename = "../figures/duplication_rate/SRR039378.png")
 duprateExpDensPlot(DupMat=dm)
 title("SRR039378")
 dev.off()
@@ -235,7 +259,7 @@ cd ../results
 
 ### Importing samples count data into R
 
-For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source("../scripts/htseq-combine_all.R")` on the R console and hit enter.
+For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source("../scripts/htseq-combine_all.R")` on the R console and hit enter. Here, ensure the sample to be excluded in the analysis (SRR039951) is not among the input files.
 
 ```{bash}
 cat ../scripts/htseq-combine_all.R
@@ -250,21 +274,31 @@ The quality of the samples is checked before further analysis to check for outli
 counts <- DGEList(data.all, group = sample.metadata$Tissue)
 
 # check the number of genes with no expression in all samples
-table(rowSums(counts$counts==0)==17)
+table(rowSums(counts$counts==0)==16)
 # FALSE  TRUE 
-# 10060  1772
-
+# 10051  1781
+##################################################################
+#used the alternative function below instead of this
+#
 # filter out Non-expressed genes and those with low expression values.
 # keep genes with at least 1 read per million in n samples, where n 
 # is minimum number of replicates which is 3 in this case
 keep <- rowSums(cpm(counts)>1) >= 3
 
-# Alternative filtering function that filters better (Law et al 2016)
-#keep.exprs <- filterByExpr(counts, group=sample.metadata$Sample_Name)
-#filtered.counts <- counts[keep.exprs,, keep.lib.sizes=FALSE]
-
 # retain genes above the cpm value
-filtered.counts <- counts[keep, , keep.lib.sizes=FALSE]
+#filtered.counts <- counts[keep, , keep.lib.sizes=FALSE]
+##################################################################
+
+# Filtering non-expressed and lowly-expressed genes.
+#
+# Alternative filtering function that filters better (Law et al 2016)
+# retain genes above a calculated cpm value
+keep.exprs <- filterByExpr(counts, group=sample.metadata$Sample_Name)
+filtered.counts <- counts[keep.exprs,, keep.lib.sizes=FALSE]
+
+# obtain logCPM unnormalized for plotting purposes.
+# Here, the norm.factors value is 1 for all samples
+logcpm.unnorm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normalized.lib.sizes = TRUE)
 
 # Normalize for composition bias using TMM
 filtered.counts <- calcNormFactors(filtered.counts, method = 'TMM')
@@ -274,7 +308,7 @@ logcpm.norm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normaliz
 
 ```
 
-Various plots are made for the samples before and after filtering the low-expressed genes and non-expressed genes.
+Various plots are made for the samples before and after normalization.
 
 \newpage
 
@@ -284,12 +318,14 @@ sample_category <- nlevels(sample.metadata$Sample_Name)
 colour.palette <- colorRampPalette(brewer.pal(sample_category, "Set2"))(sample_category)
 sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
 
-# Raw counts data (before filtering and normalization)
-# png(filename = "../figures/raw_sample_heatmap.png", res = 90, type = "cairo")
-# heatmap.2(cor(data.all), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+# Unnormalized sample heatmap
+png(filename = "../figures/unnorm_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 4, pointsize = 10)
+heatmap.2(cor(logcpm.unnorm.counts), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+dev.off()
 
-# Filtered counts data
-png(filename = "../figures/norm.filt_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
+# Normalized sample heatmap
+png(filename = "../figures/norm_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 4, pointsize = 10)
 heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', main='Sample correlations')
 
@@ -298,13 +334,13 @@ dev.off()
 
 
 ```{r fig.cap="sample correlation heatmap", echo=FALSE}
-include_graphics("../figures/raw_sample_heatmap.png")
+include_graphics("../figures/unnorm_sample_heatmap.png")
 ```
 
 \newpage
 ```{r fig.cap="Normalized sample correlation heatmap", echo=FALSE, out.width="75%"}
 
-include_graphics("../figures/norm.filt_sample_heatmap.png")
+include_graphics("../figures/norm_sample_heatmap.png")
 ```
 
 \newpage
@@ -313,14 +349,27 @@ include_graphics("../figures/norm.filt_sample_heatmap.png")
 # Checking further using sample density plot
 
 # raw data
-#log.counts <- log2(data.all + 1)
-#png("../figures/raw_sample_density.png", res =1200, type = "cairo", units = 'in',
-#    width = 6, height = 6, pointsize = 10)
-#x <- melt(as.matrix(log.counts))
+log.counts <- log2(counts$counts + 1)
+png("../figures/raw_sample_density.png", res =1200, type = "cairo", units = 'in',
+   width = 6, height = 6, pointsize = 10)
+x <- melt(as.matrix(log.counts))
+
+colnames(x) <- c('gene_id', 'sample', 'log')
+ggplot(x, aes(x=log, color=sample)) + geom_density()
+dev.off()
+
+# filtered and unnormalized sample data
+png("../figures/unnorm_sample_density.png", res =1200, type = "cairo", units = 'in',
+    width = 6, height = 4, pointsize = 10)
+x <- melt(as.matrix(logcpm.unnorm.counts))
+
+colnames(x) <- c('gene_id', 'sample', 'logcpm')
+ggplot(x, aes(x=logcpm, color=sample)) + geom_density()
+
+dev.off()
 
 # filtered and normalized sample data
-#pdf(file = "../figures/norm.filt_sample_density.pdf")
-png("../figures/norm.filt_sample_density.png", res =1200, type = "cairo", units = 'in',
+png("../figures/norm_sample_density.png", res =1200, type = "cairo", units = 'in',
     width = 6, height = 4, pointsize = 10)
 x <- melt(as.matrix(logcpm.norm.counts))
 
@@ -338,18 +387,38 @@ include_graphics("../figures/raw_sample_density.png")
 \newpage
 ```{r fig.cap="Normalized sample density plot", echo=FALSE}
 
-include_graphics("../figures/norm.filt_sample_density.png")
+include_graphics("../figures/norm_sample_density.png")
 ```
 
 \newpage
  **Principal component analysis**
 ```{r eval=FALSE, results='hide'}
 # PCA
-#pca.log.counts <- prcomp(t(log.counts)) # raw data (unnormalized and unfiltered)
-pca.log.counts <- prcomp(t(logcpm.norm.counts)) #normalized & filtered
 
-#png(filename = "../figures/raw_samples_PCA.png", res = 90, type = "cairo")
-png(filename = "../figures/norm.filt_sample_PCA.png", res =1200, type = "cairo", units = 'in',
+# raw samples PCA
+pca.log.counts <- prcomp(t(log.counts)) # raw data (unnormalized and unfiltered)
+png(filename = "../figures/raw_samples_PCA.png", res =1200, type = "cairo", units = 'in',
+    width = 6, height = 4, pointsize = 10)
+autoplot(pca.log.counts,
+         data = sample.metadata,
+         colour="Sample_Name",
+         size=3)
+dev.off()
+
+# unnormalized samples PCA
+pca.log.counts <- prcomp(t(logcpm.unnorm.counts))  #unnormalized & filtered
+png(filename = "../figures/unnorm_sample_PCA.png", res =1200, type = "cairo", units = 'in',
+    width = 6, height = 4, pointsize = 10)
+autoplot(pca.log.counts,
+         data = sample.metadata,
+         colour="Sample_Name",
+         size=3)
+dev.off()
+
+
+# normalized samples PCA
+pca.log.counts <- prcomp(t(logcpm.norm.counts))  #normalized & filtered
+png(filename = "../figures/norm_sample_PCA.png", res =1200, type = "cairo", units = 'in',
     width = 6, height = 4, pointsize = 10)
 autoplot(pca.log.counts,
          data = sample.metadata,
@@ -364,21 +433,40 @@ include_graphics("../figures/raw_samples_PCA.png")
 ```
 
 \newpage
+```{r fig.cap="Unnormalized sample PCA", echo=FALSE}
+
+include_graphics("../figures/unnorm_sample_PCA.png")
+```
+
+\newpage
 ```{r fig.cap="Normalized sample PCA", echo=FALSE}
 
-include_graphics("../figures/norm.filt_sample_PCA.png")
+include_graphics("../figures/norm_sample_PCA.png")
 ```
 \newpage
  **Boxplot**
 ```{r, eval=FALSE}
-#png(filename = "../figures/raw_sample_boxplot.png", res =90, type = "cairo")
-#boxplot(log.counts)
-
-#pdf(file = "../figures/norm.filt_sample_boxplot.pdf")
-png(filename = "../figures/norm.filt_sample_boxplot.png", res =1200, type = "cairo", units = 'in',
+# raw sample boxplot
+png(filename = "../figures/raw_sample_boxplot.png", res =1200, type = "cairo", units = 'in',
     width = 4, height = 4, pointsize = 6)
-#par(mar=c(6,3,1,1))
-#boxplot(logcpm.norm.counts, las=2)
+y <- melt(as.matrix(log.counts))
+
+colnames(y) <- c('gene_id', 'sample', 'log')
+ggplot(y, aes(x=sample, y=log)) + geom_boxplot() + theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+dev.off()
+
+# unnormalized sample boxplot
+png(filename = "../figures/unnorm_sample_boxplot.png", res =1200, type = "cairo", units = 'in',
+    width = 4, height = 4, pointsize = 6)
+y <- melt(as.matrix(logcpm.unnorm.counts))
+
+colnames(y) <- c('gene_id', 'sample', 'logcpm')
+ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() + theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+dev.off()
+
+# normalized sample boxplot
+png(filename = "../figures/norm_sample_boxplot.png", res =1200, type = "cairo", units = 'in',
+    width = 4, height = 4, pointsize = 6)
 y <- melt(as.matrix(logcpm.norm.counts))
 
 colnames(y) <- c('gene_id', 'sample', 'logcpm')
@@ -387,8 +475,8 @@ dev.off()
 ```
 
 
-```{r fig.cap="Raw Sample boxplot", echo=FALSE}
-include_graphics("../figures/raw_sample_boxplot.png")
+```{r fig.cap="Unnormalized Sample boxplot", echo=FALSE}
+include_graphics("../figures/unnorm_sample_boxplot.png")
 ```
 
 \newpage
@@ -444,7 +532,7 @@ for (conds in comparisons) {
 # Filter out genes which were not differentially expressed for any contrast
 de.genes <- filtered.counts[rownames(filtered.counts) %in% sig_genes,]
 dim(de.genes$counts)
-#4935
+#4838   16
 ################################################################
 
 # Obtain the counts of genes expressed for each contrast individually
@@ -463,14 +551,14 @@ PV_vs_MG_lrt <- glmLRT(fit, contrast = c(-1,1,0))
 # SG compared to PV
 topGenes_SG <- topTags(SG_vs_PV_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
 dim(topGenes_SG)
-#3777
+#3641    5
 
 # PV compared to MG
 topGenes_PV <- topTags(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
 dim(topGenes_PV)
-#2701
+#2832    5
 
-#Total number of genes: 6478
+#Total number of genes: 6473
 #######################################################################################
 # DE genes at 5% FDR (using decideTestsDGE function)
 #
@@ -480,9 +568,9 @@ SG_vs_PV_de.genes <- decideTestsDGE(SG_vs_PV_lrt, adjust.method = "BH", p.value 
 # get summary
 summary(SG_vs_PV_de.genes)
 #       -1*PV 1*SG
-#Down         1759
-#NotSig       5474
-#Up           2018
+#Down         1760
+#NotSig       4076
+#Up           1881
 
 # PV compared to MG
 PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05)
@@ -490,14 +578,14 @@ PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value 
 # summary
 summary(PV_vs_MG_de.genes)
 #       -1*MG 1*PV
-#Down         1447
-#NotSig       6550
-#Up           1254
+#Down         1493
+#NotSig       4885
+#Up           1339
 
 # DE genes in the PV that are common in both comparisons
 de.common <- which(PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
 length(de.common)
-#1543
+#1635
 
 # create a dataframe with data on PV and SG differential gene expression
 PV_data <- topGenes_PV$table
@@ -523,7 +611,6 @@ write.xlsx(SG_DownReg, file = "../results/Significant_differentially_expressed_g
            sheetName = "Down-regulated Salivary glands", append = TRUE)
 write.xlsx(SG_UpReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
            sheetName = "Up-regulated Salivary glands", append = TRUE)
-
 ```
 
 Plotting to visually inspect differential gene expression results.
@@ -542,11 +629,11 @@ tab <- data.frame(logFC = topGenes_SG$table$logFC,
                   negLogPval = -log10(topGenes_SG$table$PValue)) # SG compared to PV
 
 # generating the plot
-png("../figures/PV-MG_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
+png("../figures/SG-PV_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
     width = 4, height = 4, pointsize = 8)
 par(mar = c(5, 4, 4, 4))
 plot(tab, pch = 16, cex = 0.6, xlab = expression(log[2]~fold~change),
-ylab = expression(-log[10]~pvalue), main = "PV vs MG differentially expressed genes")
+ylab = expression(-log[10]~pvalue), main = "SG vs PV differentially expressed genes")
 
 ## Log2 fold change and p-value cutoffs
 lfc <- 2
@@ -586,12 +673,8 @@ include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 ########################################################################
 
 # obtain the required counts data (WGCNA input)
-gene.ids <- rownames(de.genes$counts)
-network.counts <- de.genes$counts
-#network.counts <- network.counts * 1.0 # convert to float; necessary for cor function. (Inbar et al)
-
 # WGCNA requires genes to be in columns
-network.counts <- t(network.counts)
+network.counts <- t(logcpm.norm.counts)
 
 # determine the soft-thresholding power to use
 powers <- c(c(1:10), seq(from = 12, to=20, by=2))
@@ -688,14 +771,14 @@ table(module.colours)
 
 # visualize the gene tree and TOM matrix together using TOM plot
 # raise dissTOM to a power to make moderately strong connection more visible in heatmap
-png(filename = "../figures/gene_tree&TOM.png", res =1200, type = "cairo", units = 'in',
+png(filename = "../figures/gene_tree_and_TOM.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 6, pointsize = 10)
 TOMplot(dissTOM^4, gene.tree, as.character(module.colours))
 dev.off()
 
 
 # plot gene dendrogram
-png(filename = "../figures/gene_tree&colours.png", res =1200, type = "cairo", units = 'in',
+png(filename = "../figures/gene_tree_and_colours.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 6, pointsize = 10)
 #sizeGrWindow(8,6) #open graphical window
 plotDendroAndColors(gene.tree, module.colours, "Dynamic Tree Cut", dendroLabels = FALSE,
