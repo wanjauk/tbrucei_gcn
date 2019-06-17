@@ -24,7 +24,7 @@ This document contains the workflow used in the analysis of *T. brucei* gene co-
 
 ```{r results='hide', eval=FALSE}
 # set working directory
-setwd("./tbrucei_gcn/analysis")
+setwd("./analysis")
 
 # ensure results are reproducible
 set.seed(1)
@@ -87,8 +87,17 @@ tissue <- factor(c("MG", "MG", "MG", "MG", "MG", "PV", "PV", "SG", "SG", "SG", "
 # append factor to sample.metadata to group samples
 sample.metadata["Tissue"] <- tissue
 
-# remove a sample with less than 10M reads from the analysis
-#sample.metadata <- sample.metadata[-15,] #keep commented to avoid accidentally running
+# remove a sample with less than 10M reads from the analysis (SRR039951)
+sample.metadata <- sample.metadata[-15,]
+
+# remove 2 samples that have technical duplicates (SRR039937 and SRR039938)
+sample.metadata <- sample.metadata[-9,]
+sample.metadata <- sample.metadata[-8,]
+
+# Add sample from Telleria et al 2014 study (SRR965341) to sample metadata.
+sample.metadata$Run <- as.character(sample.metadata$Run)
+
+sample.metadata <- rbind(sample.metadata, "18" = c("SA1", "SRR965341", "SA1", "SG"))
 
 # create a text file with urls to fastq files in ENA database
 fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
@@ -197,9 +206,9 @@ cat ../scripts/mark_dupes.sh
 ```
 
 At this point, dupRadar tool is used to perform quality control in R.
-Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_exprement.py` module is used in this case.
+Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_experiment.py` module is used in this case.
 
-First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_exprement.py` to verify strandedness using a few samples.
+First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_experiment.py` to verify strandedness using a few samples.
 
 ```{bash}
 # convert GTF genome annotation to BED format using a custom script from:
@@ -208,25 +217,31 @@ First we convert *T. brucei* genome annotation GTF file into `bed` format requir
 #./gtf2bed.pl ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf > ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
 
 #infer_experiment.py -i ../data/processed_data/bru-mor_bam/SRR039381.bam -r ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
+
+# output
+#This is SingleEnd Data
+#Fraction of reads failed to determine: 0.0008
+#Fraction of reads explained by "++,--": 0.3832
+#Fraction of reads explained by "+-,-+": 0.6161
 ```
 
 The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not stranded.
 
 ```{r eval=FALSE}
 # Parameters
-bam_file <- "../data/processed_data/bru-mor_bam/SRR039378.dupMarked.bam"
+bam_file <- "../data/processed_data/bru-mor_bam/SRR039951.dupMarked.bam"
 gtf_file <- "../data/brucei-morsitans/brucei-morsitans_annotations.gtf"
 stranded <- 0
 paired <- FALSE
-Threads <- 12
+threads <- 12
 
 # Duplication rate ananlysis
-dm <- analyzeDuprates(bam_file, gtf_file, stranded, paired, Threads)
+dm <- analyzeDuprates(bam_file, gtf_file, stranded, paired, threads)
 
 #Plots
-png(filename = "../figures/duplication_rate/SRR039378.png")
+png(filename = "../figures/duplication_rate/SRR039951.png")
 duprateExpDensPlot(DupMat=dm)
-title("SRR039378")
+title("SRR039951")
 dev.off()
 
 # Boxplot
@@ -711,7 +726,7 @@ text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 dev.off()
 
 # construct adjacency matrix
-softpower <- 16
+softpower <- 12
 adjacency.matrix <- adjacency(network.counts, power=softpower,
                                              type = "signed", corFnc = "cor")
 
@@ -769,6 +784,19 @@ module.colours <- labels2colors(module.labels)
 # view
 table(module.colours)
 
+# black          blue         brown          cyan     darkgreen 
+#          420           830           624           167            74 
+#     darkgrey    darkorange       darkred darkturquoise         green 
+#           70            67            93            74           426 
+#  greenyellow          grey        grey60     lightcyan    lightgreen 
+#          290            25           124           139           105 
+#  lightyellow       magenta  midnightblue        orange          pink 
+#          105           371           161            68           389 
+#       purple           red     royalblue        salmon       skyblue 
+#          314           421            98           191            32 
+#          tan     turquoise         white        yellow 
+#          212          1209            62           556
+
 # visualize the gene tree and TOM matrix together using TOM plot
 # raise dissTOM to a power to make moderately strong connection more visible in heatmap
 png(filename = "../figures/gene_tree_and_TOM.png", res =1200, type = "cairo", units = 'in',
@@ -788,7 +816,7 @@ dev.off()
 
 # get hub genes
 module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours, 
-                                             power = 16,type = "signed") #use softhresholding power
+                                             power = 12,type = "signed") #use softhresholding power
 
 # --------------------------------------------------------------------------------------------
 # merge modules with very similar expression profiles as their genes are highly co-expressed
@@ -866,8 +894,14 @@ merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
 ##############################################################################
 
 # select modules of interest
-interesting.modules <- c('black', 'cyan', 'grey','ivory',
-                         'midnightblue','paleturquoise','plum1','tan') # add more
+interesting.modules <- c('black', 'cyan', 'grey','brown',
+                         'midnightblue','blue','darkgreen','tan', 'darkgrey','darkorange',
+                         'darkred','darkturquoise','green','greenyellow','grey60','lightcyan',
+                         'lightgreen','lightyellow','magenta','orange','pink','purple','red',
+                         'royalblue','salmon','skyblue','turquoise','white','yellow')
+
+# obtain gene ids
+gene.ids <- rownames(logcpm.norm.counts)
 
 # select module genes
 inModules <- is.finite(match(module.colours, interesting.modules))
@@ -879,12 +913,8 @@ dimnames(modTOM) <- list(modGenes, modGenes)
 
 # Export the network into edge and node list files Cytoscape can read
 cyt <- exportNetworkToCytoscape(modTOM, 
-                                edgeFile = paste("../results/CytoscapeInput-edges-", 
-                                                 paste(interesting.modules, collapse="-"), ".txt",
-                                                 sep=""), 
-                                nodeFile = paste("../results/CytoscapeInput-nodes-", 
-                                                 paste(interesting.modules, collapse="-"), ".txt",
-                                                 sep=""), 
+                                edgeFile = "../results/CytoscapeInput-edges.txt", 
+                                nodeFile = "../results/CytoscapeInput-nodes.txt", 
                                 weighted = TRUE, 
                                 threshold = 0.02, 
                                 nodeNames = modGenes, 
