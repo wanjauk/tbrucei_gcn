@@ -289,7 +289,7 @@ The quality of the samples is checked before further analysis to check for outli
 counts <- DGEList(data.all, group = sample.metadata$Tissue)
 
 # check the number of genes with no expression in all samples
-table(rowSums(counts$counts==0)==16)
+table(rowSums(counts$counts==0)==15)
 # FALSE  TRUE 
 # 10051  1781
 ##################################################################
