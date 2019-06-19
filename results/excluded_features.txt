@@ -1,0 +1,6 @@
+tRNA
+rRNA
+snoRNA
+snRNA
+pseudogenic_transcript
+ncRNA

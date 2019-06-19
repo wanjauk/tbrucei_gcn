@@ -17,7 +17,7 @@ done
 #move the output sam files to a new directory
 
 #create directory if not exists
-mkdir -P ../data/processed_data/bru-mor_sam
+mkdir -p ../data/processed_data/bru-mor_sam
 
 #move the sam files
 mv ../data/raw_data/*.sam ../data/processed_data/bru-mor_sam/

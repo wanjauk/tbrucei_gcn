@@ -8,7 +8,7 @@
 basedir <- "../results"
 setwd(basedir)
 
-cntdir <- paste(basedir, "brucei_HTSeq_count_results", sep="/")
+cntdir <- paste(basedir, "brucei_HTSeq_count_results_mRNA", sep="/")
 pat <- ".counts.txt"
 hisat2.all <- list.files(path = cntdir,
                          pattern = pat,
@@ -34,7 +34,7 @@ for (i in 1:length(myfiles) ) {
 data <- DT[[myfiles[1]]]
 
 # inspect
-head(data)
+#head(data)
 
 # we now add each other table with the ID column as key
 for (i in 2:length(myfiles)) {
@@ -51,9 +51,9 @@ data <- data[,-1]
 data <- rbind(data, tot.counts=colSums(data))
 
 # inspect and look at the top row names!
-head(data)
+#head(data)
 
-tail(data)
+#tail(data)
 
 ####################################
 # take summary rows to a new table
@@ -63,7 +63,7 @@ tail(data)
 data.all.summary <- data[grep("^Tb|^tmp", rownames(data), perl=TRUE, invert=TRUE), ]
 
 # review
-data.all.summary
+#data.all.summary
 
 # transpose table
 t(data.all.summary)
@@ -77,10 +77,13 @@ write.csv(data.all.summary, file = "brucei_htseq_counts_all-summary.csv")
 data.all <- data[grep("^Tb|^tmp", rownames(data), perl=TRUE, invert=FALSE), ]
 
 # inspect final merged table
-head(data.all, 3)
+#head(data.all, 3)
 
 # write data to file
 write.table(data.all, file = "brucei_htseq_counts_all.txt", quote = FALSE, sep = "\t")
 
 # cleanup intermediate objects
 rm(y, z, i, DT)
+
+#return to analysis directory
+setwd("../analysis")

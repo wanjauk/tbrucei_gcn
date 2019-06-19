@@ -24,7 +24,7 @@ This document contains the workflow used in the analysis of *T. brucei* gene co-
 
 ```{r results='hide', eval=FALSE}
 # set working directory
-setwd("~/tbrucei_gcn/analysis")
+setwd("analysis/")
 
 # ensure results are reproducible
 set.seed(1)
@@ -47,6 +47,7 @@ library("xlsx")
 library("WGCNA")
 library("flashClust")
 library("igraph")
+library("tidyverse")
 
 # set number of threads to allow in WGCNA analysis
 allowWGCNAThreads(nThreads=20)
@@ -144,7 +145,7 @@ The genome and annotation files are downloaded from the TriTrypDB and vectorbase
 
 # convert the tbrucei gene annotation from GFF format to GTF (required by some downstream tools)
 # uses gffread from cufflinks
-#mkdir -P ../data/tbrucei_genome_annotations_GTF
+#mkdir -p ../data/tbrucei_genome_annotations_GTF
 
 #gffread ../data/tbrucei_genome_annotations_GFF/TriTrypDB-43_TbruceiTREU927.gff -T -o ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf
 
@@ -160,7 +161,7 @@ Next, *T. brucei* and *G. morsitans* genome files are concatenated into a single
 
 ```{bash}
 # make a directory to store the concatenated genomes
-# mkdir -P ../data/brucei-morsitans
+# mkdir -p ../data/brucei-morsitans
 
 # copy the genome files to the created directory and concatenate them
 #cp ../data/glossina_genome_scaffolds/glossina-* ../data/brucei-morsitans/
@@ -269,6 +270,12 @@ cd ../results
 #multiqc .
 ```
 
+## Filtering out non-protein coding genes
+Before loading the data into R, filter out the non-protein coding genes which include ncRNA, snRNA, snoRNA, pseudogenic transcripts, rRNA and tRNA.
+```{bash}
+cat ../scripts/exclude_features.sh
+```
+
 
 ## Analysis in R
 
@@ -285,13 +292,16 @@ cat ../scripts/htseq-combine_all.R
 The quality of the samples is checked before further analysis to check for outlier and batch effects.
 
 ```{r eval=FALSE}
+# Remove extra column from sample SRR965341 added while reading data into R
+data.all["Var.2"] <- NULL
+
 # Create a DGEList object
 counts <- DGEList(data.all, group = sample.metadata$Tissue)
 
 # check the number of genes with no expression in all samples
 table(rowSums(counts$counts==0)==15)
-# FALSE  TRUE 
-#10155  1677
+#FALSE  TRUE 
+# 9184   792
 ##################################################################
 #used the alternative function below instead of this
 #
@@ -547,7 +557,7 @@ for (conds in comparisons) {
 # Filter out genes which were not differentially expressed for any contrast
 de.genes <- filtered.counts[rownames(filtered.counts) %in% sig_genes,]
 dim(de.genes$counts)
-#4838   16
+#4188   15
 ################################################################
 
 # Obtain the counts of genes expressed for each contrast individually
@@ -566,14 +576,14 @@ PV_vs_MG_lrt <- glmLRT(fit, contrast = c(-1,1,0))
 # SG compared to PV
 topGenes_SG <- topTags(SG_vs_PV_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
 dim(topGenes_SG)
-#3641    5
+#2973    5
 
 # PV compared to MG
 topGenes_PV <- topTags(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
 dim(topGenes_PV)
-#2832    5
+#2543    5
 
-#Total number of genes: 6473
+#Total number of genes: 5516
 #######################################################################################
 # DE genes at 5% FDR (using decideTestsDGE function)
 #
@@ -583,9 +593,9 @@ SG_vs_PV_de.genes <- decideTestsDGE(SG_vs_PV_lrt, adjust.method = "BH", p.value 
 # get summary
 summary(SG_vs_PV_de.genes)
 #       -1*PV 1*SG
-#Down         1760
-#NotSig       4076
-#Up           1881
+#Down         1375
+#NotSig       4417
+#Up           1598
 
 # PV compared to MG
 PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05)
@@ -593,14 +603,14 @@ PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value 
 # summary
 summary(PV_vs_MG_de.genes)
 #       -1*MG 1*PV
-#Down         1493
-#NotSig       4885
-#Up           1339
+#Down         1362
+#NotSig       4847
+#Up           1181
 
 # DE genes in the PV that are common in both comparisons
 de.common <- which(PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
 length(de.common)
-#1635
+#1328
 
 # create a dataframe with data on PV and SG differential gene expression
 PV_data <- topGenes_PV$table
@@ -644,11 +654,11 @@ tab <- data.frame(logFC = topGenes_SG$table$logFC,
                   negLogPval = -log10(topGenes_SG$table$PValue)) # SG compared to PV
 
 # generating the plot
-png("../figures/SG-PV_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
+png("../figures/PV-MG_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
     width = 4, height = 4, pointsize = 8)
 par(mar = c(5, 4, 4, 4))
 plot(tab, pch = 16, cex = 0.6, xlab = expression(log[2]~fold~change),
-ylab = expression(-log[10]~pvalue), main = "SG vs PV differentially expressed genes")
+ylab = expression(-log[10]~pvalue), main = "PV vs MG differentially expressed genes")
 
 ## Log2 fold change and p-value cutoffs
 lfc <- 2
@@ -738,7 +748,8 @@ diag(adjacency.matrix) <- 0
 TOM <- TOMsimilarity(adjacency.matrix, TOMType = "signed")
 dissTOM <- 1 - TOM
 
-# remove adjacency matrix to free up memory
+# remove adjacency matrix and TOM to free up memory
+rm(TOM)
 rm(adjacency.matrix)
 gc()
 
@@ -784,26 +795,28 @@ module.colours <- labels2colors(module.labels)
 # view
 table(module.colours)
 
-#black          blue         brown          cyan     darkgreen 
-#          394           693           586           199           135 
-#     darkgrey    darkorange       darkred darkturquoise         green 
-#          116            97           136           132           424 
-#  greenyellow          grey        grey60     lightcyan    lightgreen 
-#          228            32           164           184           145 
-#  lightyellow       magenta  midnightblue        orange          pink 
-#          137           341           189           107           359 
-#       purple           red     royalblue   saddlebrown        salmon 
-#          251           411           136            75           210 
-#      skyblue     steelblue           tan     turquoise         white 
-#           79            65           216           775            82 
-#       yellow 
-#          523
+# a list of 35 modules
+#
+#         black           blue          brown           cyan      darkgreen 
+#           333            611            495            219            118 
+#      darkgrey    darkmagenta darkolivegreen     darkorange        darkred 
+#           109             33             44            103            130 
+# darkturquoise          green    greenyellow           grey         grey60 
+#           111            341            272             19            155 
+#     lightcyan     lightgreen    lightyellow        magenta   midnightblue 
+#           193            155            143            290            210 
+#        orange  paleturquoise           pink         purple            red 
+#           106             73            291            282            340 
+#     royalblue    saddlebrown         salmon        skyblue      steelblue 
+#           136             85            234             99             80 
+#           tan      turquoise         violet          white         yellow 
+#           265            693             68            101            453
 
 # visualize the gene tree and TOM matrix together using TOM plot
-# raise dissTOM to a power to make moderately strong connection more visible in heatmap
+# if necessary, raise dissTOM to a power to make moderately strong connection more visible in heatmap
 png(filename = "../figures/gene_tree_and_TOM.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 6, pointsize = 10)
-TOMplot(dissTOM^4, gene.tree, as.character(module.colours))
+TOMplot(dissTOM, gene.tree, as.character(module.colours))
 dev.off()
 
 
@@ -819,6 +832,32 @@ dev.off()
 # get hub genes
 module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours, 
                                              power = 12,type = "signed") #use softhresholding power
+
+# A list of module hub genes
+                black                  blue                 brown 
+  "Tb10.v4.0128:mRNA"   "Tb927.1.3130:mRNA"   "Tb927.3.1630:mRNA" 
+                 cyan             darkgreen              darkgrey 
+ "Tb927.11.1450:mRNA"  "Tb927.11.3260:mRNA"  "Tb927.9.14480:mRNA" 
+          darkmagenta        darkolivegreen            darkorange 
+  "Tb927.3.3730:mRNA"  "Tb927.11.1570:mRNA"   "Tb927.6.2960:mRNA" 
+              darkred         darkturquoise                 green 
+  "Tb927.3.4000:mRNA"    "Tb927.7.920:mRNA"   "Tb927.2.5810:mRNA" 
+          greenyellow                grey60             lightcyan 
+  "Tb927.6.3880:mRNA" "Tb927.10.14760:mRNA"   "Tb927.11.900:mRNA" 
+           lightgreen           lightyellow               magenta 
+  "Tb927.8.5550:mRNA" "Tb927.10.10770:mRNA" "Tb927.10.12780:mRNA" 
+         midnightblue                orange         paleturquoise 
+  "Tb927.9.6290:mRNA"  "Tb927.9.10100:mRNA"   "Tb927.9.5690:mRNA" 
+                 pink                purple                   red 
+  "Tb927.8.1650:mRNA"   "Tb927.9.5960:mRNA"   "Tb927.5.3130:mRNA" 
+            royalblue           saddlebrown                salmon 
+  "Tb927.6.3150:mRNA"   "Tb927.9.2600:mRNA"  "Tb927.11.5450:mRNA" 
+              skyblue             steelblue                   tan 
+  "Tb927.6.2790:mRNA"   "Tb927.7.2500:mRNA"   "Tb927.3.1380:mRNA" 
+            turquoise                violet                 white 
+  "Tb927.9.5240:mRNA"   "Tb927.3.3270:mRNA"   "Tb927.3.1370:mRNA" 
+               yellow 
+  "Tb927.7.7200:mRNA"
 
 # --------------------------------------------------------------------------------------------
 # merge modules with very similar expression profiles as their genes are highly co-expressed
@@ -853,6 +892,15 @@ merged.module.colours <- module.eigengenes.merge$colors
 # view
 table(merged.module.colours)
 
+# a list of 14 modules
+#
+#         black           cyan      darkgreen       darkgrey darkolivegreen 
+#           828            583            229            109            780 
+#         green    greenyellow           grey         grey60  paleturquoise 
+#           794            802             19            370             73 
+#          pink      royalblue      steelblue          white 
+#          1771            501             80            451
+
 # eigengenes of new merged modules
 merged.module.eigengenes <- module.eigengenes.merge$newMEs
 
@@ -874,6 +922,7 @@ dev.off()
 
 #-----------------------------------------------------------------------------------------
 # rename some variables based on the module eigengene analysis for later use
+#
 # module colours
 #module.colours <- merged.module.colours
 
@@ -887,9 +936,20 @@ module.labels <- match(module.colours, colorOrder)-1
 # get hub genes
 merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
                                                     merged.module.colours,
-                                                    power = 16,
+                                                    power = 12,
                                                     type = "signed")#use softhresholding power
 
+# a list of merged module hub genes
+                 black                   cyan              darkgreen 
+"Tb927.11.1690.2:mRNA"    "Tb927.4.1390:mRNA"  "Tb927.10.12710:mRNA" 
+              darkgrey         darkolivegreen                  green 
+  "Tb927.9.14480:mRNA"    "Tb927.4.4730:mRNA"    "Tb927.11.760:mRNA" 
+           greenyellow                 grey60          paleturquoise 
+ "Tb927.11.13610:mRNA"  "Tb927.10.14760:mRNA"    "Tb927.9.5690:mRNA" 
+                  pink              royalblue              steelblue 
+    "Tb927.5.630:mRNA"  "Tb927.10.12750:mRNA"    "Tb927.7.2500:mRNA" 
+                 white 
+    "Tb927.1.580:mRNA"
 
 ##############################################################################
 ## Network export to cytoscape
@@ -901,7 +961,8 @@ interesting.modules <- c('black', 'cyan', 'grey','brown',
                          'darkred','darkturquoise','green','greenyellow','grey60','lightcyan',
                          'lightgreen','lightyellow','magenta','orange','pink','purple','red',
                          'royalblue','salmon','skyblue','turquoise','white','yellow', 
-                         'saddlebrown', 'steelblue')
+                         'saddlebrown', 'steelblue','darkmagenta','darkolivegreen','paleturquoise',
+                         'violet') # these are all module colours, thus the whole network
 
 # obtain gene ids
 gene.ids <- rownames(logcpm.norm.counts)
@@ -937,7 +998,7 @@ entire.network <- export_network_to_graphml(dissTOM,
                                             filename = "../results/entire_network.graphml",
                                             threshold = 0,
                                             nodeAttr = gene.ids,
-                                            max_edge_ratio = 100)
+                                            max_edge_ratio = 3)
 # network modules
 # create a dataframe with node attributes
 node.attributes <- cbind(modGenes, module=module.colours)
