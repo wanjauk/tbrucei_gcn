@@ -24,7 +24,7 @@ This document contains the workflow used in the analysis of *T. brucei* gene co-
 
 ```{r results='hide', eval=FALSE}
 # set working directory
-setwd("./analysis")
+setwd("~/tbrucei_gcn/analysis")
 
 # ensure results are reproducible
 set.seed(1)
@@ -291,7 +291,7 @@ counts <- DGEList(data.all, group = sample.metadata$Tissue)
 # check the number of genes with no expression in all samples
 table(rowSums(counts$counts==0)==15)
 # FALSE  TRUE 
-# 10051  1781
+#10155  1677
 ##################################################################
 #used the alternative function below instead of this
 #
@@ -784,18 +784,20 @@ module.colours <- labels2colors(module.labels)
 # view
 table(module.colours)
 
-# black          blue         brown          cyan     darkgreen 
-#          420           830           624           167            74 
+#black          blue         brown          cyan     darkgreen 
+#          394           693           586           199           135 
 #     darkgrey    darkorange       darkred darkturquoise         green 
-#           70            67            93            74           426 
+#          116            97           136           132           424 
 #  greenyellow          grey        grey60     lightcyan    lightgreen 
-#          290            25           124           139           105 
+#          228            32           164           184           145 
 #  lightyellow       magenta  midnightblue        orange          pink 
-#          105           371           161            68           389 
-#       purple           red     royalblue        salmon       skyblue 
-#          314           421            98           191            32 
-#          tan     turquoise         white        yellow 
-#          212          1209            62           556
+#          137           341           189           107           359 
+#       purple           red     royalblue   saddlebrown        salmon 
+#          251           411           136            75           210 
+#      skyblue     steelblue           tan     turquoise         white 
+#           79            65           216           775            82 
+#       yellow 
+#          523
 
 # visualize the gene tree and TOM matrix together using TOM plot
 # raise dissTOM to a power to make moderately strong connection more visible in heatmap
@@ -898,7 +900,8 @@ interesting.modules <- c('black', 'cyan', 'grey','brown',
                          'midnightblue','blue','darkgreen','tan', 'darkgrey','darkorange',
                          'darkred','darkturquoise','green','greenyellow','grey60','lightcyan',
                          'lightgreen','lightyellow','magenta','orange','pink','purple','red',
-                         'royalblue','salmon','skyblue','turquoise','white','yellow')
+                         'royalblue','salmon','skyblue','turquoise','white','yellow', 
+                         'saddlebrown', 'steelblue')
 
 # obtain gene ids
 gene.ids <- rownames(logcpm.norm.counts)
@@ -916,7 +919,7 @@ cyt <- exportNetworkToCytoscape(modTOM,
                                 edgeFile = "../results/CytoscapeInput-edges.txt", 
                                 nodeFile = "../results/CytoscapeInput-nodes.txt", 
                                 weighted = TRUE, 
-                                threshold = 0.02, 
+                                threshold = 0, 
                                 nodeNames = modGenes, 
                                 nodeAttr = module.colours[inModules]);
 
@@ -932,7 +935,9 @@ source("../scripts/network_export_graphml.R")
 # the whole network
 entire.network <- export_network_to_graphml(dissTOM, 
                                             filename = "../results/entire_network.graphml",
-                                            threshold = 0, nodeAttr = gene.ids)
+                                            threshold = 0,
+                                            nodeAttr = gene.ids,
+                                            max_edge_ratio = 100)
 # network modules
 # create a dataframe with node attributes
 node.attributes <- cbind(modGenes, module=module.colours)
