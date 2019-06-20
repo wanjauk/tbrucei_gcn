@@ -149,6 +149,9 @@ The genome and annotation files are downloaded from the TriTrypDB and vectorbase
 
 #gffread ../data/tbrucei_genome_annotations_GFF/TriTrypDB-43_TbruceiTREU927.gff -T -o ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf
 
+# Download T. brucei annotated transcripts
+# wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/fasta/data/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta -P ../data/tbrucei_annotated_transcripts/
+
 # Downloading Glossina genome
 #wget https://www.vectorbase.org/download/glossina-morsitans-yalescaffoldsgmory1fagz -P ../data/glossina_genome_scaffolds/
 
@@ -226,7 +229,7 @@ First we convert *T. brucei* genome annotation GTF file into `bed` format requir
 #Fraction of reads explained by "+-,-+": 0.6161
 ```
 
-The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not stranded.
+The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not strand specific.
 
 ```{r eval=FALSE}
 # Parameters
@@ -1014,16 +1017,35 @@ modules.network <- export_network_to_graphml(modTOM,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 ```
+
+### FIRE (Finding Informative Regulatory Elements)
+Module genes and their module labels are required as input by FIRE (Finding Informative Regulatory Elements). Hence we write out text files with this input.
+
+```{r eval=FALSE}
+# write out cluster/module genes and their corresponding module labels for use by 
+# FIRE (Finding Informative Regulatory Elements)
+
+fire.clusters <- data.frame(modGenes, module.labels[inModules])
+
+# sort by module labels; FIRE input should start from 0 in module labels column.
+fire.clusters <- fire.clusters[order(fire.clusters$module.labels.inModules.), c(1,2)]
+
+write.table(fire.clusters, file = "../results/tbrucei_FIRE_expression_clusters.txt", quote = FALSE,
+            row.names = FALSE)
+
+# Also, write out module genes in a text file.
+write.table(data.frame(modGenes), file = "../results/tbrucei_module_genes.txt", row.names = FALSE, quote = FALSE, col.names = FALSE)
+```
+
+Prepare input sequences for FIRE by obtaining module genes sequences from **T. brucei**'s entire annotated transcripts. Use `seqtk` package.
+
+```{bash}
+# seqtk subseq ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta ../results/tbrucei_module_genes.txt > ../results/tbrucei_module_genes_sequences.fasta
+```
+
+
+
+
+
 
