@@ -1031,8 +1031,7 @@ fire.clusters <- data.frame(modGenes, module.labels[inModules])
 # sort by module labels; FIRE input should start from 0 in module labels column.
 fire.clusters <- fire.clusters[order(fire.clusters$module.labels.inModules.), c(1,2)]
 
-write.table(fire.clusters, file = "../results/tbrucei_FIRE_expression_clusters.txt", quote = FALSE,
-            row.names = FALSE)
+write.table(as.matrix(fire.clusters), file = "../results/tbrucei_FIRE_expression_clusters.txt", quote = FALSE, row.names = FALSE, sep = "\t")
 
 # Also, write out module genes in a text file.
 write.table(data.frame(modGenes), file = "../results/tbrucei_module_genes.txt", row.names = FALSE, quote = FALSE, col.names = FALSE)
