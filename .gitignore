@@ -2,4 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
-data/
+data/brucei*/
+data/raw_data/
+data/processed_data/
+data/glossina*/
+data/tbrucei*/
+telleria_SG_sample_processing/
+analysis/analysis.RData
+results/*.fasta

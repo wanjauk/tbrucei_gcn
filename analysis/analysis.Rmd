@@ -156,7 +156,7 @@ The genome and annotation files are downloaded from the TriTrypDB and vectorbase
 #wget https://www.vectorbase.org/download/glossina-morsitans-yalescaffoldsgmory1fagz -P ../data/glossina_genome_scaffolds/
 
 # Downloading GTF file
-#wget https://www.vectorbase.org/download/glossina-morsitans-yalebasefeaturesgmory19gtfgz -P ../data/glossina_annonations_GTF/
+#wget https://www.vectorbase.org/download/glossina-morsitans-yalebasefeaturesgmory19gtfgz -P ../data/glossina_genome_annonations_GTF/
 
 ```
 
