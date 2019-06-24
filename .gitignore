@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+*.Rproj
 data/brucei*/
 data/raw_data/
 data/processed_data/

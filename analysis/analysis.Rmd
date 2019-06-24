@@ -15,7 +15,7 @@ opts_chunk$set(echo = TRUE,
                fig.pos = 'h',
                fig.align = 'center',
                fig.show='hold')
-
+load(".RData")
 ```
 ## Introduction
 This document contains the workflow used in the analysis of *T. brucei* gene co-expression network analysis. It contains code used in each step of the analysis.
@@ -54,7 +54,7 @@ allowWGCNAThreads(nThreads=20)
 ```
 
 ## Data acquisition
-Data used in this study is obtained from European Nucleotide Archive under accession number SRP002243.
+Data used in this study is obtained from European Nucleotide Archive under accession number SRP002243 and SRR965341.
 
 First, metadata for the data is obtained from EBI as follows:
 
@@ -63,7 +63,8 @@ First, metadata for the data is obtained from EBI as follows:
 
 # ENA metadata
 # code adapted from: https://wiki.bits.vib.be/index.php/Download_read_information_and_FASTQ_data_from_the_SRA
-accession <- "SRP002243"
+
+accession <- "SRP002243" # similarly, obtain data for SRR965341
 ena.url <- paste("http://www.ebi.ac.uk/ena/data/warehouse/filereport?accession=",
                  accession,
                  "&result=read_run",
@@ -77,7 +78,11 @@ ENA.metadata <- read.table(url(ena.url), header=TRUE, sep="\t")
 # SRA metadata
 SRA.metadata <- read.table("../data/SraRunTable.metadata.txt", header = TRUE, sep = "\t")
 
-# obtain sample metadata to be used later in analysis.
+# create a text file with urls to fastq files in ENA database
+fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
+write.csv(fastq.urls, file="../data/fastq.urls.txt", eol = "\r\n", quote = FALSE, row.names = FALSE)
+
+# obtain sample metadata to be used later in analysis in R.
 matches <- c("Run","Library_Name","Sample_Name")
 sample.metadata <- SRA.metadata[grepl(paste(matches, collapse="|"), names(SRA.metadata))]
 
@@ -88,25 +93,30 @@ tissue <- factor(c("MG", "MG", "MG", "MG", "MG", "PV", "PV", "SG", "SG", "SG", "
 # append factor to sample.metadata to group samples
 sample.metadata["Tissue"] <- tissue
 
+# The sample below was analysed separately as the reads are paired-end while
+# the other samples are single-end.
+#
+# Add sample from Telleria et al 2014 study (SRR965341) to sample metadata.
+sample.metadata$Run <- as.character(sample.metadata$Run)
+
+sample.metadata <- rbind(sample.metadata, "18" = c("SA1", "SRR965341", "SA1", "SG"))
+
+#####################################################################################
+# Exclusion of the following samples was done after analysis showed they
+# were below required standards
+
 # remove a sample with less than 10M reads from the analysis (SRR039951)
 sample.metadata <- sample.metadata[-15,]
 
 # remove 2 samples that have technical duplicates (SRR039937 and SRR039938)
 sample.metadata <- sample.metadata[-9,]
 sample.metadata <- sample.metadata[-8,]
+#####################################################################################
 
-# Add sample from Telleria et al 2014 study (SRR965341) to sample metadata.
-sample.metadata$Run <- as.character(sample.metadata$Run)
-
-sample.metadata <- rbind(sample.metadata, "18" = c("SA1", "SRR965341", "SA1", "SG"))
-
-# create a text file with urls to fastq files in ENA database
-fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
-write.csv(fastq.urls, file="../data/fastq.urls.txt", eol = "\r\n", quote = FALSE, row.names = FALSE)
 ```
-```{r, eval=FALSE, echo=TRUE}
+```{r, eval=TRUE, echo=TRUE}
 # print out the sample metadata table
-kable(sample.metadata)
+sample.metadata
 ```
 
 
@@ -129,11 +139,14 @@ After downloading the RNASeq data, its quality is checked through the FASTQC too
 cat ../scripts/fastqc_reports.sh
 ```
 
-Following the high rate of unaligned and duplicate reads after FASTQC analysis, further analysis is done to ascertain their cause. The reads are aligned to *Glossina morsitans* genome to determine whether reads from the vector were also present in the sample during sequencing. Duplicate reads are assessed whether they are artifacts from PCR (PCR duplicates).
+Following the high rate of duplicate reads after FASTQC analysis, further analysis is done to ascertain their cause. Duplicate reads are assessed whether they arise from artifacts in PCR (PCR duplicates) or from biological causes (highly expressed genes). This is done later in the analysis after read mapping. Below is the sequence duplication level plot.
+```{r echo=FALSE}
+include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
+```
 
 ## Downloading *T. brucei* and *G. morsitans* genome and annotation files
 
-The genome and annotation files are downloaded from the TriTrypDB and vectorbase databases as follows:
+Genomes are obtained from their respective databases before alignment. The steps to obtain *Glossina morsitans* genome and its annotation file is indicated here as part of documenting the process. It is used in the analysis for reasons stated further in the reads mapping section. The genome and annotation files are downloaded from the TriTrypDB and vectorbase databases as follows:
 
 ```{bash}
 #Downloading T. brucei genome
@@ -149,7 +162,7 @@ The genome and annotation files are downloaded from the TriTrypDB and vectorbase
 
 #gffread ../data/tbrucei_genome_annotations_GFF/TriTrypDB-43_TbruceiTREU927.gff -T -o ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf
 
-# Download T. brucei annotated transcripts
+# Download T. brucei annotated transcripts (for use in UTR motif discovery)
 # wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/fasta/data/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta -P ../data/tbrucei_annotated_transcripts/
 
 # Downloading Glossina genome
@@ -160,22 +173,9 @@ The genome and annotation files are downloaded from the TriTrypDB and vectorbase
 
 ```
 
-Next, *T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads. This ensures no cross-mapping of reads take place.
+## Alignment of reads on the genome (Read Mapping)
 
-```{bash}
-# make a directory to store the concatenated genomes
-# mkdir -p ../data/brucei-morsitans
-
-# copy the genome files to the created directory and concatenate them
-#cp ../data/glossina_genome_scaffolds/glossina-* ../data/brucei-morsitans/
-#cp ../data/tbrucei_genome/*.fasta ../data/brucei-morsitans/
-# cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
-```
-
-
-## Alignment of reads on the genome
-
-Here, HISAT2 is used to align reads on the *T. brucei* and *G. morsitans* genomes. The first step is indexing the genome using HISAT2 followed by alignment of the reads. The output is SAM files.
+The first step is indexing the genome using HISAT2 followed by alignment of the reads. The output is SAM files.
 
 ### Indexing the genome
 
@@ -187,6 +187,23 @@ cat ../scripts/hisat2_index.sh
 
 ```{bash}
 cat ../scripts/hisat2_align.sh
+```
+Following the high rate of unaligned reads, further analysis is done to ascertain their cause. The reads are aligned to Glossina morsitans genome to determine whether reads from the vector were also present in the sample during sequencing (Dual RNA-Seq). *T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads. This also ensures no cross-mapping of reads take place. 
+
+```{bash}
+# make a directory to store the concatenated genomes
+# mkdir -p ../data/brucei-morsitans
+
+# copy the genome files to the created directory and concatenate them
+#cp ../data/glossina_genome_scaffolds/glossina-* ../data/brucei-morsitans/
+#cp ../data/tbrucei_genome/*.fasta ../data/brucei-morsitans/
+# cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
+```
+
+HISAT2 is used to re-align reads on the *T. brucei* and *G. morsitans* genomes, begining with indexing the genomes.
+Below is the alignment results from HISAT2 alignment tool.
+```{r echo=FALSE}
+include_graphics("../figures/hisat2_se_plot.png")
 ```
 
 ## Assessment of the duplication rate
@@ -252,13 +269,27 @@ dev.off()
 duprateExpBoxplot(DupMat=dm)
 ```
 
+Below are representative plots of samples with PCR duplicates and without PCR duplicates. Samples with PCR duplicates are removed from the analysis before counts data are read into R.
+
+```{r fig.cap="Sample without PCR duplicates", echo=FALSE}
+include_graphics("../figures/duplication_rate/SRR039378.png")
+```
+
+```{r fig.cap="Sample with PCR duplicates", echo=FALSE}
+include_graphics("../figures/duplication_rate/SRR039937.png")
+```
 
 ## Reads quantification
 
-HTSeq tool is used to count reads that aligned to the *T. brucei* genome. *T. brucei* annonation file is used and therefore HTSeq excludes counting *G. morsitans* reads that aligned to *Glossina* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
+HTSeq tool is used to count reads that aligned to the *T. brucei* genome. *T. brucei* annotation file is used and therefore HTSeq excludes counting *G. morsitans* reads that aligned to *Glossina* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
 
 ```{bash}
 cat ../scripts/htseq_counts.sh
+```
+
+Below is a graphical visualization of reads assignment by HTSeq.
+```{r fig.cap="HTSeq reads assignment", echo=FALSE}
+include_graphics("../figures/htseq_assignment_plot_brucei_only.png")
 ```
 
 ## Generating MultiQC report
@@ -267,10 +298,14 @@ MultiQC aggregates results from FASTQC, HISAT2 and HTSeq analysis into an HTML f
 
 ```{bash}
 #change directory to results
-cd ../results
+#cd ../results
 
 #Run multiqc
 #multiqc .
+
+# create a directory for the multiQC report and move the output there.
+#mkdir -p brucei_multiqc_report
+#mv multiqc* brucei_multiqc_report/
 ```
 
 ## Filtering out non-protein coding genes
@@ -284,7 +319,7 @@ cat ../scripts/exclude_features.sh
 
 ### Importing samples count data into R
 
-For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source("../scripts/htseq-combine_all.R")` on the R console and hit enter. Here, ensure the sample to be excluded in the analysis (SRR039951) is not among the input files.
+For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source("../scripts/htseq-combine_all.R")` on the R console and hit enter. Here, ensure the samples to be excluded in the analysis (SRR039951, SRR039937 and SRR039938) are not among the input files.
 
 ```{bash}
 cat ../scripts/htseq-combine_all.R
@@ -361,12 +396,12 @@ dev.off()
 ```
 
 
-```{r fig.cap="sample correlation heatmap", echo=FALSE}
+```{r fig.cap="Filtered-Unnormalized sample correlation heatmap", echo=FALSE}
 include_graphics("../figures/unnorm_sample_heatmap.png")
 ```
 
 \newpage
-```{r fig.cap="Normalized sample correlation heatmap", echo=FALSE, out.width="75%"}
+```{r fig.cap="Normalized sample correlation heatmap", echo=FALSE}
 
 include_graphics("../figures/norm_sample_heatmap.png")
 ```
@@ -408,7 +443,7 @@ dev.off()
 ```
 
 
-```{r fig.cap="Raw sample density plot", echo=FALSE}
+```{r fig.cap="Raw sample density plot", echo=FALSE, out.width='90%'}
 include_graphics("../figures/raw_sample_density.png")
 ```
 
@@ -456,12 +491,12 @@ dev.off()
 ```
 
 
-```{r fig.cap="Raw Sample heatmap", echo=FALSE}
+```{r fig.cap="Raw Sample PCA", echo=FALSE}
 include_graphics("../figures/raw_samples_PCA.png")
 ```
 
 \newpage
-```{r fig.cap="Unnormalized sample PCA", echo=FALSE}
+```{r fig.cap="Filtered-Unnormalized sample PCA", echo=FALSE}
 
 include_graphics("../figures/unnorm_sample_PCA.png")
 ```
@@ -503,14 +538,14 @@ dev.off()
 ```
 
 
-```{r fig.cap="Unnormalized Sample boxplot", echo=FALSE}
+```{r fig.cap="Filtered-Unnormalized Sample boxplot", echo=FALSE, out.width='75%'}
 include_graphics("../figures/unnorm_sample_boxplot.png")
 ```
 
 \newpage
-```{r fig.cap="Normalized sample boxplot", echo=FALSE}
+```{r fig.cap="Normalized sample boxplot", echo=FALSE, out.width='75%'}
 
-include_graphics("../figures/norm.filt_sample_boxplot.png")
+include_graphics("../figures/norm_sample_boxplot.png")
 ``` 
 
 \newpage 
@@ -683,12 +718,12 @@ dev.off()
 # create a venn diagram to show distribution of the number DEGs between stages
 ```
 
-```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE}
+```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE, out.width='75%'}
 # Genes differentially expressed in proventriculus compared to midgut (above p<0.05)
 include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
 ```
 
-```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus", echo=FALSE}
+```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus", echo=FALSE, out.width='75%'}
 # Genes differentially expressed in salivary gland compared to proventriculus (above p<0.05)
 include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 ```
@@ -696,9 +731,6 @@ include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 
 ### Weighted gene co-expression analysis
 ```{r, eval=FALSE}
-########################################################################
-## Constructing the network
-########################################################################
 
 # obtain the required counts data (WGCNA input)
 # WGCNA requires genes to be in columns
@@ -737,6 +769,23 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
      main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 dev.off()
+```
+Plots to determine the soft thresholding power to use.
+
+```{r echo=FALSE, out.width='80%'}
+
+include_graphics("../figures/soft-thresholding_power.png")
+```
+
+```{r echo=FALSE, out.width='80%'}
+
+include_graphics("../figures/mean_connectivity.png")
+```
+
+```{r, eval=FALSE}
+########################################################################
+## Constructing the network
+########################################################################
 
 # construct adjacency matrix
 softpower <- 12
@@ -769,7 +818,14 @@ heatmap.2(t(dissTOM[heatmap_indices, heatmap_indices]),
             main='Adjacency matrix',
             density.info='none', revC=TRUE)
 dev.off()
+```
 
+```{r fig.cap="Adjacency matrix heatmap (500 genes)", echo=FALSE, out.width='80%'}
+
+include_graphics("../figures/adjacency_matrix_heatmap.png")
+```
+
+```{r, eval=FALSE}
 ################################################################
 ## Detecting co-expression modules in R
 ################################################################
@@ -862,6 +918,15 @@ module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours,
                yellow 
   "Tb927.7.7200:mRNA"
 
+```
+
+```{r fig.cap="Gene tree and module colours", echo=FALSE, out.width='80%'}
+
+include_graphics("../figures/gene_tree_and_colours.png")
+```
+
+The section below is included for further checks so it may not be necessary to carry out this analysis.
+```{r, eval=FALSE}
 # --------------------------------------------------------------------------------------------
 # merge modules with very similar expression profiles as their genes are highly co-expressed
 # get the module eigengenes
@@ -954,6 +1019,10 @@ merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
                  white 
     "Tb927.1.580:mRNA"
 
+```
+
+
+```{r, eval=FALSE}
 ##############################################################################
 ## Network export to cytoscape
 ##############################################################################
@@ -1037,7 +1106,7 @@ write.table(as.matrix(fire.clusters), file = "../results/tbrucei_FIRE_expression
 write.table(data.frame(modGenes), file = "../results/tbrucei_module_genes.txt", row.names = FALSE, quote = FALSE, col.names = FALSE)
 ```
 
-Prepare input sequences for FIRE by obtaining module genes sequences from **T. brucei**'s entire annotated transcripts. Use `seqtk` package.
+Prepare input sequences for FIRE by obtaining module genes sequences from *T. brucei*'s entire annotated transcripts. Use `seqtk` package.
 
 ```{bash}
 # seqtk subseq ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta ../results/tbrucei_module_genes.txt > ../results/tbrucei_module_genes_sequences.fasta

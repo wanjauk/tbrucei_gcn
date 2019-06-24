@@ -5,8 +5,7 @@
 mkdir -p ../results/brucei_HTSeq_count_results_mRNA
 
 for file in ../results/brucei_HTSeq_count_results/*.counts.txt; do
-#echo    counts_file=$(echo "${file##*/}")
-echo 	counts_file=$(basename "$file" .counts.txt)
+  counts_file=$(basename "$file" .counts.txt)
 		grep -v -f ../results/excluded_features.txt ${file} > \
 			../results/brucei_HTSeq_count_results_mRNA/"${counts_file}".counts.txt
 done
