@@ -1,21 +1,21 @@
 ---
 title: "*T. brucei* co-expression network analysis"
 author: "Kennedy Mwangi"
-date: "April 15, 2019"
+date: "June 27, 2019"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 editor_options: 
   chunk_output_type: inline
 ---
 
-```{r setup, include=FALSE}
+```{r include=FALSE}
 library("knitr")
-opts_chunk$set(echo = TRUE,
-               fig.pos = 'h',
-               fig.align = 'center',
-               fig.show='hold')
-load(".RData")
+opts_chunk$set(echo = TRUE, 
+                      fig.pos = 'h', 
+                      fig.align = 'center', 
+                      fig.show='hold')
+load("sample.metadata.RData")
 ```
 ## Introduction
 This document contains the workflow used in the analysis of *T. brucei* gene co-expression network analysis. It contains code used in each step of the analysis.
@@ -88,7 +88,8 @@ sample.metadata <- SRA.metadata[grepl(paste(matches, collapse="|"), names(SRA.me
 
 # create grouping factor that will place each sample in the one of three tissues i.e.
 # midgut (MG), proventriculus(PV) and salivary glands (SG)
-tissue <- factor(c("MG", "MG", "MG", "MG", "MG", "PV", "PV", "SG", "SG", "SG", "SG", "MG", "MG", "PV", "SG", "SG", "PV"))
+tissue <- factor(c("MG", "MG", "MG", "MG", "MG", "PV", "PV", "SG", "SG", "SG", "SG", 
+                   "MG", "MG", "PV", "SG", "SG", "PV"))
 
 # append factor to sample.metadata to group samples
 sample.metadata["Tissue"] <- tissue
@@ -148,28 +149,34 @@ include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
 
 Genomes are obtained from their respective databases before alignment. The steps to obtain *Glossina morsitans* genome and its annotation file is indicated here as part of documenting the process. It is used in the analysis for reasons stated further in the reads mapping section. The genome and annotation files are downloaded from the TriTrypDB and vectorbase databases as follows:
 
-```{bash}
+```{bash, eval=FALSE, engine="sh"}
 #Downloading T. brucei genome
 
-#wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/fasta/data/TriTrypDB-43_TbruceiTREU927_Genome.fasta -P ../data/tbrucei_genome/
+wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/fasta/data/TriTrypDB-43_TbruceiTREU927_Genome.fasta \
+-P ../data/tbrucei_genome/
 
 #Downloading the GFF file
-#wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/gff/data/TriTrypDB-43_TbruceiTREU927.gff -P ../data/tbrucei_genome_annotations_GFF/
+wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/gff/data/TriTrypDB-43_TbruceiTREU927.gff \
+-P ../data/tbrucei_genome_annotations_GFF/
 
 # convert the tbrucei gene annotation from GFF format to GTF (required by some downstream tools)
 # uses gffread from cufflinks
-#mkdir -p ../data/tbrucei_genome_annotations_GTF
+mkdir -p ../data/tbrucei_genome_annotations_GTF
 
-#gffread ../data/tbrucei_genome_annotations_GFF/TriTrypDB-43_TbruceiTREU927.gff -T -o ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf
+gffread ../data/tbrucei_genome_annotations_GFF/TriTrypDB-43_TbruceiTREU927.gff \
+-T -o ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf
 
-# Download T. brucei annotated transcripts (for use in UTR motif discovery)
-# wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/fasta/data/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta -P ../data/tbrucei_annotated_transcripts/
+# Download T. brucei annotated transcripts (for use in UTR motif discovery) 
+wget https://tritrypdb.org/common/downloads/release-43/TbruceiTREU927/fasta/data/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta \
+-P ../data/tbrucei_annotated_transcripts/
 
 # Downloading Glossina genome
-#wget https://www.vectorbase.org/download/glossina-morsitans-yalescaffoldsgmory1fagz -P ../data/glossina_genome_scaffolds/
+wget https://www.vectorbase.org/download/glossina-morsitans-yalescaffoldsgmory1fagz \
+-P ../data/glossina_genome_scaffolds/
 
 # Downloading GTF file
-#wget https://www.vectorbase.org/download/glossina-morsitans-yalebasefeaturesgmory19gtfgz -P ../data/glossina_genome_annonations_GTF/
+wget https://www.vectorbase.org/download/glossina-morsitans-yalebasefeaturesgmory19gtfgz \
+-P ../data/glossina_genome_annonations_GTF/
 
 ```
 
@@ -190,14 +197,14 @@ cat ../scripts/hisat2_align.sh
 ```
 Following the high rate of unaligned reads, further analysis is done to ascertain their cause. The reads are aligned to Glossina morsitans genome to determine whether reads from the vector were also present in the sample during sequencing (Dual RNA-Seq). *T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads. This also ensures no cross-mapping of reads take place. 
 
-```{bash}
+```{bash, eval=FALSE, engine="sh"}
 # make a directory to store the concatenated genomes
-# mkdir -p ../data/brucei-morsitans
+ mkdir -p ../data/brucei-morsitans
 
 # copy the genome files to the created directory and concatenate them
-#cp ../data/glossina_genome_scaffolds/glossina-* ../data/brucei-morsitans/
-#cp ../data/tbrucei_genome/*.fasta ../data/brucei-morsitans/
-# cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
+cp ../data/glossina_genome_scaffolds/glossina-* ../data/brucei-morsitans/
+cp ../data/tbrucei_genome/*.fasta ../data/brucei-morsitans/
+cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
 ```
 
 HISAT2 is used to re-align reads on the *T. brucei* and *G. morsitans* genomes, begining with indexing the genomes.
@@ -231,13 +238,15 @@ Before this quality control can be performed, we need to verify whether the read
 
 First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_experiment.py` to verify strandedness using a few samples.
 
-```{bash}
+```{bash, eval=FALSE, engine="sh"}
 # convert GTF genome annotation to BED format using a custom script from:
 #https://github.com/ExpressionAnalysis/ea-utils/tree/master/clipper
 
-#./gtf2bed.pl ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf > ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
+../scripts/gtf2bed.pl ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf > \
+../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
 
-#infer_experiment.py -i ../data/processed_data/bru-mor_bam/SRR039381.bam -r ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
+infer_experiment.py -i ../data/processed_data/bru-mor_bam/SRR039381.bam \
+-r ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
 
 # output
 #This is SingleEnd Data
@@ -271,13 +280,16 @@ duprateExpBoxplot(DupMat=dm)
 
 Below are representative plots of samples with PCR duplicates and without PCR duplicates. Samples with PCR duplicates are removed from the analysis before counts data are read into R.
 
-```{r fig.cap="Sample without PCR duplicates", echo=FALSE}
+```{r fig.cap="Sample without PCR duplicates", echo=FALSE, out.width='80%'}
 include_graphics("../figures/duplication_rate/SRR039378.png")
 ```
 
-```{r fig.cap="Sample with PCR duplicates", echo=FALSE}
+\newpage
+```{r fig.cap="Sample with PCR duplicates", echo=FALSE, out.width='80%'}
 include_graphics("../figures/duplication_rate/SRR039937.png")
 ```
+
+\newpage
 
 ## Reads quantification
 
@@ -288,6 +300,7 @@ cat ../scripts/htseq_counts.sh
 ```
 
 Below is a graphical visualization of reads assignment by HTSeq.
+\newpage
 ```{r fig.cap="HTSeq reads assignment", echo=FALSE}
 include_graphics("../figures/htseq_assignment_plot_brucei_only.png")
 ```
@@ -296,16 +309,16 @@ include_graphics("../figures/htseq_assignment_plot_brucei_only.png")
 
 MultiQC aggregates results from FASTQC, HISAT2 and HTSeq analysis into an HTML formatted single report for better visualization.
 
-```{bash}
+```{bash, eval=FALSE, engine="sh"}
 #change directory to results
-#cd ../results
+cd ../results
 
 #Run multiqc
-#multiqc .
+multiqc .
 
 # create a directory for the multiQC report and move the output there.
-#mkdir -p brucei_multiqc_report
-#mv multiqc* brucei_multiqc_report/
+mkdir -p brucei_multiqc_report
+mv multiqc* brucei_multiqc_report/
 ```
 
 ## Filtering out non-protein coding genes
@@ -384,13 +397,15 @@ sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
 # Unnormalized sample heatmap
 png(filename = "../figures/unnorm_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 4, pointsize = 10)
-heatmap.2(cor(logcpm.unnorm.counts), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+heatmap.2(cor(logcpm.unnorm.counts), RowSideColors=sample.colours, trace='none', 
+          main='Sample correlations')
 dev.off()
 
 # Normalized sample heatmap
 png(filename = "../figures/norm_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 4, pointsize = 10)
-heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', main='Sample correlations')
+heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', 
+          main='Sample correlations')
 
 dev.off()
 ```
@@ -442,7 +457,7 @@ ggplot(x, aes(x=logcpm, color=sample)) + geom_density()
 dev.off()
 ```
 
-
+\newpage
 ```{r fig.cap="Raw sample density plot", echo=FALSE, out.width='90%'}
 include_graphics("../figures/raw_sample_density.png")
 ```
@@ -452,8 +467,8 @@ include_graphics("../figures/raw_sample_density.png")
 
 include_graphics("../figures/norm_sample_density.png")
 ```
-
 \newpage
+
  **Principal component analysis**
 ```{r eval=FALSE, results='hide'}
 # PCA
@@ -490,7 +505,7 @@ autoplot(pca.log.counts,
 dev.off()
 ```
 
-
+\newpage
 ```{r fig.cap="Raw Sample PCA", echo=FALSE}
 include_graphics("../figures/raw_samples_PCA.png")
 ```
@@ -506,6 +521,7 @@ include_graphics("../figures/unnorm_sample_PCA.png")
 
 include_graphics("../figures/norm_sample_PCA.png")
 ```
+
 \newpage
  **Boxplot**
 ```{r, eval=FALSE}
@@ -515,7 +531,8 @@ png(filename = "../figures/raw_sample_boxplot.png", res =1200, type = "cairo", u
 y <- melt(as.matrix(log.counts))
 
 colnames(y) <- c('gene_id', 'sample', 'log')
-ggplot(y, aes(x=sample, y=log)) + geom_boxplot() + theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+ggplot(y, aes(x=sample, y=log)) + geom_boxplot() + 
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 dev.off()
 
 # unnormalized sample boxplot
@@ -524,7 +541,8 @@ png(filename = "../figures/unnorm_sample_boxplot.png", res =1200, type = "cairo"
 y <- melt(as.matrix(logcpm.unnorm.counts))
 
 colnames(y) <- c('gene_id', 'sample', 'logcpm')
-ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() + theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() + 
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 dev.off()
 
 # normalized sample boxplot
@@ -533,11 +551,12 @@ png(filename = "../figures/norm_sample_boxplot.png", res =1200, type = "cairo", 
 y <- melt(as.matrix(logcpm.norm.counts))
 
 colnames(y) <- c('gene_id', 'sample', 'logcpm')
-ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() + theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() + 
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 dev.off()
 ```
 
-
+\newpage
 ```{r fig.cap="Filtered-Unnormalized Sample boxplot", echo=FALSE, out.width='75%'}
 include_graphics("../figures/unnorm_sample_boxplot.png")
 ```
@@ -722,12 +741,11 @@ dev.off()
 # Genes differentially expressed in proventriculus compared to midgut (above p<0.05)
 include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
 ```
-
+\newpage
 ```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus", echo=FALSE, out.width='75%'}
 # Genes differentially expressed in salivary gland compared to proventriculus (above p<0.05)
 include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 ```
-
 
 ### Weighted gene co-expression analysis
 ```{r, eval=FALSE}
@@ -855,21 +873,21 @@ module.colours <- labels2colors(module.labels)
 table(module.colours)
 
 # a list of 35 modules
-#
-#         black           blue          brown           cyan      darkgreen 
-#           333            611            495            219            118 
-#      darkgrey    darkmagenta darkolivegreen     darkorange        darkred 
-#           109             33             44            103            130 
-# darkturquoise          green    greenyellow           grey         grey60 
-#           111            341            272             19            155 
-#     lightcyan     lightgreen    lightyellow        magenta   midnightblue 
-#           193            155            143            290            210 
-#        orange  paleturquoise           pink         purple            red 
-#           106             73            291            282            340 
-#     royalblue    saddlebrown         salmon        skyblue      steelblue 
-#           136             85            234             99             80 
-#           tan      turquoise         violet          white         yellow 
-#           265            693             68            101            453
+
+         black           blue          brown           cyan      darkgreen 
+           333            611            495            219            118 
+      darkgrey    darkmagenta darkolivegreen     darkorange        darkred 
+           109             33             44            103            130 
+ darkturquoise          green    greenyellow           grey         grey60 
+           111            341            272             19            155 
+     lightcyan     lightgreen    lightyellow        magenta   midnightblue 
+           193            155            143            290            210 
+        orange  paleturquoise           pink         purple            red 
+           106             73            291            282            340 
+     royalblue    saddlebrown         salmon        skyblue      steelblue 
+           136             85            234             99             80 
+           tan      turquoise         violet          white         yellow 
+           265            693             68            101            453
 
 # visualize the gene tree and TOM matrix together using TOM plot
 # if necessary, raise dissTOM to a power to make moderately strong connection more visible in heatmap
@@ -920,6 +938,7 @@ module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours,
 
 ```
 
+\newpage
 ```{r fig.cap="Gene tree and module colours", echo=FALSE, out.width='80%'}
 
 include_graphics("../figures/gene_tree_and_colours.png")
@@ -961,13 +980,13 @@ merged.module.colours <- module.eigengenes.merge$colors
 table(merged.module.colours)
 
 # a list of 14 modules
-#
-#         black           cyan      darkgreen       darkgrey darkolivegreen 
-#           828            583            229            109            780 
-#         green    greenyellow           grey         grey60  paleturquoise 
-#           794            802             19            370             73 
-#          pink      royalblue      steelblue          white 
-#          1771            501             80            451
+
+         black           cyan      darkgreen       darkgrey darkolivegreen 
+           828            583            229            109            780 
+         green    greenyellow           grey         grey60  paleturquoise 
+           794            802             19            370             73 
+          pink      royalblue      steelblue          white 
+          1771            501             80            451
 
 # eigengenes of new merged modules
 merged.module.eigengenes <- module.eigengenes.merge$newMEs
@@ -1083,11 +1102,13 @@ modules.network <- export_network_to_graphml(modTOM,
                                              threshold = 0.02,
                                              nodeAttrDataFrame = node.attributes)
 
-
-
-
 ```
+  
+\newpage
+```{r fig.cap="Subnetwork of 1399 genes", echo=FALSE}
 
+include_graphics("../figures/G--clustered.png")
+```
 ### FIRE (Finding Informative Regulatory Elements)
 Module genes and their module labels are required as input by FIRE (Finding Informative Regulatory Elements). Hence we write out text files with this input.
 
@@ -1100,37 +1121,48 @@ fire.clusters <- data.frame(modGenes, module.labels[inModules])
 # sort by module labels; FIRE input should start from 0 in module labels column.
 fire.clusters <- fire.clusters[order(fire.clusters$module.labels.inModules.), c(1,2)]
 
-write.table(as.matrix(fire.clusters), file = "../results/tbrucei_FIRE_expression_clusters.txt", quote = FALSE, row.names = FALSE, sep = "\t")
+write.table(as.matrix(fire.clusters), file = "../results/tbrucei_FIRE_expression_clusters.txt", 
+            quote = FALSE, row.names = FALSE, sep = "\t")
 
 # Also, write out module genes in a text file.
-write.table(data.frame(modGenes), file = "../results/tbrucei_module_genes.txt", row.names = FALSE, quote = FALSE, col.names = FALSE)
+write.table(data.frame(modGenes), file = "../results/tbrucei_module_genes.txt", row.names = FALSE, 
+            quote = FALSE, col.names = FALSE)
 ```
 
 Prepare input sequences for FIRE by obtaining module genes sequences from *T. brucei*'s entire annotated transcripts. Use `seqtk` package.
 
-```{bash}
-# seqtk subseq ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta ../results/tbrucei_module_genes.txt > ../results/tbrucei_module_genes_sequences.fasta
+```{bash, eval=FALSE, engine="sh"}
+ seqtk subseq \
+ ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta \
+ ../results/tbrucei_module_genes.txt > \
+ ../results/tbrucei_module_genes_sequences.fasta
 
 # remove unrequired info from header and retain transcript id.
-#cut -f1 -d "|" ../results/tbrucei_module_genes_sequences.fasta > ../results/tbrucei_module_genes_sequences_without_delimiter.fasta
+cut -f1 -d "|" ../results/tbrucei_module_genes_sequences.fasta > \
+../results/tbrucei_module_genes_sequences_without_delimiter.fasta
 
 # remove trailing space after header
-#cut -f1 -d " " ../results/tbrucei_module_genes_sequences.fasta > ../results/tbrucei_module_genes_sequences_without_delimiter.fasta
+cut -f1 -d " " ../results/tbrucei_module_genes_sequences.fasta > \
+../results/tbrucei_module_genes_sequences_without_delimiter.fasta
 
 # FIRE commands - FIRE should be run in the directory where all scripts were installed. Therefore,
 # the input files should be copied to FIRE's directory (FIRE-x.x/)
 #
 #check whether input files are OK
-#perl TOOLS/FIRE_analyse_input_files.pl -fastafile tbrucei_module_genes_sequences_without_delimiter.fasta -expfile tbrucei_FIRE_expression_clusters.txt
+perl TOOLS/FIRE_analyse_input_files.pl \
+-fastafile tbrucei_module_genes_sequences_without_delimiter.fasta \
+-expfile tbrucei_FIRE_expression_clusters.txt
 
 # remove sequences >= 10,000 base pairs as they make FIRE crash
 # code - https://www.biostars.org/p/62678/
-# cat ../results/tbrucei_module_genes_sequences_without_delimiter.fasta | \
-# awk '{y= i++ % 2 ; L[y]=$0; if(y==1 && length(L[1])<=9999) {printf("%s\n%s\n",L[0],L[1]);}}' > \
-#../results/tbrucei_module_genes_sequences_without_delimiter_filtered.fasta
+ cat ../results/tbrucei_module_genes_sequences_without_delimiter.fasta | \
+ awk '{y= i++ % 2 ; L[y]=$0; if(y==1 && length(L[1])<=9999) {printf("%s\n%s\n",L[0],L[1]);}}' > \
+../results/tbrucei_module_genes_sequences_without_delimiter_filtered.fasta
 
 # recheck input files
-#perl TOOLS/FIRE_analyse_input_files.pl -fastafile tbrucei_module_genes_sequences_without_delimiter_filtered.fasta -expfile tbrucei_FIRE_expression_clusters.txt
+perl TOOLS/FIRE_analyse_input_files.pl \
+-fastafile tbrucei_module_genes_sequences_without_delimiter_filtered.fasta \
+-expfile tbrucei_FIRE_expression_clusters.txt
 
 # output
 #Checking the expression file
@@ -1142,10 +1174,11 @@ Prepare input sequences for FIRE by obtaining module genes sequences from *T. br
 #Found fasta sequence for 7272 / 7390 identifiers in expression file.
 
 # Analyze sequences for motifs
-# perl fire.pl --expfiles=tbrucei_FIRE_expression_clusters.txt --exptype=discrete --fastafile_dna=tbrucei_module_genes_sequences_without_delimiter_filtered.fasta  --nodups=1
+ perl fire.pl --expfiles=tbrucei_FIRE_expression_clusters.txt --exptype=discrete \
+ --fastafile_dna=tbrucei_module_genes_sequences_without_delimiter_filtered.fasta  --nodups=1
 
 # create HTML output of the results
-# perl MORESCRIPTS/makeresultindex.pl tbrucei_FIRE_expression_clusters.txt "T. brucei cluster motifs"
+perl MORESCRIPTS/makeresultindex.pl tbrucei_FIRE_expression_clusters.txt "T. brucei cluster motifs"
 ```
 
 
