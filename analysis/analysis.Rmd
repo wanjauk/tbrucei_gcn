@@ -141,6 +141,8 @@ cat ../scripts/fastqc_reports.sh
 ```
 
 Following the high rate of duplicate reads after FASTQC analysis, further analysis is done to ascertain their cause. Duplicate reads are assessed whether they arise from artifacts in PCR (PCR duplicates) or from biological causes (highly expressed genes). This is done later in the analysis after read mapping. Below is the sequence duplication level plot.
+
+See more on duplication [here](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html).
 ```{r echo=FALSE}
 include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
 ```
@@ -234,7 +236,7 @@ cat ../scripts/mark_dupes.sh
 ```
 
 At this point, dupRadar tool is used to perform quality control in R.
-Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_experiment.py` module is used in this case.
+Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_experiment.py` module is used in this case. RSeQC documentation and tutorial can be found [here](http://rseqc.sourceforge.net/).
 
 First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_experiment.py` to verify strandedness using a few samples.
 
@@ -255,7 +257,7 @@ infer_experiment.py -i ../data/processed_data/bru-mor_bam/SRR039381.bam \
 #Fraction of reads explained by "+-,-+": 0.6161
 ```
 
-The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not strand specific.
+The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not strand specific. Tutorial for the tool can be found [here](https://bioconductor.riken.jp/packages/3.5/bioc/vignettes/dupRadar/inst/doc/dupRadar.html)
 
 ```{r eval=FALSE}
 # Parameters
