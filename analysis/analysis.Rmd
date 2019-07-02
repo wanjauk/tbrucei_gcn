@@ -3,8 +3,8 @@ title: "*T. brucei* co-expression network analysis"
 author: "Kennedy Mwangi"
 date: "June 27, 2019"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 editor_options: 
   chunk_output_type: inline
 ---
@@ -1006,6 +1006,15 @@ png(filename = "../figures/eigengenes_heatmap.png", res =1200, type = "cairo", u
 plotEigengeneNetworks(module.eigengenes, "Eigengenes heatmap", marHeatmap = c(3,4,2,2),
                       plotDendrograms = FALSE, xLabelsAngle = 90)
 dev.off()
+```
+
+\newpage
+```{r fig.cap="Dendrogram with original and merged colours", echo=FALSE, out.width='80%'}
+
+include_graphics("../figures/merged-original_colours-original_dendro.png")
+```
+
+```{r, eval=FALSE}
 
 #-----------------------------------------------------------------------------------------
 # rename some variables based on the module eigengene analysis for later use
