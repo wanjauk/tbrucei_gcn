@@ -46,8 +46,8 @@ library("ggfortify")
 library("xlsx")
 library("WGCNA")
 library("flashClust")
-library("igraph")
 library("tidyverse")
+library("igraph")
 
 # set number of threads to allow in WGCNA analysis
 allowWGCNAThreads(nThreads=20)
@@ -114,6 +114,10 @@ sample.metadata <- sample.metadata[-9,]
 sample.metadata <- sample.metadata[-8,]
 #####################################################################################
 
+# include batch information for the samples
+batch <- factor(c(1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2))
+
+sample.metadata["Batch"] <- batch
 ```
 ```{r, eval=TRUE, echo=TRUE}
 # print out the sample metadata table
@@ -384,6 +388,10 @@ filtered.counts <- calcNormFactors(filtered.counts, method = 'TMM')
 # Convert counts per million per gene to log counts per million for further downstream analysis.
 logcpm.norm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normalized.lib.sizes = TRUE)
 
+# use ComBat to remove batch effects
+modcombat <- model.matrix(~Tissue, data=sample.metadata)
+logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = sample.metadata$Batch, mod = modcombat)
+
 ```
 
 Various plots are made for the samples before and after normalization.
@@ -407,6 +415,16 @@ dev.off()
 png(filename = "../figures/norm_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 4, pointsize = 10)
 heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', 
+          main='Sample correlations')
+
+dev.off()
+
+# plot to check removal of batch effects by ComBat
+png(filename = "../figures/batch_effect_removal_analysis/combat_norm_sample_heatmap.png", res =1200, 
+    type = "cairo", 
+    units = 'in',
+    width = 5, height = 4, pointsize = 10)
+heatmap.2(cor(logcpm.norm.counts.combat), RowSideColors=sample.colours, trace='none', 
           main='Sample correlations')
 
 dev.off()
@@ -501,6 +519,16 @@ pca.log.counts <- prcomp(t(logcpm.norm.counts))  #normalized & filtered
 png(filename = "../figures/norm_sample_PCA.png", res =1200, type = "cairo", units = 'in',
     width = 6, height = 4, pointsize = 10)
 autoplot(pca.log.counts,
+         data = sample.metadata,
+         colour="Sample_Name",
+         size=3)
+dev.off()
+
+# plot to check removal of batch effects by ComBat
+pca.log.counts.combat <- prcomp(t(logcpm.norm.counts.combat))  #normalized & filtered
+png(filename = "../figures/batch_effect_removal_analysis/combat_norm_sample_PCA.png", res =1200, type = "cairo", units = 'in',
+    width = 6, height = 4, pointsize = 10)
+autoplot(pca.log.counts.combat,
          data = sample.metadata,
          colour="Sample_Name",
          size=3)
