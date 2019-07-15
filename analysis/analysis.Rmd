@@ -782,7 +782,7 @@ include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 
 # obtain the required counts data (WGCNA input)
 # WGCNA requires genes to be in columns
-network.counts <- t(logcpm.norm.counts)
+network.counts <- t(logcpm.norm.counts.combat)
 
 # determine the soft-thresholding power to use
 powers <- c(c(1:10), seq(from = 12, to=20, by=2))
@@ -836,29 +836,25 @@ include_graphics("../figures/mean_connectivity.png")
 ########################################################################
 
 # construct adjacency matrix
-softpower <- 12
+softpower <- 14
 adjacency.matrix <- adjacency(network.counts, power=softpower,
                                              type = "signed", corFnc = "cor")
-
-#set diagonal to 0 to remove uninformative correlations
-diag(adjacency.matrix) <- 0
 
 # Turn the adjacency matrix to topologicaal overlap matrix to minimize
 # the effects of noise and spurious associations
 TOM <- TOMsimilarity(adjacency.matrix, TOMType = "signed")
 dissTOM <- 1 - TOM
 
-# remove adjacency matrix and TOM to free up memory
-rm(TOM)
-rm(adjacency.matrix)
-gc()
+#set diagonal to NA to remove uninformative correlations
+diag(adjacency.matrix) <- NA
+
 
 # Adjacency matrix heatmap plot / network heatmap of selected genes
-heatmap_indices <- sample(nrow(dissTOM), 500) # sub-sample for visualization purposes
+heatmap_indices <- sample(nrow(adjacency.matrix), 500) # sub-sample for visualization purposes
 
 png(filename = "../figures/adjacency_matrix_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 5, pointsize = 10)
-heatmap.2(t(dissTOM[heatmap_indices, heatmap_indices]),
+heatmap.2(t(adjacency.matrix[heatmap_indices, heatmap_indices]),
             col=redgreen(75),
             labRow=NA, labCol=NA, 
             trace='none', dendrogram='row',
@@ -866,6 +862,12 @@ heatmap.2(t(dissTOM[heatmap_indices, heatmap_indices]),
             main='Adjacency matrix',
             density.info='none', revC=TRUE)
 dev.off()
+
+
+
+# remove adjacency matrix and TOM to free up memory
+rm(adjacency.matrix)
+gc()
 ```
 
 ```{r fig.cap="Adjacency matrix heatmap (500 genes)", echo=FALSE, out.width='80%'}
@@ -902,29 +904,33 @@ module.colours <- labels2colors(module.labels)
 # view
 table(module.colours)
 
-# a list of 35 modules
+# a list of 27 modules
 
-         black           blue          brown           cyan      darkgreen 
-           333            611            495            219            118 
-      darkgrey    darkmagenta darkolivegreen     darkorange        darkred 
-           109             33             44            103            130 
- darkturquoise          green    greenyellow           grey         grey60 
-           111            341            272             19            155 
-     lightcyan     lightgreen    lightyellow        magenta   midnightblue 
-           193            155            143            290            210 
-        orange  paleturquoise           pink         purple            red 
-           106             73            291            282            340 
-     royalblue    saddlebrown         salmon        skyblue      steelblue 
-           136             85            234             99             80 
-           tan      turquoise         violet          white         yellow 
-           265            693             68            101            453
+        black          blue         brown          cyan     darkgreen 
+          438           614           547           219           102 
+     darkgrey    darkorange       darkred darkturquoise         green 
+           93            80           106           100           528 
+  greenyellow          grey        grey60     lightcyan    lightgreen 
+          251            59           191           193           164 
+  lightyellow       magenta  midnightblue        orange          pink 
+          129           264           200            86           383 
+       purple           red     royalblue        salmon           tan 
+          251           460           127           230           243 
+    turquoise         white        yellow 
+          732            61           539 
 
 # visualize the gene tree and TOM matrix together using TOM plot
 # if necessary, raise dissTOM to a power to make moderately strong connection more visible in heatmap
-png(filename = "../figures/gene_tree_and_TOM.png", res =1200, type = "cairo", units = 'in',
+diag(dissTOM) <- NA
+
+png(filename = "../figures/gene_tree_and_dissTOM.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 6, pointsize = 10)
 TOMplot(dissTOM, gene.tree, as.character(module.colours))
 dev.off()
+
+# remove matrix to free memory
+rm(dissTOM)
+gc()
 
 
 # plot gene dendrogram
@@ -937,34 +943,29 @@ plotDendroAndColors(gene.tree, module.colours, "Dynamic Tree Cut", dendroLabels 
 dev.off()
 
 # get hub genes
+# choose power 4: https://support.bioconductor.org/p/46342/
 module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours, 
-                                             power = 12,type = "signed") #use softhresholding power
+                                             power = 4,type = "signed")
 
 # A list of module hub genes
                 black                  blue                 brown 
-  "Tb10.v4.0128:mRNA"   "Tb927.1.3130:mRNA"   "Tb927.3.1630:mRNA" 
+  "Tb927.7.1790:mRNA"   "Tb927.8.3620:mRNA"  "Tb927.11.1570:mRNA" 
                  cyan             darkgreen              darkgrey 
- "Tb927.11.1450:mRNA"  "Tb927.11.3260:mRNA"  "Tb927.9.14480:mRNA" 
-          darkmagenta        darkolivegreen            darkorange 
-  "Tb927.3.3730:mRNA"  "Tb927.11.1570:mRNA"   "Tb927.6.2960:mRNA" 
-              darkred         darkturquoise                 green 
-  "Tb927.3.4000:mRNA"    "Tb927.7.920:mRNA"   "Tb927.2.5810:mRNA" 
-          greenyellow                grey60             lightcyan 
-  "Tb927.6.3880:mRNA" "Tb927.10.14760:mRNA"   "Tb927.11.900:mRNA" 
-           lightgreen           lightyellow               magenta 
-  "Tb927.8.5550:mRNA" "Tb927.10.10770:mRNA" "Tb927.10.12780:mRNA" 
-         midnightblue                orange         paleturquoise 
-  "Tb927.9.6290:mRNA"  "Tb927.9.10100:mRNA"   "Tb927.9.5690:mRNA" 
+  "Tb927.2.5530:mRNA" "Tb927.11.14020:mRNA"   "Tb927.9.9450:mRNA" 
+           darkorange               darkred         darkturquoise 
+   "Tb927.8.710:mRNA"   "Tb927.2.5270:mRNA"   "Tb927.8.6650:mRNA" 
+                green           greenyellow                grey60 
+"Tb927.10.13790:mRNA"    "Tb927.7.920:mRNA"  "Tb927.10.3820:mRNA" 
+            lightcyan            lightgreen           lightyellow 
+ "Tb927.11.6440:mRNA"   "Tb927.10.720:mRNA"  "Tb927.10.2560:mRNA" 
+              magenta          midnightblue                orange 
+  "Tb927.9.6290:mRNA"  "Tb927.11.6640:mRNA"   "Tb927.9.2520:mRNA" 
                  pink                purple                   red 
-  "Tb927.8.1650:mRNA"   "Tb927.9.5960:mRNA"   "Tb927.5.3130:mRNA" 
-            royalblue           saddlebrown                salmon 
-  "Tb927.6.3150:mRNA"   "Tb927.9.2600:mRNA"  "Tb927.11.5450:mRNA" 
-              skyblue             steelblue                   tan 
-  "Tb927.6.2790:mRNA"   "Tb927.7.2500:mRNA"   "Tb927.3.1380:mRNA" 
-            turquoise                violet                 white 
-  "Tb927.9.5240:mRNA"   "Tb927.3.3270:mRNA"   "Tb927.3.1370:mRNA" 
-               yellow 
-  "Tb927.7.7200:mRNA"
+ "Tb927.10.6200:mRNA"    "Tb927.1.600:mRNA"   "Tb927.7.6920:mRNA" 
+            royalblue                salmon                   tan 
+"Tb927.10.15680:mRNA"  "Tb927.11.1450:mRNA"   "Tb927.3.2930:mRNA" 
+            turquoise                 white                yellow 
+ "Tb927.9.15630:mRNA"   "Tb927.8.7980:mRNA"   "Tb927.1.3550:mRNA"
 
 ```
 
@@ -1009,14 +1010,14 @@ merged.module.colours <- module.eigengenes.merge$colors
 # view
 table(merged.module.colours)
 
-# a list of 14 modules
+# a list of 13 modules
 
-         black           cyan      darkgreen       darkgrey darkolivegreen 
-           828            583            229            109            780 
-         green    greenyellow           grey         grey60  paleturquoise 
-           794            802             19            370             73 
-          pink      royalblue      steelblue          white 
-          1771            501             80            451
+      black        blue       brown    darkgrey     darkred       green 
+        438        1565         735         477         796         728 
+greenyellow        grey  lightgreen         red      salmon       white 
+        515          59         164         703         230         441 
+     yellow 
+        539
 
 # eigengenes of new merged modules
 merged.module.eigengenes <- module.eigengenes.merge$newMEs
@@ -1054,7 +1055,7 @@ include_graphics("../figures/merged-original_colours-original_dendro.png")
 
 # construct numerical labels corresponding to the colours
 colorOrder <- c("grey", standardColors(50))
-module.labels <- match(module.colours, colorOrder)-1
+#module.labels <- match(module.colours, colorOrder)-1
 
 # module eigengenes
 #module.eigengenes <- merged.module.eigengenes
@@ -1062,20 +1063,18 @@ module.labels <- match(module.colours, colorOrder)-1
 # get hub genes
 merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
                                                     merged.module.colours,
-                                                    power = 12,
-                                                    type = "signed")#use softhresholding power
+                                                    power = 4,
+                                                    type = "signed")
 
 # a list of merged module hub genes
-                 black                   cyan              darkgreen 
-"Tb927.11.1690.2:mRNA"    "Tb927.4.1390:mRNA"  "Tb927.10.12710:mRNA" 
-              darkgrey         darkolivegreen                  green 
-  "Tb927.9.14480:mRNA"    "Tb927.4.4730:mRNA"    "Tb927.11.760:mRNA" 
-           greenyellow                 grey60          paleturquoise 
- "Tb927.11.13610:mRNA"  "Tb927.10.14760:mRNA"    "Tb927.9.5690:mRNA" 
-                  pink              royalblue              steelblue 
-    "Tb927.5.630:mRNA"  "Tb927.10.12750:mRNA"    "Tb927.7.2500:mRNA" 
-                 white 
-    "Tb927.1.580:mRNA"
+                black                  blue                 brown 
+  "Tb927.7.1790:mRNA"   "Tb927.1.3130:mRNA" "Tb927.11.14220:mRNA" 
+             darkgrey               darkred                 green 
+  "Tb927.11.760:mRNA"   "Tb927.5.1050:mRNA"   "Tb927.8.6580:mRNA" 
+          greenyellow            lightgreen                   red 
+"Tb927.11.10610:mRNA"   "Tb927.10.720:mRNA" "Tb927.10.14900:mRNA" 
+               salmon                 white                yellow 
+ "Tb927.11.1450:mRNA"   "Tb927.8.3530:mRNA"   "Tb927.1.3550:mRNA"
 
 ```
 
@@ -1090,19 +1089,17 @@ interesting.modules <- c('black', 'cyan', 'grey','brown',
                          'midnightblue','blue','darkgreen','tan', 'darkgrey','darkorange',
                          'darkred','darkturquoise','green','greenyellow','grey60','lightcyan',
                          'lightgreen','lightyellow','magenta','orange','pink','purple','red',
-                         'royalblue','salmon','skyblue','turquoise','white','yellow', 
-                         'saddlebrown', 'steelblue','darkmagenta','darkolivegreen','paleturquoise',
-                         'violet') # these are all module colours, thus the whole network
+                         'royalblue','salmon','turquoise','white','yellow') # all module colours, thus the whole network
 
 # obtain gene ids
-gene.ids <- rownames(logcpm.norm.counts)
+gene.ids <- rownames(logcpm.norm.counts.combat)
 
 # select module genes
 inModules <- is.finite(match(module.colours, interesting.modules))
 modGenes <- gene.ids[inModules]
 
 # select the corresponding dissTOM based on module genes
-modTOM <- dissTOM[inModules, inModules]
+modTOM <- TOM[inModules, inModules]
 dimnames(modTOM) <- list(modGenes, modGenes)
 
 # Export the network into edge and node list files Cytoscape can read
@@ -1110,7 +1107,7 @@ cyt <- exportNetworkToCytoscape(modTOM,
                                 edgeFile = "../results/CytoscapeInput-edges.txt", 
                                 nodeFile = "../results/CytoscapeInput-nodes.txt", 
                                 weighted = TRUE, 
-                                threshold = 0, 
+                                threshold = 0.2, 
                                 nodeNames = modGenes, 
                                 nodeAttr = module.colours[inModules]);
 
@@ -1124,7 +1121,7 @@ rm(cyt)
 source("../scripts/network_export_graphml.R")
 
 # the whole network
-entire.network <- export_network_to_graphml(dissTOM, 
+entire.network <- export_network_to_graphml(TOM, 
                                             filename = "../results/entire_network.graphml",
                                             threshold = 0,
                                             nodeAttr = gene.ids,
