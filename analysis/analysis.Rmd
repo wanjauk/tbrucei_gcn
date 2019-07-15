@@ -1107,7 +1107,7 @@ cyt <- exportNetworkToCytoscape(modTOM,
                                 edgeFile = "../results/CytoscapeInput-edges.txt", 
                                 nodeFile = "../results/CytoscapeInput-nodes.txt", 
                                 weighted = TRUE, 
-                                threshold = 0.2, 
+                                threshold = 0.3, 
                                 nodeNames = modGenes, 
                                 nodeAttr = module.colours[inModules]);
 
