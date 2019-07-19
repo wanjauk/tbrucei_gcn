@@ -213,7 +213,7 @@ cp ../data/tbrucei_genome/*.fasta ../data/brucei-morsitans/
 cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
 ```
 
-HISAT2 is used to re-align reads on the *T. brucei* and *G. morsitans* genomes, begining with indexing the genomes.
+HISAT2 is used to re-align reads on the *T. brucei* and *G. morsitans* genomes, beginning with indexing the genomes.
 Below is the alignment results from HISAT2 alignment tool.
 ```{r echo=FALSE}
 include_graphics("../figures/hisat2_se_plot.png")
@@ -1129,6 +1129,7 @@ entire.network <- export_network_to_graphml(TOM,
 # network modules
 # create a dataframe with node attributes
 node.attributes <- cbind(modGenes, module=module.colours)
+node.attributes <- as.data.frame(node.attributes)
 
 # Add RGB versions of colour modules
 node.attributes$colourRGB <- col2hex(node.attributes$module)
@@ -1137,6 +1138,10 @@ modules.network <- export_network_to_graphml(modTOM,
                                              filename = "../results/modules_network.graphml",
                                              threshold = 0.02,
                                              nodeAttrDataFrame = node.attributes)
+
+# write out a node attributes files with hexadecimal colour names for module genes
+write.table(node.attributes, file = "../results/Cytoscape_node_attributes.txt",row.names = FALSE, quote = FALSE, sep = "\t")
+
 
 ```
   
