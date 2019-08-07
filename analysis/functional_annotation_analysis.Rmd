@@ -14,11 +14,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library('foreach')
 library('doParallel')
 library('Trypanosoma.brucei.TREU927', character.only = TRUE)
-
+library('dplyr')
+library('rtracklayer')
+library('tibble')
 
 # load helper functions
 source("~/manuscript-shared-rnaseq/R/enrichment_analysis.R")
 source("~/manuscript-shared-rnaseq/R/annotations.R")
+source("~/manuscript-shared-rnaseq/R/wgcna.R")
 ```
 
 ## Introduction
@@ -73,6 +76,24 @@ EuPathDB has an issue that's been resolved which involves the inability to downl
 After creating and installing the annotation package in R, we perform functional annotation/enrichment (GO and KEGG).
 Code from the following repo will be used in functional enrichment analysis: https://github.com/elsayed-lab/manuscript-shared-rnaseq
 
+## Gene ID and Transcript ID
+```{r eval=FALSE}
+gtf_file <- import("../data/TriTrypDB-43_TbruceiTREU927.gtf")
+
+gene_and_transcript_id <- mcols(gtf_file)[,c("gene_id","transcript_id")]
+
+gene_and_transcript_id <- unique(gene_and_transcript_id)
+
+
+# replace transcript id with gene ids as rownames
+logcpm.norm.counts.combat.tmp <- tibble::rownames_to_column(as.data.frame(logcpm.norm.counts.combat), "transcript_id")
+
+logcpm.norm.counts.combat.tmp$gene_id <- gene_and_transcript_id$gene_id[match(logcpm.norm.counts.combat.tmp$transcript_id, gene_and_transcript_id$transcript_id)]
+
+logcpm.norm.counts.combat <- as.data.frame(logcpm.norm.counts.combat.tmp) %>% remove_rownames %>% column_to_rownames(var = "gene_id")
+
+logcpm.norm.counts.combat$transcript_id <- NULL
+```
 
 ## Loading annotations from the packages
 
@@ -88,8 +109,8 @@ orgdb <- get(Trypanosoma.brucei.TREU927)
 assign('select', dplyr::select, envir=.GlobalEnv)
 assign('get',    base::get, envir=.GlobalEnv)
 
-gene_info <- load_parasite_annotations(orgdb, rownames(counts$counts),
-                                       keytype="GID") # Warning: counts object contains transcript names instead of genes names. Use gene names instead.
+gene_info <- load_parasite_annotations(orgdb, rownames(logcpm.norm.counts.combat),
+                                       keytype="GID")
 
 # Get transcript lengths (sum of all exon lengths for each gene)
 txdb <- orgdb@txdbSlot
@@ -102,21 +123,20 @@ gene_info[match(transcript_lengths$gene_id, gene_info$gene_id),
 gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
 
 # A gene was excluded in the annotation database as a result of an orphan transcript. Add its placeholder.
-  gene_info <- rbind(gene_info,
-                     data.frame(gene_id='Tb927.4.4663',
-                                chromosome='4',
-                                description=NA, strand=NA, type=NA, 
-                                transcript_length=NA))
+gene_info <- rbind(gene_info, data.frame(gene_id='Tb927.4.4663',
+                                         chromosome='4',
+                                         description=NA, strand=NA, type=NA,
+                                         transcript_length=NA))
   
   
 # Keep only the feature information remaining genes
-gene_info <- gene_info[gene_info$gene_id %in% rownames(counts$counts),] #WGCNA input counts table?
+gene_info <- gene_info[gene_info$gene_id %in% rownames(logcpm.norm.counts.combat),] #WGCNA input counts?
 
 # For now, just grab the description for the first transcript
 #gene_info <- gene_info[!duplicated(gene_info$gene_id),]
 
 # Gene IDs
-gene_ids <- rownames(counts$counts)
+gene_ids <- rownames(logcpm.norm.counts.combat)
 
 # gene annotations preview
 kable(head(gene_info), caption='Preview of gene annotations.')
@@ -129,7 +149,7 @@ go_term_mapping <- "~/tbrucei_annotation_package/build/3.6.0/TriTrypDB-43_Tbruce
 go_terms <- read.table(go_term_mapping, header = TRUE)
 
 # Exclude genes not found in count table
-go_terms <- go_terms[go_terms$gene %in% rownames(counts$counts),]
+go_terms <- go_terms[go_terms$gene %in% rownames(logcpm.norm.counts.combat),]
 
 # gene / go term mapping
 gene_go_mapping <- as.data.frame(unique(go_terms %>% select(-term)))
@@ -141,10 +161,10 @@ go_term_id_mapping <- as.data.frame(unique(go_terms %>% select(-gene)))
 # Load KEGG annotations
 #########################################################################################
 
-gene_kegg_mapping <- load_kegg_mapping(orgdb, rownames(counts$counts),
+gene_kegg_mapping <- load_kegg_mapping(orgdb, rownames(logcpm.norm.counts.combat),
                                        keytype="GID")
 
-kegg_pathways <- load_kegg_pathways(orgdb, rownames(counts$counts),
+kegg_pathways <- load_kegg_pathways(orgdb, rownames(logcpm.norm.counts.combat),
                                     keytype="GID")
 
 
@@ -155,7 +175,6 @@ colnames(kegg_pathways)     <- c('category', 'name', 'class', 'description')
 kegg_pathways <- unique(kegg_pathways)
 
 ```
-
 
 
 ## GO Enrichment
@@ -175,8 +194,10 @@ names(gene_lengths) <- gene_info$gene_id
 # analysis with variable names of the code below
 module_colors <- module.colours
 gene_tree <-gene.tree
+wgcna_input <- logcpm.norm.counts.combat
+modules_of_interest <- interesting.modules
 
-# Initiallize parallelization
+# Initialize parallelization
 cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
 registerDoParallel(cl)
 message("Performing GO enrichment")
@@ -324,6 +345,76 @@ dev.off()
 
 include_graphics("../figures/gene_tree_and_module_enrichment_status.png")
 ```
+
+# Module labels mappings
+```{r eval=FALSE}
+module_label_mapping <- rbind(cbind(modules_of_interest,
+                                    seq_along(modules_of_interest)),
+                              cbind(remaining_modules,
+                                    seq_along(remaining_modules) +
+                                      length(modules_of_interest)))
+
+module_label_mapping <- as.data.frame(module_label_mapping)
+colnames(module_label_mapping) <- c('color', 'number')
+```
+
+
+## Save results
+
+```{r}
+## Save results
+
+###############################################################################
+# Save enrichment results as text files
+module_output_dir <- "../results/enrichment_results"
+if (!dir.exists(module_output_dir)) {
+    dir.create(module_output_dir, recursive=TRUE)
+}
+
+# GO enrichment 
+output_module_enrichment_results(module_go_enrichment, module_output_dir,
+'go', go_term_id_mapping)
+
+# KEGG enrichment
+output_module_enrichment_results(module_kegg_enrichment, module_output_dir,
+'kegg', kegg_pathways %>% select(-description))
+
+#################################################################################
+# Create result data frame
+result <- cbind(gene_info, color=module_colors)
+
+# drop unneeded columns
+keep_cols <- intersect(c('gene_id', 'color', 'description', 'chromosome',
+'strand', 'transcript_length'), colnames(result))
+result <- tbl_df(result[,keep_cols])
+
+# add expression-related fields
+result$expr_variance <- apply(wgcna_input, 1, var)
+result$expr_mean <- apply(wgcna_input, 1, mean)
+
+# replace colors with numbers
+#module_colors <- module_label_mapping$number[match(module_colors, module_label_mapping$color)]
+
+#result$color <- module_label_mapping$number[match(result$color, module_label_mapping$color)]
+
+# Write out an excel/csv file for the result dataframe
+
+
+#################################################################################
+correlation_matrix <- cor(network.counts) # check this further to determine whether relationship is correct
+
+# Module Stats
+# main_contrast: variable useful if 'result' variable has Differential expression column specified
+# "de_comparisons"
+module_stats <- create_module_stats_df(result, correlation_matrix, 
+                                       wgcna_input,main_contrast)
+
+# Write module stats to a file
+write.csv(module_stats, file="../results/module_stats.csv",row.names=FALSE, quote=FALSE)
+
+```
+
+
 
 ## Gene developmental stage associations
 
