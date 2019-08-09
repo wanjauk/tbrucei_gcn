@@ -13,7 +13,10 @@ knitr::opts_chunk$set(echo = TRUE)
 # library('AnnotationHub')
 library('foreach')
 library('doParallel')
+library('goseq')
 library('Trypanosoma.brucei.TREU927', character.only = TRUE)
+library('org.Tb927.tritryp.db')
+library('TxDb.TbruceiTREU927.tritryp43.genes')
 library('dplyr')
 library('rtracklayer')
 library('tibble')
@@ -103,7 +106,7 @@ Document: manuscript-shared-rnaseq/Rmd/init/load_pathogen_annotations.Rmd
 #################################################################
 # load gene annotations from packages
 #################################################################
-orgdb <- get(Trypanosoma.brucei.TREU927)
+orgdb <- get("Trypanosoma.brucei.TREU927")
 
 # Fix AnnotationDbi namespace mess
 assign('select', dplyr::select, envir=.GlobalEnv)
@@ -123,6 +126,7 @@ gene_info[match(transcript_lengths$gene_id, gene_info$gene_id),
 gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
 
 # A gene was excluded in the annotation database as a result of an orphan transcript. Add its placeholder.
+## ---not run---
 gene_info <- rbind(gene_info, data.frame(gene_id='Tb927.4.4663',
                                          chromosome='4',
                                          description=NA, strand=NA, type=NA,
@@ -145,17 +149,23 @@ kable(head(gene_info), caption='Preview of gene annotations.')
 # load GO terms associated with each parasite gene that were downloaded from Tritrypdb
 #########################################################################################
 # T. brucei go term annotations file path
-go_term_mapping <- "~/tbrucei_annotation_package/build/3.6.0/TriTrypDB-43_TbruceiTREU927_go_table.txt"
-go_terms <- read.table(go_term_mapping, header = TRUE)
+#go_term_mapping <- "~/tbrucei_annotation_package/build/3.6.0/TriTrypDB-43_TbruceiTREU927_go_table.txt"
+#go_terms <- read.table(go_term_mapping, header = TRUE)
 
-# Exclude genes not found in count table
-go_terms <- go_terms[go_terms$gene %in% rownames(logcpm.norm.counts.combat),]
+# load go terms from annotation package instead
+go_terms <- load_go_terms(orgdb, rownames(logcpm.norm.counts.combat), 
+                          keytype='GID')
+
+# Exclude genes not found in count table --not run--
+#go_terms <- go_terms[go_terms$GID %in% rownames(logcpm.norm.counts.combat),]
 
 # gene / go term mapping
-gene_go_mapping <- as.data.frame(unique(go_terms %>% select(-term)))
+gene_go_mapping <- as.data.frame(unique(go_terms %>% select(GID, GO, ONTOLOGY)))
+colnames(gene_go_mapping) <- c('gene', 'category', 'ontology')
 
 # go id / term mapping
-go_term_id_mapping <- as.data.frame(unique(go_terms %>% select(-gene)))
+go_term_id_mapping <- as.data.frame(unique(go_terms[c('GO', 'TERM', 'ONTOLOGY')]))
+colnames(go_term_id_mapping) <- c("category", "term", "ontology")
 
 #########################################################################################
 # Load KEGG annotations
@@ -196,6 +206,7 @@ module_colors <- module.colours
 gene_tree <-gene.tree
 wgcna_input <- logcpm.norm.counts.combat
 modules_of_interest <- interesting.modules
+num_modules <- length(unique(module_colors))
 
 # Initialize parallelization
 cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
@@ -216,7 +227,7 @@ module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq'
                                           gene_go_mapping, gene_lengths)
     
     # Add descriptions
-    #enriched <- merge(enriched, go_term_id_mapping, by='category')
+    enriched <- merge(enriched, go_term_id_mapping, by='category')
   }, error=function(e) {
     # goseq fails in some cases; have not been able to track down cause yet
     # to avoid errors we will just return an empty result set
@@ -332,10 +343,10 @@ WGCNA::plotDendroAndColors(gene_tree,
                         groupLabels=c(sprintf("Modules\n(n=%s)", num_modules),
                                     #sprintf("Red = upregulated at %s", CONFIG$de_cond2),
                                     "GO enrichment", "KEGG enrichment", "Unassigned"),
-                        cex.colorLabels=cex_color_labels, cex.main=cex_main,
-                        cex.axis=cex_axis, cex.lab=cex_lab,
+                        #cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                       # cex.axis=cex_axis, cex.lab=cex_lab,
                         dendroLabels=FALSE,
-                        marAll=c(4,8,6,4),
+                        #marAll=c(4,8,6,4),
                         guideHang=0.05)
 dev.off()
 ```
@@ -350,7 +361,7 @@ include_graphics("../figures/gene_tree_and_module_enrichment_status.png")
 ```{r eval=FALSE}
 module_label_mapping <- rbind(cbind(modules_of_interest,
                                     seq_along(modules_of_interest)),
-                              cbind(remaining_modules,
+                              cbind(remaining_modules, #remaining modules variable?
                                     seq_along(remaining_modules) +
                                       length(modules_of_interest)))
 
@@ -398,7 +409,7 @@ result$expr_mean <- apply(wgcna_input, 1, mean)
 #result$color <- module_label_mapping$number[match(result$color, module_label_mapping$color)]
 
 # Write out an excel/csv file for the result dataframe
-
+write.table(result, file="../results/results_df.txt", quote = FALSE, sep = "\t")
 
 #################################################################################
 correlation_matrix <- cor(network.counts) # check this further to determine whether relationship is correct
@@ -406,6 +417,7 @@ correlation_matrix <- cor(network.counts) # check this further to determine whet
 # Module Stats
 # main_contrast: variable useful if 'result' variable has Differential expression column specified
 # "de_comparisons"
+#--this code did not work--
 module_stats <- create_module_stats_df(result, correlation_matrix, 
                                        wgcna_input,main_contrast)
 
