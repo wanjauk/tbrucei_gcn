@@ -1,0 +1,11 @@
+category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
+GO:0003774	0.0239082572800984	15	77	motor activity	MF	over-represented
+GO:0003777	0.0366316592198322	14	72	microtubule motor activity	MF	over-represented
+GO:0005856	0.00121100487184406	57	693	cytoskeleton	CC	over-represented
+GO:0005875	0.0366316592198322	14	82	microtubule associated complex	CC	over-represented
+GO:0006928	0.00183410091088889	21	125	movement of cell or subcellular component	BP	over-represented
+GO:0015630	0.00183410091088889	35	344	microtubule cytoskeleton	CC	over-represented
+GO:0043228	0.00158715816484726	75	1289	non-membrane-bounded organelle	CC	over-represented
+GO:0043232	0.00158715816484726	75	1289	intracellular non-membrane-bounded organelle	CC	over-represented
+GO:0044430	0.00121100487184406	54	659	cytoskeletal part	CC	over-represented
+GO:0071103	0.0197492606792931	7	22	DNA conformation change	BP	over-represented

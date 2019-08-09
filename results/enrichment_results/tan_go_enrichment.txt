@@ -1,0 +1,3 @@
+category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
+GO:0000922	0.0493009156261486	5	13	spindle pole	CC	over-represented
+GO:0015630	0.0493009156261486	25	344	microtubule cytoskeleton	CC	over-represented

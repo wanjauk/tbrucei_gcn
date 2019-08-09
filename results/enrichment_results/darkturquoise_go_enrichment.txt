@@ -1,0 +1,2 @@
+category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
+GO:0016772	0.0181513470693136	17	324	transferase activity, transferring phosphorus-containing groups	MF	over-represented

@@ -1,0 +1,20 @@
+category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
+GO:0003723	0.0223319901611677	13	392	RNA binding	MF	under-represented
+GO:0003735	4.98821201383832e-06	0	161	structural constituent of ribosome	MF	under-represented
+GO:0005198	0.0281508675173312	6	190	structural molecule activity	MF	under-represented
+GO:0005730	0.00747246791632126	9	307	nucleolus	CC	under-represented
+GO:0006412	0	1	243	translation	BP	under-represented
+GO:0006518	1.10410441689784e-06	2	252	peptide metabolic process	BP	under-represented
+GO:0009058	0.0033228756835232	29	680	biosynthetic process	BP	under-represented
+GO:0009059	0.00691894788373148	17	438	macromolecule biosynthetic process	BP	under-represented
+GO:0010467	0.0212875652407995	47	886	gene expression	BP	under-represented
+GO:0034641	0.0033228756835232	49	1006	cellular nitrogen compound metabolic process	BP	under-represented
+GO:0034645	0.00747246791632126	17	433	cellular macromolecule biosynthetic process	BP	under-represented
+GO:0043043	0	1	245	peptide biosynthetic process	BP	under-represented
+GO:0043603	2.641759311039e-06	3	268	cellular amide metabolic process	BP	under-represented
+GO:0043604	9.08997478787267e-07	2	259	amide biosynthetic process	BP	under-represented
+GO:0044249	0.00418065921967419	28	657	cellular biosynthetic process	BP	under-represented
+GO:0044271	0.000140487807798183	15	494	cellular nitrogen compound biosynthetic process	BP	under-represented
+GO:1901566	1.31466622129601e-05	10	399	organonitrogen compound biosynthetic process	BP	under-represented
+GO:1901576	0.0033228756835232	28	667	organic substance biosynthetic process	BP	under-represented
+GO:1990904	0.00638494702061671	13	345	ribonucleoprotein complex	CC	under-represented

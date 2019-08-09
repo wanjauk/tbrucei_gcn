@@ -1,0 +1,64 @@
+category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
+GO:0003674	0.0395268190425889	233	3380	molecular_function	MF	over-represented
+GO:0003735	0.000224112285217693	30	161	structural constituent of ribosome	MF	over-represented
+GO:0004016	0.00176570715543275	11	43	adenylate cyclase activity	MF	over-represented
+GO:0005198	0.00247549600617074	30	190	structural molecule activity	MF	over-represented
+GO:0005740	0.000135965231309649	34	216	mitochondrial envelope	CC	over-represented
+GO:0005742	0.038612774137596	4	7	mitochondrial outer membrane translocase complex	CC	over-represented
+GO:0005743	0.00611893982157362	20	120	mitochondrial inner membrane	CC	over-represented
+GO:0005777	0.00269176734040174	24	158	peroxisome	CC	over-represented
+GO:0005832	0.00339439625528245	5	8	chaperonin-containing T-complex	CC	over-represented
+GO:0006412	7.90382243367568e-06	41	243	translation	BP	over-represented
+GO:0006457	0.0400578426170679	16	103	protein folding	BP	over-represented
+GO:0006518	7.90382243367568e-06	42	252	peptide metabolic process	BP	over-represented
+GO:0006753	0.0110369921654709	20	138	nucleoside phosphate metabolic process	BP	over-represented
+GO:0006807	0.0105733817189682	124	1532	nitrogen compound metabolic process	BP	over-represented
+GO:0008150	0.00611893982157362	216	2974	biological_process	BP	over-represented
+GO:0008152	0.00183446880380016	168	2137	metabolic process	BP	over-represented
+GO:0009058	5.91473453329851e-07	82	680	biosynthetic process	BP	over-represented
+GO:0009059	0.00611893982157362	49	438	macromolecule biosynthetic process	BP	over-represented
+GO:0009117	0.0191742017718931	19	133	nucleotide metabolic process	BP	over-represented
+GO:0009165	0.0499848458863081	15	104	nucleotide biosynthetic process	BP	over-represented
+GO:0009187	0.00183446880380016	12	52	cyclic nucleotide metabolic process	BP	over-represented
+GO:0009190	0.00183446880380016	12	52	cyclic nucleotide biosynthetic process	BP	over-represented
+GO:0009975	0.00176570715543275	11	43	cyclase activity	MF	over-represented
+GO:0016020	4.18785134655653e-07	92	812	membrane	CC	over-represented
+GO:0016021	0.00042388743054206	47	394	integral component of membrane	CC	over-represented
+GO:0016829	0.0073758506684634	15	87	lyase activity	MF	over-represented
+GO:0016849	0.00224136215902957	12	53	phosphorus-oxygen lyase activity	MF	over-represented
+GO:0019538	0.00131332062630518	76	763	protein metabolic process	BP	over-represented
+GO:0019866	0.00611893982157362	20	120	organelle inner membrane	CC	over-represented
+GO:0020015	0.0047970316221227	23	154	glycosome	CC	over-represented
+GO:0020022	0.0461871108764272	9	43	acidocalcisome	CC	over-represented
+GO:0031090	0.00243000293496694	37	289	organelle membrane	CC	over-represented
+GO:0031224	0.00042388743054206	47	394	intrinsic component of membrane	CC	over-represented
+GO:0031966	9.43754059018447e-05	34	212	mitochondrial membrane	CC	over-represented
+GO:0031967	0.0499848458863081	38	359	organelle envelope	CC	over-represented
+GO:0031975	0.0499848458863081	38	359	envelope	CC	over-represented
+GO:0034641	0.019606509115352	88	1006	cellular nitrogen compound metabolic process	BP	over-represented
+GO:0034645	0.00534700724932938	49	433	cellular macromolecule biosynthetic process	BP	over-represented
+GO:0042579	0.00269176734040174	24	158	microbody	CC	over-represented
+GO:0043043	5.1706295340345e-06	42	245	peptide biosynthetic process	BP	over-represented
+GO:0043603	1.00749282400637e-05	43	268	cellular amide metabolic process	BP	over-represented
+GO:0043604	6.44028536941004e-06	43	259	amide biosynthetic process	BP	over-represented
+GO:0044237	0.00611893982157362	130	1597	cellular metabolic process	BP	over-represented
+GO:0044238	0.00534700724932938	132	1630	primary metabolic process	BP	over-represented
+GO:0044249	1.28453920053536e-06	79	657	cellular biosynthetic process	BP	over-represented
+GO:0044267	0.00183446880380016	69	673	cellular protein metabolic process	BP	over-represented
+GO:0044271	2.77919725659106e-07	69	494	cellular nitrogen compound biosynthetic process	BP	over-represented
+GO:0044281	0.00130746883429084	38	305	small molecule metabolic process	BP	over-represented
+GO:0044425	0.000217135223670331	63	573	membrane part	CC	over-represented
+GO:0044444	7.90382243367568e-06	238	3008	cytoplasmic part	CC	over-represented
+GO:0051082	0.0473986129610098	12	68	unfolded protein binding	MF	over-represented
+GO:0055085	0.0139655413406652	19	127	transmembrane transport	BP	over-represented
+GO:0055086	0.00421759854759234	24	167	nucleobase-containing small molecule metabolic process	BP	over-represented
+GO:0071704	0.00706584325287892	151	1934	organic substance metabolic process	BP	over-represented
+GO:0098799	0.038612774137596	4	7	outer mitochondrial membrane protein complex	CC	over-represented
+GO:0101031	0.000481561161860322	6	9	chaperone complex	CC	over-represented
+GO:1901293	0.0281709303176119	16	108	nucleoside phosphate biosynthetic process	BP	over-represented
+GO:1901564	0.000135965231309649	91	921	organonitrogen compound metabolic process	BP	over-represented
+GO:1901566	9.06157248266893e-06	55	399	organonitrogen compound biosynthetic process	BP	over-represented
+GO:1901576	5.91473453329851e-07	81	667	organic substance biosynthetic process	BP	over-represented
+GO:0005856	0.000385321317253138	14	693	cytoskeleton	CC	under-represented
+GO:0015630	0.00138388824665346	3	344	microtubule cytoskeleton	CC	under-represented
+GO:0044430	0.000305861673441363	12	659	cytoskeletal part	CC	under-represented

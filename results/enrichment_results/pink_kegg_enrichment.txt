@@ -1,0 +1,2 @@
+category	pvalue_adj	num_in_subset	num_total	name	class	direction
+path:tbr03013	0.0318667491809267	8	42	RNA transport	Genetic Information Processing; Translation	over-represented

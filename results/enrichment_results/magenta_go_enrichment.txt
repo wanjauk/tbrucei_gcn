@@ -1,0 +1,14 @@
+category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
+GO:0004054	0.0182468998480512	3	3	arginine kinase activity	MF	over-represented
+GO:0005856	0.000397878593088503	54	693	cytoskeleton	CC	over-represented
+GO:0005929	0.00180699634831898	89	1558	cilium	CC	over-represented
+GO:0005930	0.000397878593088503	31	293	axoneme	CC	over-represented
+GO:0016775	0.0182468998480512	3	3	phosphotransferase activity, nitrogenous group as acceptor	MF	over-represented
+GO:0042995	0.00180699634831898	89	1558	cell projection	CC	over-represented
+GO:0043228	0.0130203537636039	72	1289	non-membrane-bounded organelle	CC	over-represented
+GO:0043232	0.0130203537636039	72	1289	intracellular non-membrane-bounded organelle	CC	over-represented
+GO:0044430	0.000408153368954609	52	659	cytoskeletal part	CC	over-represented
+GO:0044441	0.0020837338915465	84	1464	ciliary part	CC	over-represented
+GO:0044463	0.0020837338915465	84	1464	cell projection part	CC	over-represented
+GO:0120025	0.00180699634831898	89	1558	plasma membrane bounded cell projection	CC	over-represented
+GO:0120038	0.0020837338915465	84	1464	plasma membrane bounded cell projection part	CC	over-represented

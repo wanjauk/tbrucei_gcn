@@ -1,0 +1,16 @@
+category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
+GO:0000313	0.00850474102669742	17	120	organellar ribosome	CC	over-represented
+GO:0000315	0.0218404812085423	12	72	organellar large ribosomal subunit	CC	over-represented
+GO:0003735	0.0185389854670767	21	161	structural constituent of ribosome	MF	over-represented
+GO:0005739	0.0218404812085423	81	1359	mitochondrion	CC	over-represented
+GO:0005743	0.00850474102669742	17	120	mitochondrial inner membrane	CC	over-represented
+GO:0005759	0.0190665078316718	17	136	mitochondrial matrix	CC	over-represented
+GO:0005761	0.0116451122827317	16	114	mitochondrial ribosome	CC	over-represented
+GO:0005762	0.0185389854670767	12	70	mitochondrial large ribosomal subunit	CC	over-represented
+GO:0005840	0.000260108865222378	33	260	ribosome	CC	over-represented
+GO:0019866	0.00850474102669742	17	120	organelle inner membrane	CC	over-represented
+GO:0032991	0.00816862807875209	65	1028	protein-containing complex	CC	over-represented
+GO:0044391	0.0185389854670767	18	142	ribosomal subunit	CC	over-represented
+GO:0044429	0.00423426124681441	54	714	mitochondrial part	CC	over-represented
+GO:0098798	1.0929733693493e-06	34	240	mitochondrial protein complex	CC	over-represented
+GO:1990904	0.00111884990007013	36	345	ribonucleoprotein complex	CC	over-represented
