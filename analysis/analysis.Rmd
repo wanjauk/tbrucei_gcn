@@ -38,6 +38,7 @@ library("dupRadar")
 library("Rsubread")
 library("limma")
 library("edgeR")
+library("sva")
 library("RColorBrewer")
 library("ggplot2")
 library("gplots")
@@ -48,6 +49,20 @@ library("WGCNA")
 library("flashClust")
 library("tidyverse")
 library("igraph")
+library('foreach')
+library('doParallel')
+library('goseq')
+library('Trypanosoma.brucei.TREU927', character.only = TRUE)
+library('org.Tb927.tritryp.db')
+library('TxDb.TbruceiTREU927.tritryp43.genes')
+library('dplyr')
+library('rtracklayer')
+library('tibble')
+
+# load helper functions
+source("~/manuscript-shared-rnaseq/R/enrichment_analysis.R")
+source("~/manuscript-shared-rnaseq/R/annotations.R")
+source("~/manuscript-shared-rnaseq/R/wgcna.R")
 
 # set number of threads to allow in WGCNA analysis
 allowWGCNAThreads(nThreads=20)
@@ -147,7 +162,7 @@ cat ../scripts/fastqc_reports.sh
 Following the high rate of duplicate reads after FASTQC analysis, further analysis is done to ascertain their cause. Duplicate reads are assessed whether they arise from artifacts in PCR (PCR duplicates) or from biological causes (highly expressed genes). This is done later in the analysis after read mapping. Below is the sequence duplication level plot.
 
 See more on duplication [here](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html).
-```{r echo=FALSE}
+```{r echo=FALSE, out.width='80%'}
 include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
 ```
 
@@ -215,7 +230,7 @@ cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_g
 
 HISAT2 is used to re-align reads on the *T. brucei* and *G. morsitans* genomes, beginning with indexing the genomes.
 Below is the alignment results from HISAT2 alignment tool.
-```{r echo=FALSE}
+```{r echo=FALSE, out.width='80%'}
 include_graphics("../figures/hisat2_se_plot.png")
 ```
 
@@ -306,8 +321,8 @@ cat ../scripts/htseq_counts.sh
 ```
 
 Below is a graphical visualization of reads assignment by HTSeq.
-\newpage
-```{r fig.cap="HTSeq reads assignment", echo=FALSE}
+
+```{r fig.cap="HTSeq reads assignment", echo=FALSE, out.width='80%'}
 include_graphics("../figures/htseq_assignment_plot_brucei_only.png")
 ```
 
@@ -344,6 +359,16 @@ For further analysis, samples read counts are read into R. To read the sample co
 cat ../scripts/htseq-combine_all.R
 ```
 
+### Gene IDs and Transcript IDs
+```{r eval=FALSE}
+# for changing transcript ids to corresponding gene ids
+gtf_file <- import("../data/TriTrypDB-43_TbruceiTREU927.gtf")
+
+gene_and_transcript_id <- mcols(gtf_file)[,c("gene_id","transcript_id")]
+
+gene_and_transcript_id <- unique(gene_and_transcript_id)
+```
+
 ### Sample quality check
 
 The quality of the samples is checked before further analysis to check for outlier and batch effects.
@@ -378,6 +403,20 @@ keep <- rowSums(cpm(counts)>1) >= 3
 keep.exprs <- filterByExpr(counts, group=sample.metadata$Sample_Name)
 filtered.counts <- counts[keep.exprs,, keep.lib.sizes=FALSE]
 
+# replace transcript ids with gene ids as rownames
+filtered.counts.tmp <- tibble::rownames_to_column(as.data.frame(filtered.counts$counts),
+                                                  "transcript_id")
+
+filtered.counts.tmp$gene_id <- gene_and_transcript_id$gene_id[match(filtered.counts.tmp$transcript_id,
+                                                                    gene_and_transcript_id$transcript_id)]
+
+filtered.counts.tmp <- as.data.frame(filtered.counts.tmp) %>% remove_rownames %>% 
+  column_to_rownames(var = "gene_id")
+
+filtered.counts.tmp$transcript_id <- NULL
+
+filtered.counts$counts <- as.matrix(filtered.counts.tmp)
+
 # obtain logCPM unnormalized for plotting purposes.
 # Here, the norm.factors value is 1 for all samples
 logcpm.unnorm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normalized.lib.sizes = TRUE)
@@ -390,7 +429,8 @@ logcpm.norm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normaliz
 
 # use ComBat to remove batch effects
 modcombat <- model.matrix(~Tissue, data=sample.metadata)
-logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = sample.metadata$Batch, mod = modcombat)
+logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = sample.metadata$Batch, 
+                                    mod = modcombat)
 
 ```
 
@@ -399,7 +439,7 @@ Various plots are made for the samples before and after normalization.
 \newpage
 
 **Samples heatmap**
-```{r results='hide', eval=FALSE}
+```{r results='hide', eval=FALSE, echo=FALSE}
 sample_category <- nlevels(sample.metadata$Sample_Name)
 colour.palette <- colorRampPalette(brewer.pal(sample_category, "Set2"))(sample_category)
 sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
@@ -441,9 +481,8 @@ include_graphics("../figures/unnorm_sample_heatmap.png")
 include_graphics("../figures/norm_sample_heatmap.png")
 ```
 
-\newpage
  **Samples density plot**
-```{r eval=FALSE, results='hide'}
+```{r eval=FALSE, results='hide', echo=FALSE}
 # Checking further using sample density plot
 
 # raw data
@@ -487,10 +526,9 @@ include_graphics("../figures/raw_sample_density.png")
 
 include_graphics("../figures/norm_sample_density.png")
 ```
-\newpage
 
  **Principal component analysis**
-```{r eval=FALSE, results='hide'}
+```{r eval=FALSE, results='hide', echo=FALSE}
 # PCA
 
 # raw samples PCA
@@ -535,7 +573,6 @@ autoplot(pca.log.counts.combat,
 dev.off()
 ```
 
-\newpage
 ```{r fig.cap="Raw Sample PCA", echo=FALSE}
 include_graphics("../figures/raw_samples_PCA.png")
 ```
@@ -552,9 +589,8 @@ include_graphics("../figures/unnorm_sample_PCA.png")
 include_graphics("../figures/norm_sample_PCA.png")
 ```
 
-\newpage
  **Boxplot**
-```{r, eval=FALSE}
+```{r, eval=FALSE, echo=FALSE}
 # raw sample boxplot
 png(filename = "../figures/raw_sample_boxplot.png", res =1200, type = "cairo", units = 'in',
     width = 4, height = 4, pointsize = 6)
@@ -586,7 +622,6 @@ ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() +
 dev.off()
 ```
 
-\newpage
 ```{r fig.cap="Filtered-Unnormalized Sample boxplot", echo=FALSE, out.width='75%'}
 include_graphics("../figures/unnorm_sample_boxplot.png")
 ```
@@ -602,14 +637,15 @@ include_graphics("../figures/norm_sample_boxplot.png")
 
 ```{r eval=FALSE}
 # Apply sample grouping based on Tissue from which the sample was derived
-design <- model.matrix(~0+sample.metadata$Tissue)
-colnames(design) <- levels(sample.metadata$Tissue)
+design <- model.matrix(~0+sample.metadata$Tissue+sample.metadata$Batch)
+#colnames(design) <- levels(sample.metadata$Tissue)
+colnames(design) <- c("MG","PV","SG","Batch")
 
 # Estimate dispersions for tags
-filtered.counts <- estimateDisp(filtered.counts, design, robust = TRUE)
+filtered.counts.dge <- estimateDisp(filtered.counts, design, robust = TRUE)
 
 # Fit a generalized likelihood model to the DGELIST using sample grouping
-fit <- glmFit(filtered.counts,design)
+fit <- glmFit(filtered.counts.dge,design)
 
 #################################################################
 # code in this section adapted from https://github.com/iscb-dc-rsg/2016-summer-workshop
@@ -642,9 +678,9 @@ for (conds in comparisons) {
 }
 
 # Filter out genes which were not differentially expressed for any contrast
-de.genes <- filtered.counts[rownames(filtered.counts) %in% sig_genes,]
+de.genes <- filtered.counts.dge[rownames(filtered.counts.dge) %in% sig_genes,]
 dim(de.genes$counts)
-#4188   15
+#3934   15
 ################################################################
 
 # Obtain the counts of genes expressed for each contrast individually
@@ -653,24 +689,24 @@ dim(de.genes$counts)
 
 # Likelihood ratio test to identify DEGs
 # SG compared to PV
-SG_vs_PV_lrt <- glmLRT(fit, contrast=c(0,-1,1))
+  SG_vs_PV_lrt <- glmLRT(fit, contrast=c(0,-1,1,0))
 
 # PV compared to MG
-PV_vs_MG_lrt <- glmLRT(fit, contrast = c(-1,1,0))
+PV_vs_MG_lrt <- glmLRT(fit, contrast = c(-1,1,0,0))
 
 
 # Genes with most significant differences (using topTags)
 # SG compared to PV
 topGenes_SG <- topTags(SG_vs_PV_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
 dim(topGenes_SG)
-#2973    5
+#3166    5
 
 # PV compared to MG
 topGenes_PV <- topTags(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
 dim(topGenes_PV)
-#2543    5
+#1908    5
 
-#Total number of genes: 5516
+#Total number of genes: 5074
 #######################################################################################
 # DE genes at 5% FDR (using decideTestsDGE function)
 #
@@ -680,9 +716,9 @@ SG_vs_PV_de.genes <- decideTestsDGE(SG_vs_PV_lrt, adjust.method = "BH", p.value 
 # get summary
 summary(SG_vs_PV_de.genes)
 #       -1*PV 1*SG
-#Down         1375
-#NotSig       4417
-#Up           1598
+#Down         1463
+#NotSig       4224
+#Up           1703
 
 # PV compared to MG
 PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05)
@@ -690,44 +726,43 @@ PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value 
 # summary
 summary(PV_vs_MG_de.genes)
 #       -1*MG 1*PV
-#Down         1362
-#NotSig       4847
-#Up           1181
+#Down         987
+#NotSig       5482
+#Up           921
 
 # DE genes in the PV that are common in both comparisons
 de.common <- which(PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
 length(de.common)
-#1328
+#1140
 
 # create a dataframe with data on PV and SG differential gene expression
 PV_data <- topGenes_PV$table
 SG_data <- topGenes_SG$table
 
-# append status of regulation for each gene (either upregulated, 1 or downregulated, -1)
-## appending result was erroneous; status (+ or -) did not coincide with logFC sign (+ or -). why?
-PV_data$RegulationStatus <- PV_vs_MG_de.genes[rownames(PV_vs_MG_de.genes) %in% rownames(PV_data),]
-SG_data$RegulationStatus <- SG_vs_PV_de.genes[rownames(SG_vs_PV_de.genes) %in% rownames(SG_data),]
+# get common DE genes between PV-MG and PV-SG
+MG_PV_common <- subset(PV_data, PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
+PV_SG_common <- subset(SG_data, PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
 
-# obtain upregulated and downregulated genes and write out to excel
-PV_DownReg <- PV_data[order(PV_data$logFC),]
-PV_UpReg <- PV_data[order(PV_data$logFC, decreasing = TRUE),]
+MG_PV_common <- MG_PV_common[order(MG_PV_common$logFC, decreasing = TRUE),]
+PV_SG_common <- PV_SG_common[order(PV_SG_common$logFC, decreasing = TRUE),]
 
-SG_DownReg <- SG_data[order(SG_data$logFC),]
-SG_UpReg <- SG_data[order(SG_data$logFC, decreasing = TRUE),]
+# write out to excel upregulated and downregulated genes and the commmon genes between contrasts
+PV_vs_MG <- PV_data[order(PV_data$logFC, decreasing = TRUE),]
+SG_vs_PV <- SG_data[order(SG_data$logFC, decreasing = TRUE),]
 
-write.xlsx(PV_DownReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Down-regulated Proventriculus")
-write.xlsx(PV_UpReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Up-regulated Proventriculus", append = TRUE)
-write.xlsx(SG_DownReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Down-regulated Salivary glands", append = TRUE)
-write.xlsx(SG_UpReg, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Up-regulated Salivary glands", append = TRUE)
+write.xlsx(PV_vs_MG, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Midgut vs Proventriculus DE genes")
+write.xlsx(SG_vs_PV, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Proventriculus vs Salivary glands DE genes", append = TRUE)
+write.xlsx(MG_PV_common, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Midgut vs Proventriculus Common genes", append = TRUE)
+write.xlsx(PV_SG_common, file = "../results/Significant_differentially_expressed_genes.xlsx",
+           sheetName = "Proventriculus vs Salivary glands Common genes", append = TRUE)
 ```
 
 Plotting to visually inspect differential gene expression results.
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, echo=FALSE}
 # Differential expression analysis - plots
 #
 # Volcano plots
@@ -741,11 +776,11 @@ tab <- data.frame(logFC = topGenes_SG$table$logFC,
                   negLogPval = -log10(topGenes_SG$table$PValue)) # SG compared to PV
 
 # generating the plot
-png("../figures/PV-MG_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
+png("../figures/SG-PV_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
     width = 4, height = 4, pointsize = 8)
 par(mar = c(5, 4, 4, 4))
 plot(tab, pch = 16, cex = 0.6, xlab = expression(log[2]~fold~change),
-ylab = expression(-log[10]~pvalue), main = "PV vs MG differentially expressed genes")
+ylab = expression(-log[10]~pvalue), main = "SG vs PV differentially expressed genes")
 
 ## Log2 fold change and p-value cutoffs
 lfc <- 2
@@ -766,7 +801,7 @@ dev.off()
 
 # create a venn diagram to show distribution of the number DEGs between stages
 ```
-
+\newpage
 ```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE, out.width='75%'}
 # Genes differentially expressed in proventriculus compared to midgut (above p<0.05)
 include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
@@ -776,7 +811,7 @@ include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
 # Genes differentially expressed in salivary gland compared to proventriculus (above p<0.05)
 include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
 ```
-
+\newpage
 ### Weighted gene co-expression analysis
 ```{r, eval=FALSE}
 
@@ -788,12 +823,10 @@ network.counts <- t(logcpm.norm.counts.combat)
 powers <- c(c(1:10), seq(from = 12, to=20, by=2))
 sft <- pickSoftThreshold(network.counts, powerVector = powers, verbose = 5)
 
-# results
-#sizeGrWindow(9, 5)
-par(mfrow = c(1,2))
+```
 
-cex1 <- 0.9
-
+Plots to determine the soft thresholding power to use.
+```{r, eval=FALSE, echo=FALSE}
 # Scale-free topology fit index as a function of the soft-thresholding power
 png(filename = "../figures/soft-thresholding_power.png", res =1200, type = "cairo", units = 'in',
     width = 4, height = 4, pointsize = 10)
@@ -818,7 +851,6 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 dev.off()
 ```
-Plots to determine the soft thresholding power to use.
 
 ```{r echo=FALSE, out.width='80%'}
 
@@ -869,12 +901,12 @@ dev.off()
 rm(adjacency.matrix)
 gc()
 ```
-
+\newpage
 ```{r fig.cap="Adjacency matrix heatmap (500 genes)", echo=FALSE, out.width='80%'}
 
 include_graphics("../figures/adjacency_matrix_heatmap.png")
 ```
-
+\newpage
 ```{r, eval=FALSE}
 ################################################################
 ## Detecting co-expression modules in R
@@ -974,7 +1006,7 @@ module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours,
 
 include_graphics("../figures/gene_tree_and_colours.png")
 ```
-
+\newpage
 The section below is included for further checks so it may not be necessary to carry out this analysis.
 ```{r, eval=FALSE}
 # --------------------------------------------------------------------------------------------
@@ -1022,6 +1054,10 @@ greenyellow        grey  lightgreen         red      salmon       white
 # eigengenes of new merged modules
 merged.module.eigengenes <- module.eigengenes.merge$newMEs
 
+```
+
+```{r, eval=FALSE, echo=FALSE}
+
 # plot the dendrogram with original and merged colours underneath
 #sizeGrWindow(12, 9)
 png(filename = "../figures/merged-original_colours-original_dendro.png", res =1200, type = "cairo", 
@@ -1044,7 +1080,7 @@ dev.off()
 
 include_graphics("../figures/merged-original_colours-original_dendro.png")
 ```
-
+\newpage
 ```{r, eval=FALSE}
 
 #-----------------------------------------------------------------------------------------
@@ -1140,17 +1176,341 @@ modules.network <- export_network_to_graphml(modTOM,
                                              nodeAttrDataFrame = node.attributes)
 
 # write out a node attributes files with hexadecimal colour names for module genes
-write.table(node.attributes, file = "../results/Cytoscape_node_attributes.txt",row.names = FALSE, quote = FALSE, sep = "\t")
+write.table(node.attributes, file = "../results/Cytoscape_node_attributes.txt",row.names = FALSE, 
+            quote = FALSE, sep = "\t")
 
 
 ```
   
 \newpage
-```{r fig.cap="Subnetwork of 1399 genes", echo=FALSE}
+```{r fig.cap="Subnetwork of 1399 genes", echo=FALSE, out.width='80%'}
 
 include_graphics("../figures/G--clustered.png")
 ```
-### FIRE (Finding Informative Regulatory Elements)
+\newpage
+
+## Functional Analysis
+
+### Loading annotations from the packages
+Document: manuscript-shared-rnaseq/Rmd/init/load_pathogen_annotations.Rmd
+
+```{r eval=FALSE}
+#################################################################
+# load gene annotations from packages
+#################################################################
+orgdb <- get("Trypanosoma.brucei.TREU927")
+
+# Fix AnnotationDbi namespace mess
+assign('select', dplyr::select, envir=.GlobalEnv)
+assign('get',    base::get, envir=.GlobalEnv)
+
+gene_info <- load_parasite_annotations(orgdb, rownames(logcpm.norm.counts.combat),
+                                       keytype="GID")
+
+# Get transcript lengths (sum of all exon lengths for each gene)
+txdb <- orgdb@txdbSlot
+transcript_lengths <- transcriptLengths(txdb)
+transcript_lengths <- transcript_lengths[transcript_lengths$gene_id %in%
+                                         gene_info$gene_id,]
+
+gene_info[match(transcript_lengths$gene_id, gene_info$gene_id), 
+          'transcript_length'] <- transcript_lengths$tx_len
+gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
+
+# A gene was excluded in the annotation database as a result of an orphan transcript. Add its placeholder.
+## ---not run---
+gene_info <- rbind(gene_info, data.frame(gene_id='Tb927.4.4663',
+                                         chromosome='4',
+                                         description=NA, strand=NA, type=NA,
+                                         transcript_length=NA))
+  
+  
+# Keep only the feature information remaining genes
+gene_info <- gene_info[gene_info$gene_id %in% rownames(logcpm.norm.counts.combat),] #WGCNA input counts
+
+# For now, just grab the description for the first transcript
+#gene_info <- gene_info[!duplicated(gene_info$gene_id),]
+
+# Gene IDs
+gene_ids <- rownames(logcpm.norm.counts.combat)
+
+# gene annotations preview
+kable(head(gene_info), caption='Preview of gene annotations.')
+
+#########################################################################################
+# load GO terms associated with each parasite gene that were downloaded from Tritrypdb
+#########################################################################################
+# T. brucei go term annotations file path
+#go_term_mapping <- "~/tbrucei_annotation_package/build/3.6.0/TriTrypDB-43_TbruceiTREU927_go_table.txt"
+#go_terms <- read.table(go_term_mapping, header = TRUE)
+
+# load go terms from annotation package instead
+go_terms <- load_go_terms(orgdb, rownames(logcpm.norm.counts.combat), 
+                          keytype='GID')
+
+# Exclude genes not found in count table --not run--
+#go_terms <- go_terms[go_terms$GID %in% rownames(logcpm.norm.counts.combat),]
+
+# gene / go term mapping
+gene_go_mapping <- as.data.frame(unique(go_terms %>% select(GID, GO, ONTOLOGY)))
+colnames(gene_go_mapping) <- c('gene', 'category', 'ontology')
+
+# go id / term mapping
+go_term_id_mapping <- as.data.frame(unique(go_terms[c('GO', 'TERM', 'ONTOLOGY')]))
+colnames(go_term_id_mapping) <- c("category", "term", "ontology")
+
+#########################################################################################
+# Load KEGG annotations
+#########################################################################################
+
+gene_kegg_mapping <- load_kegg_mapping(orgdb, rownames(logcpm.norm.counts.combat),
+                                       keytype="GID")
+
+kegg_pathways <- load_kegg_pathways(orgdb, rownames(logcpm.norm.counts.combat),
+                                    keytype="GID")
+
+
+# Rename gene/KEGG mapping columns to be consistent with GO mapping
+colnames(gene_kegg_mapping) <- c('gene', 'category')
+colnames(kegg_pathways)     <- c('category', 'name', 'class', 'description')
+
+kegg_pathways <- unique(kegg_pathways)
+
+```
+
+### GO Enrichment
+
+document: manuscript-shared-rnaseq/Rmd/results/go_enrichment_network.Rmd
+
+```{r go_enrichment_modules, message=FALSE, warning=FALSE, results='hide', eval=FALSE}
+# save required variables obtained earlier in analysis with variable names of the code below
+module_colors <- module.colours
+gene_tree <-gene.tree
+wgcna_input <- logcpm.norm.counts.combat
+modules_of_interest <- interesting.modules
+num_modules <- length(unique(module_colors))
+
+# Initialize parallelization
+cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
+registerDoParallel(cl)
+message("Performing GO enrichment")
+
+# Check each module for enrichment in GO terms and save result in a list
+module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+  set.seed(1)
+  # Measure GO enrichment for module
+  enriched <- tryCatch({
+    # module gene ids
+    in_module_geneids <- gene_ids[module_colors == color]
+    message(sprintf("[GO enrichment] %s", color))
+    
+    # T. brucei GO enrichment
+    enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
+                                          gene_go_mapping, gene_lengths)
+    
+    # Add descriptions
+    enriched <- merge(enriched, go_term_id_mapping, by='category')
+  }, error=function(e) {
+    # goseq fails in some cases; have not been able to track down cause yet
+    # to avoid errors we will just return an empty result set
+    warning(sprintf("GO enrichment failed for module %s", color))
+    cbind(
+        get_enrichment_placeholder(),
+        term=numeric(0),
+        ontology=numeric(0)
+    )
+  })
+  enriched
+}
+names(module_go_enrichment) <- unique(module_colors)
+
+# remove any null/empty entries from the results
+module_go_enrichment <- module_go_enrichment[!sapply(module_go_enrichment, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r print_go_enrichment_modules, results='asis', eval=FALSE}
+# Print enrichment results
+tmp <- cbind(gene=gene_ids, color=module_colors)
+gene_mapping <- merge(gene_go_mapping, tmp, by='gene')
+cat(sprintf('- Total enriched modules: %d\n', 
+            sum(sapply(module_go_enrichment, nrow) > 0)))
+
+# create tables of the results in this document
+print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
+                             #NULL, gene_mapping, 'output/modules', 
+                             NULL, gene_mapping, 
+                             enrichment_type='go',
+                             include_gene_lists=FALSE)
+
+enriched_colors_go <- get_enriched_modules(module_go_enrichment)
+
+# Module enrichment status (used in dendrogram plots)
+go_enrichment_status   <- as.numeric(module_colors %in% enriched_colors_go)
+
+```
+
+### KEGG Enrichment
+
+document: manuscript-shared-rnaseq/Rmd/results/kegg_enrichment_network.Rmd
+
+```{r kegg_enrichment_modules, message=FALSE, warning=FALSE, results='hide', eval=FALSE}
+# Check each module for enrichment in KEGG terms and save result in a list
+cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
+registerDoParallel(cl)
+
+message("Performing KEGG enrichment")
+
+# Check each module for enrichment in GO terms and save result in a list
+module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+  set.seed(1)
+
+  # Measure KEGG enrichment for module
+  enriched <- tryCatch({
+      in_module_geneids <- gene_ids[module_colors == color]
+      enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
+                                        gene_kegg_mapping, gene_lengths)
+      
+      enriched <- unique(merge(enriched, kegg_pathways[,c('category','name')],
+                              by='category'))
+  }, error=function(e) {
+      # goseq fails in some cases; have not been able to track down cause yet
+      warning(sprintf("KEGG enrichment failed for module %s", color))
+      return(get_enrichment_placeholder())
+  })
+  enriched
+}
+
+names(module_kegg_enrichment) <- unique(module_colors)
+
+# remove any null/empty entries from the results
+module_kegg_enrichment <- module_kegg_enrichment[!sapply(module_kegg_enrichment, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r print_kegg_enrichment_modules, results='asis', eval=FALSE}
+cat(sprintf('- Total enriched modules: %d\n', 
+            sum(sapply(module_kegg_enrichment, nrow) > 0)))
+
+# create tables of the results in this document
+print_enrichment_results(module_kegg_enrichment, module_sizes, 
+                             'KEGG pathway',
+                             #output_dir='output/modules',
+                             enrichment_type='kegg')
+
+enriched_colors_kegg <- get_enriched_modules(module_kegg_enrichment)
+
+```
+
+```{r enrichment_status, eval=FALSE}
+# Module enrichment status (used in dendrogram plots)
+kegg_enrichment_status <- as.numeric(module_colors %in% enriched_colors_kegg)
+```
+
+```{r module_dendrogram_annotated, results='asis', eval=FALSE}
+
+cat('\n### Dendrogram with annotated modules\n')
+
+unassigned_modules <- as.numeric(module_colors == 'grey')
+
+png(filename = "../figures/gene_tree_and_module_enrichment_status.png", res =1200, 
+    type = "cairo", units = 'in', width = 5, height = 6, pointsize = 10)
+WGCNA::plotDendroAndColors(gene_tree,
+                        cbind(module_colors, go_enrichment_status,
+                            kegg_enrichment_status, unassigned_modules),
+                        groupLabels=c(sprintf("Modules\n(n=%s)", num_modules),
+                                    #sprintf("Red = upregulated at %s", CONFIG$de_cond2),
+                                    "GO enrichment", "KEGG enrichment", "Unassigned"),
+                        #cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                       # cex.axis=cex_axis, cex.lab=cex_lab,
+                        dendroLabels=FALSE,
+                        #marAll=c(4,8,6,4),
+                        guideHang=0.05)
+dev.off()
+```
+
+\newpage
+```{r fig.cap="Gene tree and module enrichment status", echo=FALSE, out.width='80%', eval=FALSE}
+
+include_graphics("../figures/gene_tree_and_module_enrichment_status.png")
+```
+
+### Module labels mappings
+```{r eval=FALSE}
+module_label_mapping <- rbind(cbind(modules_of_interest,
+                                    seq_along(modules_of_interest)),
+                              cbind(remaining_modules, #remaining modules variable?
+                                    seq_along(remaining_modules) +
+                                      length(modules_of_interest)))
+
+module_label_mapping <- as.data.frame(module_label_mapping)
+colnames(module_label_mapping) <- c('color', 'number')
+```
+
+
+### Save results
+
+```{r, eval=FALSE}
+## Save results
+
+###############################################################################
+# Save enrichment results as text files
+module_output_dir <- "../results/enrichment_results"
+if (!dir.exists(module_output_dir)) {
+    dir.create(module_output_dir, recursive=TRUE)
+}
+
+# GO enrichment 
+output_module_enrichment_results(module_go_enrichment, module_output_dir,
+'go', go_term_id_mapping)
+
+# KEGG enrichment
+output_module_enrichment_results(module_kegg_enrichment, module_output_dir,
+'kegg', kegg_pathways %>% select(-description))
+
+#################################################################################
+# Create result data frame
+result <- cbind(gene_info, color=module_colors)
+
+# drop unneeded columns
+keep_cols <- intersect(c('gene_id', 'color', 'description', 'chromosome',
+'strand', 'transcript_length'), colnames(result))
+result <- tbl_df(result[,keep_cols])
+
+# add expression-related fields
+result$expr_variance <- apply(wgcna_input, 1, var)
+result$expr_mean <- apply(wgcna_input, 1, mean)
+
+# replace colors with numbers
+#module_colors <- module_label_mapping$number[match(module_colors, module_label_mapping$color)]
+
+#result$color <- module_label_mapping$number[match(result$color, module_label_mapping$color)]
+
+# Write out an excel/csv file for the result dataframe
+write.table(result, file="../results/results_df.txt", quote = FALSE, sep = "\t")
+
+#################################################################################
+correlation_matrix <- cor(network.counts) # check this further to determine whether relationship is correct
+
+# Module Stats
+# main_contrast: variable useful if 'result' variable has Differential expression column specified
+# "de_comparisons"
+#--this code did not work--
+module_stats <- create_module_stats_df(result, correlation_matrix, 
+                                       wgcna_input,main_contrast)
+
+# Write module stats to a file
+write.csv(module_stats, file="../results/module_stats.csv",row.names=FALSE, quote=FALSE)
+
+```
+
+
+
+## FIRE (Finding Informative Regulatory Elements)
 Module genes and their module labels are required as input by FIRE (Finding Informative Regulatory Elements). Hence we write out text files with this input.
 
 ```{r eval=FALSE}
