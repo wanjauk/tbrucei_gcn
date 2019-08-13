@@ -751,13 +751,13 @@ PV_vs_MG <- PV_data[order(PV_data$logFC, decreasing = TRUE),]
 SG_vs_PV <- SG_data[order(SG_data$logFC, decreasing = TRUE),]
 
 write.xlsx(PV_vs_MG, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Midgut vs Proventriculus DE genes")
+           sheetName = "MG vs PV")
 write.xlsx(SG_vs_PV, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Proventriculus vs Salivary glands DE genes", append = TRUE)
+           sheetName = "PV vs SG", append = TRUE)
 write.xlsx(MG_PV_common, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Midgut vs Proventriculus Common genes", append = TRUE)
+           sheetName = "MG vs PV Common genes", append = TRUE)
 write.xlsx(PV_SG_common, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "Proventriculus vs Salivary glands Common genes", append = TRUE)
+           sheetName = "PV vs SG Common genes", append = TRUE)
 ```
 
 Plotting to visually inspect differential gene expression results.
@@ -980,24 +980,20 @@ module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours,
                                              power = 4,type = "signed")
 
 # A list of module hub genes
-                black                  blue                 brown 
-  "Tb927.7.1790:mRNA"   "Tb927.8.3620:mRNA"  "Tb927.11.1570:mRNA" 
-                 cyan             darkgreen              darkgrey 
-  "Tb927.2.5530:mRNA" "Tb927.11.14020:mRNA"   "Tb927.9.9450:mRNA" 
-           darkorange               darkred         darkturquoise 
-   "Tb927.8.710:mRNA"   "Tb927.2.5270:mRNA"   "Tb927.8.6650:mRNA" 
-                green           greenyellow                grey60 
-"Tb927.10.13790:mRNA"    "Tb927.7.920:mRNA"  "Tb927.10.3820:mRNA" 
-            lightcyan            lightgreen           lightyellow 
- "Tb927.11.6440:mRNA"   "Tb927.10.720:mRNA"  "Tb927.10.2560:mRNA" 
-              magenta          midnightblue                orange 
-  "Tb927.9.6290:mRNA"  "Tb927.11.6640:mRNA"   "Tb927.9.2520:mRNA" 
-                 pink                purple                   red 
- "Tb927.10.6200:mRNA"    "Tb927.1.600:mRNA"   "Tb927.7.6920:mRNA" 
-            royalblue                salmon                   tan 
-"Tb927.10.15680:mRNA"  "Tb927.11.1450:mRNA"   "Tb927.3.2930:mRNA" 
-            turquoise                 white                yellow 
- "Tb927.9.15630:mRNA"   "Tb927.8.7980:mRNA"   "Tb927.1.3550:mRNA"
+           black             blue            brown             cyan 
+  "Tb927.7.1790"   "Tb927.8.3620"  "Tb927.11.1570"   "Tb927.2.5530" 
+       darkgreen         darkgrey       darkorange          darkred 
+"Tb927.11.14020"   "Tb927.9.9450"    "Tb927.8.710"   "Tb927.2.5270" 
+   darkturquoise            green      greenyellow           grey60 
+  "Tb927.8.6650" "Tb927.10.13790"    "Tb927.7.920"  "Tb927.10.3820" 
+       lightcyan       lightgreen      lightyellow          magenta 
+ "Tb927.11.6440"   "Tb927.10.720"  "Tb927.10.2560"   "Tb927.9.6290" 
+    midnightblue           orange             pink           purple 
+ "Tb927.11.6640"   "Tb927.9.2520"  "Tb927.10.6200"    "Tb927.1.600" 
+             red        royalblue           salmon              tan 
+  "Tb927.7.6920" "Tb927.10.15680"  "Tb927.11.1450"   "Tb927.3.2930" 
+       turquoise            white           yellow 
+ "Tb927.9.15630"   "Tb927.8.7980"   "Tb927.1.3550"
 
 ```
 
@@ -1103,14 +1099,12 @@ merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
                                                     type = "signed")
 
 # a list of merged module hub genes
-                black                  blue                 brown 
-  "Tb927.7.1790:mRNA"   "Tb927.1.3130:mRNA" "Tb927.11.14220:mRNA" 
-             darkgrey               darkred                 green 
-  "Tb927.11.760:mRNA"   "Tb927.5.1050:mRNA"   "Tb927.8.6580:mRNA" 
-          greenyellow            lightgreen                   red 
-"Tb927.11.10610:mRNA"   "Tb927.10.720:mRNA" "Tb927.10.14900:mRNA" 
-               salmon                 white                yellow 
- "Tb927.11.1450:mRNA"   "Tb927.8.3530:mRNA"   "Tb927.1.3550:mRNA"
+           black             blue            brown         darkgrey 
+  "Tb927.7.1790"   "Tb927.1.3130" "Tb927.11.14220"   "Tb927.11.760" 
+         darkred            green      greenyellow       lightgreen 
+  "Tb927.5.1050"   "Tb927.8.6580" "Tb927.11.10610"   "Tb927.10.720" 
+             red           salmon            white           yellow 
+"Tb927.10.14900"  "Tb927.11.1450"   "Tb927.8.3530"   "Tb927.1.3550"
 
 ```
 
@@ -1491,7 +1485,9 @@ result$expr_mean <- apply(wgcna_input, 1, mean)
 #result$color <- module_label_mapping$number[match(result$color, module_label_mapping$color)]
 
 # Write out an excel/csv file for the result dataframe
-write.table(result, file="../results/results_df.txt", quote = FALSE, sep = "\t")
+write.table(result, file="../results/genes_results_df.txt", quote = FALSE, sep = "\t")
+
+write.xlsx(result, file="../results/genes_results_df.xlsx", sheetName="Gene Clustering")
 
 #################################################################################
 correlation_matrix <- cor(network.counts) # check this further to determine whether relationship is correct
@@ -1505,6 +1501,41 @@ module_stats <- create_module_stats_df(result, correlation_matrix,
 
 # Write module stats to a file
 write.csv(module_stats, file="../results/module_stats.csv",row.names=FALSE, quote=FALSE)
+#################################################################################
+# Save module enrichment results in a dataframe and write out to excel
+black <- module_go_enrichment$black
+tan <- module_go_enrichment$tan    
+brown <- module_go_enrichment$brown
+blue <- module_go_enrichment$blue  
+turquoise <- module_go_enrichment$turquoise
+magenta <- module_go_enrichment$magenta    
+darkturquoise <- module_go_enrichment$darkturquoise
+green <- module_go_enrichment$green                
+red <- module_go_enrichment$red    
+pink <- module_go_enrichment$pink
+salmon <- module_go_enrichment$salmon
+lightyellow <- module_go_enrichment$lightyellow
+greenyellow <- module_go_enrichment$greenyellow
+purple <- module_go_enrichment$purple
+
+go_enrichment_df_list <- c("black","tan","brown","blue","turquoise","magenta","darkturquoise",
+                       "green","red","pink","salmon","lightyellow","greenyellow","purple")
+
+  for(name in enrichment_df_list){
+      write.xlsx(x = get(name), 
+                 file = "../results/Module_go_enrichment_results.xlsx", 
+                 sheetName = name, append=TRUE, row.names = FALSE)
+  }
+
+####################################################################################
+#save KEGG enrichment results
+
+red <- module_kegg_enrichment$red    
+pink <- module_kegg_enrichment$pink
+lightyellow <- module_go_enrichment$lightyellow
+
+
+go_enrichment_df_list <- c("blue","magenta","red","pink","lightyellow","yellow","lightcyan")
 
 ```
 
