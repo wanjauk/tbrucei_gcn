@@ -1339,7 +1339,7 @@ print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
                              enrichment_type='go',
                              include_gene_lists=FALSE)
 
-enriched_colors_go <- get_enriched_modules(module_go_enrichment)
+  enriched_colors_go <- get_enriched_modules(module_go_enrichment)
 
 # Module enrichment status (used in dendrogram plots)
 go_enrichment_status   <- as.numeric(module_colors %in% enriched_colors_go)
@@ -1487,7 +1487,7 @@ result$expr_mean <- apply(wgcna_input, 1, mean)
 # Write out an excel/csv file for the result dataframe
 write.table(result, file="../results/genes_results_df.txt", quote = FALSE, sep = "\t")
 
-write.xlsx(result, file="../results/genes_results_df.xlsx", sheetName="Gene Clustering")
+write.xlsx(result, file="../results/genes_results_df.xlsx")
 
 #################################################################################
 correlation_matrix <- cor(network.counts) # check this further to determine whether relationship is correct
@@ -1521,7 +1521,7 @@ purple <- module_go_enrichment$purple
 go_enrichment_df_list <- c("black","tan","brown","blue","turquoise","magenta","darkturquoise",
                        "green","red","pink","salmon","lightyellow","greenyellow","purple")
 
-  for(name in enrichment_df_list){
+  for(name in go_enrichment_df_list){
       write.xlsx(x = get(name), 
                  file = "../results/Module_go_enrichment_results.xlsx", 
                  sheetName = name, append=TRUE, row.names = FALSE)
@@ -1532,10 +1532,20 @@ go_enrichment_df_list <- c("black","tan","brown","blue","turquoise","magenta","d
 
 red <- module_kegg_enrichment$red    
 pink <- module_kegg_enrichment$pink
-lightyellow <- module_go_enrichment$lightyellow
+lightyellow <- module_kegg_enrichment$lightyellow
+blue <- module_kegg_enrichment$blue
+yellow <- module_kegg_enrichment$yellow
+lightcyan <- module_kegg_enrichment$lightcyan
+magenta <- module_kegg_enrichment$magenta
 
 
-go_enrichment_df_list <- c("blue","magenta","red","pink","lightyellow","yellow","lightcyan")
+kegg_enrichment_df_list <- c("blue","magenta","red","pink","lightyellow","yellow","lightcyan")
+
+for(name in kegg_enrichment_df_list){
+      write.xlsx(x = get(name), 
+                 file = "../results/Module_kegg_enrichment_results.xlsx", 
+                 sheetName = name, append=TRUE, row.names = FALSE)
+  }
 
 ```
 
