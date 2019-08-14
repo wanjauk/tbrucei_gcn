@@ -1,0 +1,14 @@
+Package: org.Tb927.tritryp.db
+Title: Genome wide annotation for Trypanosoma brucei
+Description: Genome wide annotation for Trypanosoma brucei, primarily based on mapping using TriTrypDB Gene identifiers.
+Version: 43.0
+Author: Keith Hughitt <khughitt@umd.edu>
+Maintainer: Keith Hughitt <khughitt@umd.edu>
+Depends: R (>= 2.7.0), methods, AnnotationDbi (>= 1.44.0)
+Suggests: DBI, annotate, RUnit
+Imports: methods, AnnotationDbi
+License: Artistic-2.0
+organism: Trypanosoma brucei
+species: Trypanosoma brucei brucei TREU927
+biocViews: OrgDb, annotation
+
