@@ -63,6 +63,7 @@ library('tibble')
 source("~/manuscript-shared-rnaseq/R/enrichment_analysis.R")
 source("~/manuscript-shared-rnaseq/R/annotations.R")
 source("~/manuscript-shared-rnaseq/R/wgcna.R")
+source("~/manuscript-shared-rnaseq/R/util.R")
 
 # set number of threads to allow in WGCNA analysis
 allowWGCNAThreads(nThreads=20)
@@ -1284,6 +1285,17 @@ wgcna_input <- logcpm.norm.counts.combat
 modules_of_interest <- interesting.modules
 num_modules <- length(unique(module_colors))
 
+# save the module sizes 
+# Data frame of module sizes
+module_counts <- c()
+for (color in unique(module_colors)) {
+    module_counts <- append(module_counts, sum(module_colors == color))
+}
+
+# create a mapping from module id to number of genes for later use
+module_sizes <- data.frame(module_id=unique(module_colors),
+                           num_genes=module_counts)
+
 # Initialize parallelization
 cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
 registerDoParallel(cl)
@@ -1334,7 +1346,7 @@ cat(sprintf('- Total enriched modules: %d\n',
 
 # create tables of the results in this document
 print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
-                             #NULL, gene_mapping, 'output/modules', 
+                             #NULL, gene_mapping, output_dir='../results/printed_enrichment_results', 
                              NULL, gene_mapping, 
                              enrichment_type='go',
                              include_gene_lists=FALSE)
@@ -1393,7 +1405,7 @@ cat(sprintf('- Total enriched modules: %d\n',
 # create tables of the results in this document
 print_enrichment_results(module_kegg_enrichment, module_sizes, 
                              'KEGG pathway',
-                             #output_dir='output/modules',
+                             #output_dir='../results/printed_enrichment_results',
                              enrichment_type='kegg')
 
 enriched_colors_kegg <- get_enriched_modules(module_kegg_enrichment)
