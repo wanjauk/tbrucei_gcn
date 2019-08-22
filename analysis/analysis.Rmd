@@ -1122,11 +1122,19 @@ interesting.modules <- c('black', 'cyan', 'grey','brown',
                          'lightgreen','lightyellow','magenta','orange','pink','purple','red',
                          'royalblue','salmon','turquoise','white','yellow') # all module colours, thus the whole network
 
+# enriched modules
+enriched.modules <- c("black","tan","brown","blue","turquoise","magenta","darkturquoise",
+                      "green","red","pink","salmon","lightyellow","purple","greenyellow")
+
 # obtain gene ids
 gene.ids <- rownames(logcpm.norm.counts.combat)
 
 # select module genes
-inModules <- is.finite(match(module.colours, interesting.modules))
+#inModules <- is.finite(match(module.colours, interesting.modules)) # whole network modules
+
+#inModules <- is.finite(match(module.colours, enriched.modules)) # enriched modules
+inModules <- is.finite(match(module.colours, c("midnightblue", "lightcyan"))) # individual modules
+
 modGenes <- gene.ids[inModules]
 
 # select the corresponding dissTOM based on module genes
@@ -1134,18 +1142,14 @@ modTOM <- TOM[inModules, inModules]
 dimnames(modTOM) <- list(modGenes, modGenes)
 
 # Export the network into edge and node list files Cytoscape can read
-cyt <- exportNetworkToCytoscape(modTOM, 
-                                edgeFile = "../results/CytoscapeInput-edges.txt", 
-                                nodeFile = "../results/CytoscapeInput-nodes.txt", 
-                                weighted = TRUE, 
-                                threshold = 0.3, 
-                                nodeNames = modGenes, 
-                                nodeAttr = module.colours[inModules]);
+exportNetworkToCytoscape(modTOM,
+                         edgeFile = "../results/cytoscape_input_files/CytoscapeInput-edges_midnightblue_lightcyan_module_thresh0.txt",
+                         nodeFile = "../results/cytoscape_input_files/CytoscapeInput-nodes_midnightblue_lightcyan_module_thresh0.txt",
+                         weighted = TRUE,
+                         threshold = 0,
+                         nodeNames = modGenes,
+                         nodeAttr = module.colours[inModules]);
 
-
-
-# remove the cytoscape network
-rm(cyt)
 
 # Also, export the network as graphml format
 # use export_network_to_graphml function
@@ -1153,25 +1157,30 @@ source("../scripts/network_export_graphml.R")
 
 # the whole network
 entire.network <- export_network_to_graphml(TOM, 
-                                            filename = "../results/entire_network.graphml",
+                                            filename = "../results/entire_network_thresh0.graphml",
                                             threshold = 0,
                                             nodeAttr = gene.ids,
                                             max_edge_ratio = 3)
 # network modules
 # create a dataframe with node attributes
-node.attributes <- cbind(modGenes, module=module.colours)
+enriched.module.colours <- module.colours[inModules] #get enriched module colours from module.colours
+node.attributes <- cbind(modGenes, module=enriched.module.colours) # node atrr. for enriched modules
+
+#node.attributes <- cbind(modGenes, module=module.colours) # get node attr. for whole network
 node.attributes <- as.data.frame(node.attributes)
 
 # Add RGB versions of colour modules
 node.attributes$colourRGB <- col2hex(node.attributes$module)
 
 modules.network <- export_network_to_graphml(modTOM, 
-                                             filename = "../results/modules_network.graphml",
+                                             filename = "../results/modules_network_thresh0.02.graphml",
                                              threshold = 0.02,
                                              nodeAttrDataFrame = node.attributes)
 
 # write out a node attributes files with hexadecimal colour names for module genes
-write.table(node.attributes, file = "../results/Cytoscape_node_attributes.txt",row.names = FALSE, 
+write.table(node.attributes, 
+            file = "../results/cytoscape_input_files/Cytoscape_node_attributes_enriched_modules_midnightblue_lightcyan.txt",
+            row.names = FALSE, 
             quote = FALSE, sep = "\t")
 
 
@@ -1339,8 +1348,19 @@ stopCluster(cl)
 
 ```{r print_go_enrichment_modules, results='asis', eval=FALSE}
 # Print enrichment results
-tmp <- cbind(gene=gene_ids, color=module_colors)
-gene_mapping <- merge(gene_go_mapping, tmp, by='gene')
+
+# temporarily repeat the gene / go term mapping to add 'term' column
+gene_go_mapping_tmp <- as.data.frame(unique(go_terms %>% select(GID, GO, TERM, ONTOLOGY)))
+colnames(gene_go_mapping_tmp) <- c('gene', 'category', 'term', 'ontology')
+  
+gene_info_tmp <- gene_info %>% select(-chromosome, -strand,
+                                      - type, -transcript_length)
+colnames(gene_info_tmp) <- c("gene","description")
+
+tmp <- cbind(gene_info_tmp, color=module_colors)
+
+#tmp <- cbind(gene=gene_ids, color=module_colors)
+gene_mapping <- merge(gene_go_mapping_tmp, tmp, by='gene')
 cat(sprintf('- Total enriched modules: %d\n', 
             sum(sapply(module_go_enrichment, nrow) > 0)))
 
@@ -1579,25 +1599,28 @@ write.table(as.matrix(fire.clusters), file = "../results/tbrucei_FIRE_expression
             quote = FALSE, row.names = FALSE, sep = "\t")
 
 # Also, write out module genes in a text file.
-write.table(data.frame(modGenes), file = "../results/tbrucei_module_genes.txt", row.names = FALSE, 
-            quote = FALSE, col.names = FALSE)
+write.table(data.frame(modGenes), file = "../results/tbrucei_module_genes.txt", row.names = FALSE, quote = FALSE, col.names = FALSE)
 ```
 
 Prepare input sequences for FIRE by obtaining module genes sequences from *T. brucei*'s entire annotated transcripts. Use `seqtk` package.
 
 ```{bash, eval=FALSE, engine="sh"}
- seqtk subseq \
- ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta \
- ../results/tbrucei_module_genes.txt > \
- ../results/tbrucei_module_genes_sequences.fasta
+# remove unrequired info from header and retain gene id.
+cut -f1 -d ":" ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta > \
+../results/tbrucei_annotated_transcript_sequences.fasta
+
+
+seqtk subseq  ../results/tbrucei_annotated_transcript_sequences.fasta \
+../results/tbrucei_module_genes.txt > \
+../results/tbrucei_module_genes_sequences_FIRE_input.fasta
 
 # remove unrequired info from header and retain transcript id.
-cut -f1 -d "|" ../results/tbrucei_module_genes_sequences.fasta > \
-../results/tbrucei_module_genes_sequences_without_delimiter.fasta
+#cut -f1 -d "|" ../results/tbrucei_module_genes_sequences.fasta > \
+#../results/tbrucei_module_genes_sequences_without_delimiter.fasta
 
 # remove trailing space after header
-cut -f1 -d " " ../results/tbrucei_module_genes_sequences.fasta > \
-../results/tbrucei_module_genes_sequences_without_delimiter.fasta
+#cut -f1 -d " " ../results/tbrucei_module_genes_sequences.fasta > \
+#../results/tbrucei_module_genes_sequences_without_delimiter.fasta
 
 # FIRE commands - FIRE should be run in the directory where all scripts were installed. Therefore,
 # the input files should be copied to FIRE's directory (FIRE-x.x/)
