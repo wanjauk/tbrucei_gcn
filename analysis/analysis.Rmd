@@ -1579,6 +1579,43 @@ for(name in kegg_enrichment_df_list){
                  sheetName = name, append=TRUE, row.names = FALSE)
   }
 
+######################################################################################
+# save module hub genes domain description
+module_hub_genes_description <- gene_info %>% filter(gene_id %in% as.data.frame(module.hub.genes)$module.hub.genes) %>% select(gene_id, description)
+
+module_hub_genes_df <- as.data.frame(module.hub.genes)
+
+module_hub_genes_df <- tibble::rownames_to_column(module_hub_genes_df, var="module")
+
+module_hub_genes_domain_description <- merge(module_hub_genes_df, module_hub_genes_description,
+                                             by.x="module.hub.genes", by.y="gene_id")
+
+# reorder and rename columns 
+module_hub_genes_domain_description <- module_hub_genes_domain_description[,c(2,1,3)]
+
+module_hub_genes_domain_description <- module_hub_genes_domain_description %>%
+  dplyr::rename(hub_genes=module.hub.genes)
+
+write.xlsx(module_hub_genes_domain_description,
+           file = "../results/module_hub_genes_domain_description.xlsx",
+           #append = TRUE,
+           row.names = FALSE)
+
+#########################################################################################
+# Add hub genes and description to top GO terms in each module
+
+modules_top_over_represented_go_terms <-readxl::read_excel('../results/modules_top_over_represented_go_terms.xlsx')
+
+enriched_modules_hub_genes <- module_hub_genes_domain_description %>% filter(module %in% modules_top_over_represented_go_terms$module)
+
+modules_top_over_represented_go_terms_and_hub_genes <- merge(modules_top_over_represented_go_terms,
+                                                             enriched_modules_hub_genes, by="module")
+
+write.xlsx(modules_top_over_represented_go_terms_and_hub_genes,
+           file = "../results/modules_top_over_represented_go_terms_and_hub_genes.xlsx",
+           #append = TRUE,
+           row.names = FALSE)
+
 ```
 
 
