@@ -732,33 +732,56 @@ summary(PV_vs_MG_de.genes)
 #Up           921
 
 # DE genes in the PV that are common in both comparisons
-de.common <- which(PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
+de.common <- which(PV_vs_MG_de.genes[,1]!=0 & SG_vs_PV_de.genes[,1]!=0)
 length(de.common)
-#1140
+#1140 
+
+de.common.df <- as.data.frame(de.common)
+de.common.df <- tibble::rownames_to_column(de.common.df, var = "gene_id")
 
 # create a dataframe with data on PV and SG differential gene expression
 PV_data <- topGenes_PV$table
 SG_data <- topGenes_SG$table
 
-# get common DE genes between PV-MG and PV-SG
-MG_PV_common <- subset(PV_data, PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
-PV_SG_common <- subset(SG_data, PV_vs_MG_de.genes!=0 & SG_vs_PV_de.genes!=0)
+PV_data <- tibble::rownames_to_column(PV_data, var = "gene_id")
+SG_data <- tibble::rownames_to_column(SG_data, var = "gene_id")
 
-MG_PV_common <- MG_PV_common[order(MG_PV_common$logFC, decreasing = TRUE),]
-PV_SG_common <- PV_SG_common[order(PV_SG_common$logFC, decreasing = TRUE),]
+# obtain the common genes for each comparison
+PV_data_common_de_genes <- PV_data %>% filter(gene_id %in% de.common.df$gene_id)
+SG_data_common_de_genes <- SG_data %>% filter(gene_id %in% de.common.df$gene_id)
+
+PV_data_common_de_genes <- PV_data_common_de_genes[order(PV_data_common_de_genes$logFC, 
+                                                         decreasing = TRUE),]
+SG_data_common_de_genes <- SG_data_common_de_genes[order(SG_data_common_de_genes$logFC, 
+                                                         decreasing = TRUE),]
 
 # write out to excel upregulated and downregulated genes and the commmon genes between contrasts
 PV_vs_MG <- PV_data[order(PV_data$logFC, decreasing = TRUE),]
 SG_vs_PV <- SG_data[order(SG_data$logFC, decreasing = TRUE),]
 
-write.xlsx(PV_vs_MG, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "MG vs PV")
-write.xlsx(SG_vs_PV, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "PV vs SG", append = TRUE)
-write.xlsx(MG_PV_common, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "MG vs PV Common genes", append = TRUE)
-write.xlsx(PV_SG_common, file = "../results/Significant_differentially_expressed_genes.xlsx",
-           sheetName = "PV vs SG Common genes", append = TRUE)
+write.xlsx(PV_vs_MG, file = "../results/differentially_expressed_genes.xlsx",
+           sheetName = "MG vs PV", row.names = FALSE)
+write.xlsx(SG_vs_PV, file = "../results/differentially_expressed_genes.xlsx",
+           sheetName = "PV vs SG", append = TRUE, row.names = FALSE)
+
+write.xlsx(PV_data_common_de_genes, 
+           file = "../results/differentially_expressed_genes_common_in_contrasts.xlsx",
+           sheetName = "MG vs PV Common genes", append = TRUE, row.names = FALSE)
+write.xlsx(SG_data_common_de_genes, 
+           file = "../results/differentially_expressed_genes_common_in_contrasts.xlsx",
+           sheetName = "PV vs SG Common genes", append = TRUE, row.names = FALSE)
+
+PV_contrast_common_de_genes_logFC <- PV_data_common_de_genes %>% select(gene_id, logFC_MGvsPV=logFC)
+
+SG_contrast_common_de_genes_logFC <- SG_data_common_de_genes %>% select(gene_id, logFC_PVvsSG=logFC)
+
+contrast_common_de_genes_logFC <- merge(PV_contrast_common_de_genes_logFC, 
+                                        SG_contrast_common_de_genes_logFC, by="gene_id")
+
+write.xlsx(contrast_common_de_genes_logFC, 
+           file = "../results/differentially_expressed_genes_common_in_contrasts_logFC_comparison.xlsx",
+           sheetName = "Common DEGs LogFC Comparisons", row.names = FALSE)
+
 ```
 
 Plotting to visually inspect differential gene expression results.
@@ -801,6 +824,19 @@ cex = 0.8, line = 0.5)
 dev.off()
 
 # create a venn diagram to show distribution of the number DEGs between stages
+PV_data_tmp <- PV_data %>% tibble::column_to_rownames("gene_id")
+SG_data_tmp <- SG_data %>% tibble::column_to_rownames("gene_id")
+
+png(filename = "../figures/venn_de_genes.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 4, pointsize = 10)
+vd <- venn.diagram(x = list("MG vs PV" = rownames(PV_data_tmp),
+                            "SG vs PV" = rownames(SG_data_tmp)),
+                   fill = brewer.pal(3, "Set2")[1:2], filename = NULL)
+grid.draw(vd)
+dev.off()
+
+# clean up
+rm(PV_data_tmp, SG_data_tmp)
 ```
 \newpage
 ```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE, out.width='75%'}
@@ -1480,7 +1516,7 @@ colnames(module_label_mapping) <- c('color', 'number')
 
 ### Save results
 
-```{r, eval=FALSE}
+```{r, echo=FALSE, eval=FALSE}
 ## Save results
 
 ###############################################################################
@@ -1517,9 +1553,9 @@ result$expr_mean <- apply(wgcna_input, 1, mean)
 #result$color <- module_label_mapping$number[match(result$color, module_label_mapping$color)]
 
 # Write out an excel/csv file for the result dataframe
-write.table(result, file="../results/genes_results_df.txt", quote = FALSE, sep = "\t")
+write.table(result, file="../results/coexpression_network_genes.txt", quote = FALSE, sep = "\t")
 
-write.xlsx(result, file="../results/genes_results_df.xlsx")
+write.xlsx(result, file="../results/coexpression_network_genes.xlsx")
 
 #################################################################################
 correlation_matrix <- cor(network.counts) # check this further to determine whether relationship is correct
@@ -1594,10 +1630,10 @@ module_hub_genes_domain_description <- merge(module_hub_genes_df, module_hub_gen
 module_hub_genes_domain_description <- module_hub_genes_domain_description[,c(2,1,3)]
 
 module_hub_genes_domain_description <- module_hub_genes_domain_description %>%
-  dplyr::rename(hub_genes=module.hub.genes)
+  dplyr::rename(hub_gene=module.hub.genes)
 
 write.xlsx(module_hub_genes_domain_description,
-           file = "../results/module_hub_genes_domain_description.xlsx",
+           file = "../results/hub_genes.xlsx",
            #append = TRUE,
            row.names = FALSE)
 
@@ -1616,8 +1652,36 @@ write.xlsx(modules_top_over_represented_go_terms_and_hub_genes,
            #append = TRUE,
            row.names = FALSE)
 
-```
+######################################################################################
+# write to excel DE hub genes expressed through out life cycle stages and their different LogFC in contrasts
 
+contrast_common_de_genes_logFC_hub_genes <- contrast_common_de_genes_logFC %>% filter(gene_id %in% modules_top_over_represented_go_terms_and_hub_genes$hub_genes)
+
+modules_top_over_represented_go_terms_and_hub_genes_logFC <- merge(modules_top_over_represented_go_terms_and_hub_genes,
+                                                                   contrast_common_de_genes_logFC_hub_genes,
+                                                                   by.x="hub_genes", by.y = "gene_id")
+
+modules_top_over_represented_go_terms_and_hub_genes_logFC <- modules_top_over_represented_go_terms_and_hub_genes_logFC %>% select(-num_total, -num_in_subset)
+
+# reorder columns
+modules_top_over_represented_go_terms_and_hub_genes_logFC <- modules_top_over_represented_go_terms_and_hub_genes_logFC[,c(2:6,1,7:9)]
+
+# write output to excel
+write.xlsx(modules_top_over_represented_go_terms_and_hub_genes_logFC,
+           file = "../results/common_differentially_expressed_hub_genes_logFC_comparison.xlsx",
+           #append = TRUE,
+           row.names = FALSE)
+
+#######################################################################################
+# write hub genes and common DEG across contrasts to output text files for cytoscape analysis
+
+#hub genes
+write.table(module_hub_genes_domain_description$hub_genes, file="../results/hub_genes.txt", quote = FALSE, row.names = FALSE)
+
+#common DEGs
+write.table(contrast_common_de_genes_logFC$gene_id, file="../results/common_DEG_across_contrasts.txt", quote = FALSE, row.names = FALSE)
+
+```
 
 
 ## FIRE (Finding Informative Regulatory Elements)
@@ -1643,21 +1707,17 @@ Prepare input sequences for FIRE by obtaining module genes sequences from *T. br
 
 ```{bash, eval=FALSE, engine="sh"}
 # remove unrequired info from header and retain gene id.
-cut -f1 -d ":" ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta > \
-../results/tbrucei_annotated_transcript_sequences.fasta
+cut -f2 -d "|" ../data/tbrucei_annotated_transcripts/TriTrypDB-43_TbruceiTREU927_AnnotatedTranscripts.fasta | cut -f2 -d " " | cut -f1 -d " " | cut -f2 -d "=" > ../results/tbrucei_annotated_transcript_sequences_gene_as_header.fasta
 
+# add ">" symbol to header
+awk '{ if ($0 ~ /Tb/) { printf ">"; } print $0; }' ../results/tbrucei_annotated_transcript_sequences_gene_as_header.fasta > ../results/tbrucei_annotated_transcript_sequences.fasta
 
-seqtk subseq  ../results/tbrucei_annotated_transcript_sequences.fasta \
+# obtain module gene sequences
+seqtk subseq ../results/tbrucei_annotated_transcript_sequences.fasta \
 ../results/tbrucei_module_genes.txt > \
 ../results/tbrucei_module_genes_sequences_FIRE_input.fasta
 
-# remove unrequired info from header and retain transcript id.
-#cut -f1 -d "|" ../results/tbrucei_module_genes_sequences.fasta > \
-#../results/tbrucei_module_genes_sequences_without_delimiter.fasta
-
-# remove trailing space after header
-#cut -f1 -d " " ../results/tbrucei_module_genes_sequences.fasta > \
-#../results/tbrucei_module_genes_sequences_without_delimiter.fasta
+seqkit grep -n -f ../results/tbrucei_module_genes_sorted.txt ../results/tbrucei_annotated_transcript_sequences.fasta > ../results/tbrucei_module_genes_sequences_FIRE_input.fasta1
 
 # FIRE commands - FIRE should be run in the directory where all scripts were installed. Therefore,
 # the input files should be copied to FIRE's directory (FIRE-x.x/)
