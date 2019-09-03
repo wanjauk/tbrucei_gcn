@@ -1,4 +1,4 @@
-modGenes	module.labels.inModules.
+gene	label
 Tb05.5K5.240	 0
 Tb11.v5.0482	 0
 Tb11.v5.0537	 0
