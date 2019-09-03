@@ -135,6 +135,7 @@ batch <- factor(c(1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2))
 
 sample.metadata["Batch"] <- batch
 ```
+  
 ```{r, eval=TRUE, echo=TRUE}
 # print out the sample metadata table
 sample.metadata
@@ -299,20 +300,17 @@ dev.off()
 # Boxplot
 duprateExpBoxplot(DupMat=dm)
 ```
-
+\newpage
 Below are representative plots of samples with PCR duplicates and without PCR duplicates. Samples with PCR duplicates are removed from the analysis before counts data are read into R.
 
 ```{r fig.cap="Sample without PCR duplicates", echo=FALSE, out.width='80%'}
 include_graphics("../figures/duplication_rate/SRR039378.png")
 ```
-
 \newpage
 ```{r fig.cap="Sample with PCR duplicates", echo=FALSE, out.width='80%'}
 include_graphics("../figures/duplication_rate/SRR039937.png")
 ```
-
 \newpage
-
 ## Reads quantification
 
 HTSeq tool is used to count reads that aligned to the *T. brucei* genome. *T. brucei* annotation file is used and therefore HTSeq excludes counting *G. morsitans* reads that aligned to *Glossina* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
@@ -326,7 +324,7 @@ Below is a graphical visualization of reads assignment by HTSeq.
 ```{r fig.cap="HTSeq reads assignment", echo=FALSE, out.width='80%'}
 include_graphics("../figures/htseq_assignment_plot_brucei_only.png")
 ```
-
+\newpage
 ## Generating MultiQC report
 
 MultiQC aggregates results from FASTQC, HISAT2 and HTSeq analysis into an HTML formatted single report for better visualization.
@@ -437,8 +435,6 @@ logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = sample.metad
 
 Various plots are made for the samples before and after normalization.
 
-\newpage
-
 **Samples heatmap**
 ```{r results='hide', eval=FALSE, echo=FALSE}
 sample_category <- nlevels(sample.metadata$Sample_Name)
@@ -449,14 +445,14 @@ sample.colours <- colour.palette[as.integer(sample.metadata$Sample_Name)]
 png(filename = "../figures/unnorm_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 4, pointsize = 10)
 heatmap.2(cor(logcpm.unnorm.counts), RowSideColors=sample.colours, trace='none', 
-          main='Sample correlations')
+          main='Sample correlations', margins = c(8, 8), xlab="Sample", ylab="Sample")
 dev.off()
 
 # Normalized sample heatmap
 png(filename = "../figures/norm_sample_heatmap.png", res =1200, type = "cairo", units = 'in',
     width = 5, height = 4, pointsize = 10)
 heatmap.2(cor(logcpm.norm.counts), RowSideColors=sample.colours, trace='none', 
-          main='Sample correlations')
+          main='Sample correlations', margins = c(8, 8), xlab="Sample", ylab="Sample")
 
 dev.off()
 
@@ -466,22 +462,21 @@ png(filename = "../figures/batch_effect_removal_analysis/combat_norm_sample_heat
     units = 'in',
     width = 5, height = 4, pointsize = 10)
 heatmap.2(cor(logcpm.norm.counts.combat), RowSideColors=sample.colours, trace='none', 
-          main='Sample correlations')
+          main='Sample correlations', margins = c(8, 8), xlab="Sample", ylab="Sample")
 
 dev.off()
 ```
 
 
-```{r fig.cap="Filtered-Unnormalized sample correlation heatmap", echo=FALSE}
+```{r fig.cap="Filtered-Unnormalized sample correlation heatmap", echo=FALSE, eval=FALSE}
 include_graphics("../figures/unnorm_sample_heatmap.png")
 ```
 
-\newpage
 ```{r fig.cap="Normalized sample correlation heatmap", echo=FALSE}
 
 include_graphics("../figures/norm_sample_heatmap.png")
 ```
-
+\newpage
  **Samples density plot**
 ```{r eval=FALSE, results='hide', echo=FALSE}
 # Checking further using sample density plot
@@ -517,17 +512,15 @@ ggplot(x, aes(x=logcpm, color=sample)) + geom_density()
 dev.off()
 ```
 
-\newpage
-```{r fig.cap="Raw sample density plot", echo=FALSE, out.width='90%'}
+```{r fig.cap="Raw sample density plot", echo=FALSE, out.width='90%', eval=FALSE}
 include_graphics("../figures/raw_sample_density.png")
 ```
 
-\newpage
 ```{r fig.cap="Normalized sample density plot", echo=FALSE}
 
 include_graphics("../figures/norm_sample_density.png")
 ```
-
+\newpage
  **Principal component analysis**
 ```{r eval=FALSE, results='hide', echo=FALSE}
 # PCA
@@ -574,22 +567,26 @@ autoplot(pca.log.counts.combat,
 dev.off()
 ```
 
-```{r fig.cap="Raw Sample PCA", echo=FALSE}
+```{r fig.cap="Raw Sample PCA", echo=FALSE, eval=FALSE}
 include_graphics("../figures/raw_samples_PCA.png")
 ```
 
-\newpage
-```{r fig.cap="Filtered-Unnormalized sample PCA", echo=FALSE}
+```{r fig.cap="Filtered-Unnormalized sample PCA", echo=FALSE, eval=FALSE}
 
 include_graphics("../figures/unnorm_sample_PCA.png")
 ```
 
-\newpage
 ```{r fig.cap="Normalized sample PCA", echo=FALSE}
 
 include_graphics("../figures/norm_sample_PCA.png")
 ```
 
+```{r fig.cap="Normalized and batch effect removed sample PCA", echo=FALSE}
+
+include_graphics("../figures/batch_effect_removal_analysis/combat_norm_sample_PCA.png")
+```
+
+\newpage
  **Boxplot**
 ```{r, eval=FALSE, echo=FALSE}
 # raw sample boxplot
@@ -623,17 +620,16 @@ ggplot(y, aes(x=sample, y=logcpm)) + geom_boxplot() +
 dev.off()
 ```
 
-```{r fig.cap="Filtered-Unnormalized Sample boxplot", echo=FALSE, out.width='75%'}
+```{r fig.cap="Filtered-Unnormalized Sample boxplot", echo=FALSE, out.width='75%',eval=FALSE}
 include_graphics("../figures/unnorm_sample_boxplot.png")
 ```
 
-\newpage
 ```{r fig.cap="Normalized sample boxplot", echo=FALSE, out.width='75%'}
 
 include_graphics("../figures/norm_sample_boxplot.png")
 ``` 
 
-\newpage 
+\newpage
 ### Identify differentially expressed genes
 
 ```{r eval=FALSE}
@@ -790,39 +786,57 @@ Plotting to visually inspect differential gene expression results.
 # Differential expression analysis - plots
 #
 # Volcano plots
+SG_DEGs <- topGenes_SG$table
 
-#table with negative log to base 10 transformed p-values and logFC
-# create a plot for each comparison PV-MG and SG-PV one at a time.
-tab <- data.frame(logFC = topGenes_PV$table$logFC, 
-                  negLogPval = -log10(topGenes_PV$table$PValue)) # PV compared to MG
+SG_DEGs <- tibble::rownames_to_column(SG_DEGs, var = "gene_id")
 
-tab <- data.frame(logFC = topGenes_SG$table$logFC, 
-                  negLogPval = -log10(topGenes_SG$table$PValue)) # SG compared to PV
+SG_DEGs = mutate(SG_DEGs, sig=ifelse(SG_DEGs$FDR <0.05 & abs(logFC)>1, "FDR<0.05", "Not Sig"))
 
-# generating the plot
-png("../figures/SG-PV_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
-    width = 4, height = 4, pointsize = 8)
-par(mar = c(5, 4, 4, 4))
-plot(tab, pch = 16, cex = 0.6, xlab = expression(log[2]~fold~change),
-ylab = expression(-log[10]~pvalue), main = "SG vs PV differentially expressed genes")
+#png("../figures/ggplot_SG-PV_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
+#    width = 6, height = 6, pointsize = 4)
+ggplot(SG_DEGs, 
+  aes(logFC, -log10(PValue))) +
+  geom_point(aes(col=sig),size = 1) + 
+  theme_bw(base_size = 9) + 
+    #coord_cartesian(ylim=c(0,300))+ 
+  coord_cartesian(xlim=c(-10,13)) +
+  scale_color_manual(values=c("red","black")) +
+  ggtitle("SG vs PV differentilaly expressed genes") +
+  geom_text_repel(data=filter(SG_DEGs, abs(logFC)>5),
+                  #family = "Times New Roman", 
+                  aes(label=gene_id),
+                  #size = 2, 
+                  arrow = arrow(length = unit(0.01, 'npc')), 
+                  force = 7,box.padding = unit(0.4, "lines"), 
+                  point.padding = unit(0.3, "lines"))
+ggsave("SG-PV_DEG_volcanoplot.png", device = "png")
 
-## Log2 fold change and p-value cutoffs
-lfc <- 2
-pval <- 0.05
+#dev.off()
+###################################
+PV_DEGs <- topGenes_PV$table
 
-## Select interesting genes
-signGenes <- (abs(tab$logFC) > lfc & tab$negLogPval > -log10(pval))
+PV_DEGs <- tibble::rownames_to_column(PV_DEGs, var = "gene_id")
 
-## Identifying the selected genes
-points(tab[signGenes, ], pch = 16, cex = 0.8, col = "red")
-abline(h = -log10(pval), col = "green3", lty = 2)
-abline(v = c(-lfc, lfc), col = "blue", lty = 2)
-mtext(paste("pval =", pval), side = 4, at = -log10(pval), cex = 0.8, line = 0.5, las = 1)
-mtext(c(paste("-", lfc, "fold"), paste("+", lfc, "fold")), side = 3, at = c(-lfc, lfc),
-cex = 0.8, line = 0.5)
+PV_DEGs = mutate(PV_DEGs, sig=ifelse(PV_DEGs$FDR <0.05 & abs(logFC)>1, "FDR<0.05", "Not Sig"))
 
-dev.off()
+ggplot(PV_DEGs, 
+       aes(logFC, -log10(PValue))) +
+  geom_point(aes(col=sig),size = 1) + 
+  theme_bw(base_size = 9) + 
+  #coord_cartesian(ylim=c(0,300))+ 
+  coord_cartesian(xlim=c(-12,7)) +
+  scale_color_manual(values=c("red","black")) +
+  ggtitle("PV vs MG differentilaly expressed genes") +
+  geom_text_repel(data=filter(PV_DEGs, abs(logFC)>3.5),
+                  #family = "Times New Roman", 
+                  aes(label=gene_id),
+                  #size = 2, 
+                  arrow = arrow(length = unit(0.01, 'npc')), 
+                  force = 7,box.padding = unit(0.4, "lines"), 
+                  point.padding = unit(0.3, "lines"))
+ggsave("PV-MG_DEG_volcanoplot.png", device = "png")
 
+#####################################
 # create a venn diagram to show distribution of the number DEGs between stages
 PV_data_tmp <- PV_data %>% tibble::column_to_rownames("gene_id")
 SG_data_tmp <- SG_data %>% tibble::column_to_rownames("gene_id")
@@ -838,12 +852,17 @@ dev.off()
 # clean up
 rm(PV_data_tmp, SG_data_tmp)
 ```
+
+```{r, fig.cap="Venn diagram showing differentially expressed genes", echo=FALSE, out.width='75%'}
+# venn diagram
+include_graphics("../figures/venn_de_genes.png")
+```
 \newpage
 ```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE, out.width='75%'}
 # Genes differentially expressed in proventriculus compared to midgut (above p<0.05)
 include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
 ```
-\newpage
+
 ```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus", echo=FALSE, out.width='75%'}
 # Genes differentially expressed in salivary gland compared to proventriculus (above p<0.05)
 include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
@@ -861,7 +880,7 @@ powers <- c(c(1:10), seq(from = 12, to=20, by=2))
 sft <- pickSoftThreshold(network.counts, powerVector = powers, verbose = 5)
 
 ```
-
+\newpage
 Plots to determine the soft thresholding power to use.
 ```{r, eval=FALSE, echo=FALSE}
 # Scale-free topology fit index as a function of the soft-thresholding power
@@ -938,7 +957,7 @@ dev.off()
 rm(adjacency.matrix)
 gc()
 ```
-\newpage
+
 ```{r fig.cap="Adjacency matrix heatmap (500 genes)", echo=FALSE, out.width='80%'}
 
 include_graphics("../figures/adjacency_matrix_heatmap.png")
@@ -1004,7 +1023,7 @@ gc()
 
 # plot gene dendrogram
 png(filename = "../figures/gene_tree_and_colours.png", res =1200, type = "cairo", units = 'in',
-    width = 5, height = 6, pointsize = 10)
+    width = 6, height = 6, pointsize = 10)
 #sizeGrWindow(8,6) #open graphical window
 plotDendroAndColors(gene.tree, module.colours, "Dynamic Tree Cut", dendroLabels = FALSE,
                     hang = 0.03, addGuide = TRUE, guideHang = 0.05,
@@ -1039,9 +1058,11 @@ module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours,
 
 include_graphics("../figures/gene_tree_and_colours.png")
 ```
-\newpage
-The section below is included for further checks so it may not be necessary to carry out this analysis.
-```{r, eval=FALSE}
+
+
+```{r, eval=FALSE, echo=FALSE}
+#The section below is included for further checks so it may not be necessary to carry out this analysis.
+
 # --------------------------------------------------------------------------------------------
 # merge modules with very similar expression profiles as their genes are highly co-expressed
 # get the module eigengenes
@@ -1094,7 +1115,7 @@ merged.module.eigengenes <- module.eigengenes.merge$newMEs
 # plot the dendrogram with original and merged colours underneath
 #sizeGrWindow(12, 9)
 png(filename = "../figures/merged-original_colours-original_dendro.png", res =1200, type = "cairo", 
-    units = 'in', width = 5, height = 6, pointsize = 10)
+    units = 'in', width = 6, height = 6, pointsize = 10)
 plotDendroAndColors(gene.tree, cbind(module.colours, merged.module.colours), 
                     c("Dynamic Tree Cut", "Merged dynamic"), 
                     dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
@@ -1108,13 +1129,13 @@ plotEigengeneNetworks(module.eigengenes, "Eigengenes heatmap", marHeatmap = c(3,
 dev.off()
 ```
 
-\newpage
-```{r fig.cap="Dendrogram with original and merged colours", echo=FALSE, out.width='80%'}
+
+```{r fig.cap="Dendrogram with original and merged colours", echo=FALSE, out.width='80%', eval=FALSE}
 
 include_graphics("../figures/merged-original_colours-original_dendro.png")
 ```
-\newpage
-```{r, eval=FALSE}
+
+```{r, eval=FALSE, echo=FALSE}
 
 #-----------------------------------------------------------------------------------------
 # rename some variables based on the module eigengene analysis for later use
@@ -1222,10 +1243,9 @@ write.table(node.attributes,
 
 ```
   
-\newpage
-```{r fig.cap="Subnetwork of 1399 genes", echo=FALSE, out.width='80%'}
+```{r fig.cap="Co-expression subnetwork", echo=FALSE,out.width='99%'}
 
-include_graphics("../figures/G--clustered.png")
+include_graphics("../results/tbrucei_network.png")
 ```
 \newpage
 
@@ -1480,7 +1500,7 @@ cat('\n### Dendrogram with annotated modules\n')
 unassigned_modules <- as.numeric(module_colors == 'grey')
 
 png(filename = "../figures/gene_tree_and_module_enrichment_status.png", res =1200, 
-    type = "cairo", units = 'in', width = 5, height = 6, pointsize = 10)
+    type = "cairo", units = 'in', width = 6, height = 6, pointsize = 10)
 WGCNA::plotDendroAndColors(gene_tree,
                         cbind(module_colors, go_enrichment_status,
                             kegg_enrichment_status, unassigned_modules),
@@ -1495,8 +1515,7 @@ WGCNA::plotDendroAndColors(gene_tree,
 dev.off()
 ```
 
-\newpage
-```{r fig.cap="Gene tree and module enrichment status", echo=FALSE, out.width='80%', eval=FALSE}
+```{r fig.cap="Gene tree and module enrichment status", echo=FALSE, out.width='80%'}
 
 include_graphics("../figures/gene_tree_and_module_enrichment_status.png")
 ```
@@ -1683,7 +1702,6 @@ write.table(contrast_common_de_genes_logFC$gene_id, file="../results/common_DEG_
 
 ```
 
-
 ## FIRE (Finding Informative Regulatory Elements)
 Module genes and their module labels are required as input by FIRE (Finding Informative Regulatory Elements). Hence we write out text files with this input.
 
@@ -1695,6 +1713,9 @@ fire.clusters <- data.frame(modGenes, module.labels[inModules])
 
 # sort by module labels; FIRE input should start from 0 in module labels column.
 fire.clusters <- fire.clusters[order(fire.clusters$module.labels.inModules.), c(1,2)]
+
+# rename columns
+colnames(fire.clusters) <- c("gene", "label")
 
 write.table(as.matrix(fire.clusters), file = "../results/tbrucei_FIRE_expression_clusters.txt", 
             quote = FALSE, row.names = FALSE, sep = "\t")
