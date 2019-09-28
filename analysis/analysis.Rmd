@@ -58,6 +58,7 @@ library('TxDb.TbruceiTREU927.tritryp43.genes')
 library('dplyr')
 library('rtracklayer')
 library('tibble')
+library('ggrepel')
 
 # load helper functions
 source("~/manuscript-shared-rnaseq/R/enrichment_analysis.R")
@@ -801,15 +802,15 @@ ggplot(SG_DEGs,
     #coord_cartesian(ylim=c(0,300))+ 
   coord_cartesian(xlim=c(-10,13)) +
   scale_color_manual(values=c("red","black")) +
-  ggtitle("SG vs PV differentilaly expressed genes") +
-  geom_text_repel(data=filter(SG_DEGs, abs(logFC)>5),
+  ggtitle("SG vs PV differentially expressed genes") +
+  geom_text_repel(data=filter(SG_DEGs, logFC>4.5 | logFC< -3.7),
                   #family = "Times New Roman", 
                   aes(label=gene_id),
                   #size = 2, 
                   arrow = arrow(length = unit(0.01, 'npc')), 
                   force = 7,box.padding = unit(0.4, "lines"), 
                   point.padding = unit(0.3, "lines"))
-ggsave("SG-PV_DEG_volcanoplot.png", device = "png")
+ggsave("../figures/SG-PV_DEG_volcanoplot.png", device = "png")
 
 #dev.off()
 ###################################
@@ -826,15 +827,15 @@ ggplot(PV_DEGs,
   #coord_cartesian(ylim=c(0,300))+ 
   coord_cartesian(xlim=c(-12,7)) +
   scale_color_manual(values=c("red","black")) +
-  ggtitle("PV vs MG differentilaly expressed genes") +
-  geom_text_repel(data=filter(PV_DEGs, abs(logFC)>3.5),
+  ggtitle("PV vs MG differentially expressed genes") +
+  geom_text_repel(data=filter(PV_DEGs, abs(logFC)>3.2),
                   #family = "Times New Roman", 
                   aes(label=gene_id),
                   #size = 2, 
                   arrow = arrow(length = unit(0.01, 'npc')), 
                   force = 7,box.padding = unit(0.4, "lines"), 
                   point.padding = unit(0.3, "lines"))
-ggsave("PV-MG_DEG_volcanoplot.png", device = "png")
+ggsave("../figures/PV-MG_DEG_volcanoplot.png", device = "png")
 
 #####################################
 # create a venn diagram to show distribution of the number DEGs between stages
