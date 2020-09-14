@@ -3,7 +3,7 @@
 #Script to convert sam files to bam files
 #
 for sam_file in ../data/processed_data/bru-mor_sam/*.sam; do
-	sam_file_name=$(echo $sam_file | cut -f1 -d '.')
+	sam_file_name=$(basename "$sam_file" .sam)
 		samtools view -S -b $sam_file > ${sam_file_name}.bam
 done
 

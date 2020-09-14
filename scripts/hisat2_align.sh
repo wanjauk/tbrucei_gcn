@@ -3,7 +3,7 @@
 #Script to align reads to the indexed genome using HISAT2
 #
 for fastq in ../data/raw_data/*.fastq; do
-    fqname=$(echo $fastq | cut -f1 -d '.')
+    fqname=$(basename "$fastq" .fastq)
 
 		hisat2 \
 		 -x bru-mor_genome_index_hisat2 \

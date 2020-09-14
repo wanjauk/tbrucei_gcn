@@ -11,7 +11,7 @@ mkdir -p ../results/brucei_HTSeq_count_results
 GFF_FILE=$1
 
 for bam_file in ../data/processed_data/bru-mor_bam/*.bam; do
-    bam_file_name=$(echo $bam_file | cut -f1 -d '.')
+    bam_file_name=$(basename "$bam_file" .bam)
     
         python /opt/apps/htseq/0.11.2/bin/htseq-count \
             -f bam \
