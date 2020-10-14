@@ -35,7 +35,7 @@ Data used in this study is obtained from European Nucleotide Archive under acces
 
 First, metadata for the data is obtained from EBI as follows:
 
-```{r, code = readLines(here::here("scripts","02_download-metadata-file.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","02a_download-metadata-file.R")), eval=FALSE}
 
 ```
 
@@ -86,7 +86,7 @@ include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
 Alignment of the reads to the chimeric genome. The output is SAM files.
 
 
-```{bash, code = readLines(here::here("scripts"," 05_read-alignment.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","05_read-alignment.sh")), eval=FALSE}
 
 ```
  
