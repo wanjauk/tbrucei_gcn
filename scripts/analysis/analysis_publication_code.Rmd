@@ -22,11 +22,11 @@ This document contains the workflow used in the analysis of *T. brucei* gene co-
 
 ### Setting up R for the analysis
 
-```{r, code = readLines(here::here("scripts","00_libraries.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","libraries.R")), eval=FALSE}
 
 ```
 
-```{r, code = readLines(here::here("scripts","01_settings.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","settings.R")), eval=FALSE}
 
 ```
 
@@ -35,7 +35,11 @@ Data used in this study is obtained from European Nucleotide Archive under acces
 
 First, metadata for the data is obtained from EBI as follows:
 
-```{r, code = readLines(here::here("scripts","02a_download-metadata-file.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","get-fastq-files-urls.R")), eval=FALSE}
+
+```
+
+```{r, code = readLines(here::here("scripts","analysis","prepare-samples-metadata.R")), eval=FALSE}
 
 ```
 
@@ -47,7 +51,7 @@ sample.metadata
 
 Next, RNASeq data is downloaded from EBI database's FTP site. Some of the downstream tools require that FASTQ files that were downloaded in zipped form are unzipped.
 
-```{bash, code = readLines(here::here("scripts","02b_download-fastq-files.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","download-fastq-files.sh")), eval=FALSE}
 
 ```
 
@@ -55,14 +59,14 @@ Next, RNASeq data is downloaded from EBI database's FTP site. Some of the downst
 
 Genomes are obtained from their respective databases before alignment. The genome and annotation files are downloaded from the TriTrypDB and vectorbase databases as follows:
 
-```{bash, code = readLines(here::here("scripts","02c_download-genome-and-annotation-files.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","download-genome-and-annotation-files.sh")), eval=FALSE}
 
 ```
 
 ## Data quality assessment
 After downloading the RNASeq data, its quality is checked through the FASTQC tool whose output is a report in HTML format.
 
-```{bash, code = readLines(here::here("scripts","03_generate-fastqc-reports.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","generate-fastqc-reports.sh")), eval=FALSE}
 
 ```
 
@@ -76,7 +80,7 @@ include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
 
 *T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads. This ensures no cross-mapping of reads take place during alignment with HISAT2. The next step is indexing the genome using HISAT2.
 
-```{bash, code = readLines(here::here("scripts","04_concatenate-and-index-genome.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","concatenate-and-index-genome.sh")), eval=FALSE}
 
 ```
 
@@ -86,7 +90,7 @@ include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
 Alignment of the reads to the chimeric genome. The output is SAM files.
 
 
-```{bash, code = readLines(here::here("scripts","05_read-alignment.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","read-alignment.sh")), eval=FALSE}
 
 ```
  
@@ -100,13 +104,13 @@ include_graphics("../figures/hisat2_se_plot.png")
 At this point, quality control to assess the duplication rate can be performed.
 First, the SAM files are converted to sorted BAM files required by dupRadar tool. The BAM files are then sorted using samtools
 
-```{bash, code = readLines(here::here("scripts","06_convert-sam-to-bam.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","convert-sam-to-bam.sh")), eval=FALSE}
 
 ```
 
 Next, duplicates are marked in the BAM files using Picard.
 
-```{bash, code = readLines(here::here("scripts","07_mark-duplicates.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","mark-duplicates.sh")), eval=FALSE}
 
 ```
 
@@ -140,7 +144,7 @@ The next step is to run the dupRadar quality control analysis setting the `stran
 
 For each of the 18 samples, dupRadar tool is used to perform quality control in R.
 
-```{r, code = readLines(here::here("scripts","08_run-dupRadar.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","run-dupRadar.R")), eval=FALSE}
 
 ```
 
@@ -173,7 +177,7 @@ sample.metadata <- sample.metadata[-8,]
 
 HTSeq tool is used to count reads that aligned to the *T. brucei* genome. *T. brucei* annotation file is used and therefore HTSeq excludes counting *G. morsitans* reads that aligned to *Glossina* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
 
-```{bash, code = readLines(here::here("scripts","09_reads-quantification.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","reads-quantification.sh")), eval=FALSE}
 
 ```
 
@@ -204,7 +208,7 @@ mv multiqc* brucei_multiqc_report/
 
 Before loading the data into R, filter out the non-protein coding genes which include ncRNA, snRNA, snoRNA, pseudogenic transcripts, rRNA and tRNA.
 
-```{bash, code = readLines(here::here("scripts","10_exclude-features.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","exclude-features.sh")), eval=FALSE}
 
 ```
 

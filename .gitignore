@@ -11,3 +11,4 @@ data/tbrucei*/
 telleria_SG_sample_processing/
 analysis/analysis.RData
 results/*.fasta
+data/scratch
