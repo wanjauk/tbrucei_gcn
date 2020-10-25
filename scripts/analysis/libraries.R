@@ -2,6 +2,7 @@
 # load required R packages ------------------------------------------------
 
 library("here")
+library("tidyr")
 library("dupRadar")
 library("Rsubread")
 library("limma")
