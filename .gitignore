@@ -12,3 +12,5 @@ telleria_SG_sample_processing/
 analysis/analysis.RData
 results/*.fasta
 data/scratch
+data/raw/savage/*.fastq
+data/raw/telleria/*.fastq

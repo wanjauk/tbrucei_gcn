@@ -13,7 +13,7 @@ cat ${FILE} | xargs -n1 wget $3 -P ${OUT_DIR}
 
 #decompress fastq.gz files
 #
-FASTQ_FILES=${OUT_DIR}*.fastq.gz
+FASTQ_FILES=${OUT_DIR}/*.fastq.gz
 
 for file in ${FASTQ_FILES}; do
     gunzip ${file}
