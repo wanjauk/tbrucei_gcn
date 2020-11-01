@@ -1,0 +1,127 @@
+---
+title: "co-expression network module eigengene analysis"
+author: "Kennedy Mwangi"
+date: ""
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: inline
+---
+### Module eigen genes analysis
+The section below is included for further checks so it may not be necessary to carry out this analysis.
+
+
+```{r include=FALSE}
+library("knitr")
+opts_chunk$set(echo = TRUE, 
+                      fig.pos = 'h', 
+                      fig.align = 'center', 
+                      fig.show='hold')
+# load("sample.metdata.final.RData")
+```
+
+```{r, eval=FALSE, echo=FALSE}
+
+# --------------------------------------------------------------------------------------------
+# merge modules with very similar expression profiles as their genes are highly co-expressed
+# get the module eigengenes
+module.eigengenes <- moduleEigengenes(network.counts, colors = module.colours)$eigengenes
+
+# calculate dissimilarity of module eigengenes using correlations
+module.eigengenes.diss <- 1 - cor(module.eigengenes)
+
+# cluster module eigengenes
+module.eigengenes.tree <- flashClust(as.dist(module.eigengenes.diss), method = "average")
+
+# choose height at which to cut the tree for merge i.e. the threshold
+module.eigengenes.thresh <- 0.25
+
+# create plots for the results
+png(filename = "../figures/module_eigengenes_cluster.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 6, pointsize = 10)
+#sizeGrWindow(7, 6)
+plot(module.eigengenes.tree, main = "Clustering of module eigengenes", xlab = "", sub = "")
+abline(h=module.eigengenes.thresh, col="red")
+
+dev.off()
+
+# merge the modules
+module.eigengenes.merge <- mergeCloseModules(network.counts, module.colours, 
+                                             cutHeight = module.eigengenes.thresh)
+
+# merged module colours
+merged.module.colours <- module.eigengenes.merge$colors
+
+# view
+table(merged.module.colours)
+
+# a list of 13 modules
+
+      black        blue       brown    darkgrey     darkred       green 
+        438        1565         735         477         796         728 
+greenyellow        grey  lightgreen         red      salmon       white 
+        515          59         164         703         230         441 
+     yellow 
+        539
+
+# eigengenes of new merged modules
+merged.module.eigengenes <- module.eigengenes.merge$newMEs
+
+```
+
+```{r, eval=FALSE, echo=FALSE}
+
+# plot the dendrogram with original and merged colours underneath
+#sizeGrWindow(12, 9)
+png(filename = "../figures/merged-original_colours-original_dendro.png", res =1200, type = "cairo", 
+    units = 'in', width = 6, height = 6, pointsize = 10)
+plotDendroAndColors(gene.tree, cbind(module.colours, merged.module.colours), 
+                    c("Dynamic Tree Cut", "Merged dynamic"), 
+                    dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
+dev.off()
+
+# plot heatmap of eigengenes (orginal before merge)
+png(filename = "../figures/eigengenes_heatmap.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 6, pointsize = 10)
+plotEigengeneNetworks(module.eigengenes, "Eigengenes heatmap", marHeatmap = c(3,4,2,2),
+                      plotDendrograms = FALSE, xLabelsAngle = 90)
+dev.off()
+```
+
+
+```{r fig.cap="Dendrogram with original and merged colours", echo=FALSE, out.width='80%', eval=FALSE}
+
+include_graphics("../figures/merged-original_colours-original_dendro.png")
+```
+
+```{r, eval=FALSE, echo=FALSE}
+
+#-----------------------------------------------------------------------------------------
+# rename some variables based on the module eigengene analysis for later use
+#
+# module colours
+#module.colours <- merged.module.colours
+
+# construct numerical labels corresponding to the colours
+colorOrder <- c("grey", standardColors(50))
+#module.labels <- match(module.colours, colorOrder)-1
+
+# module eigengenes
+#module.eigengenes <- merged.module.eigengenes
+
+# get hub genes
+merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
+                                                    merged.module.colours,
+                                                    power = 4,
+                                                    type = "signed")
+
+# a list of merged module hub genes
+           black             blue            brown         darkgrey 
+  "Tb927.7.1790"   "Tb927.1.3130" "Tb927.11.14220"   "Tb927.11.760" 
+         darkred            green      greenyellow       lightgreen 
+  "Tb927.5.1050"   "Tb927.8.6580" "Tb927.11.10610"   "Tb927.10.720" 
+             red           salmon            white           yellow 
+"Tb927.10.14900"  "Tb927.11.1450"   "Tb927.8.3530"   "Tb927.1.3550"
+
+```

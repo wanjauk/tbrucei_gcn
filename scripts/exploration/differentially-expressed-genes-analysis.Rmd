@@ -1,0 +1,261 @@
+---
+title: "Differential gene expression analysis"
+author: "Kennedy Mwangi"
+date: ""
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+```{r include=FALSE}
+library("knitr")
+opts_chunk$set(echo = TRUE, 
+                      fig.pos = 'h', 
+                      fig.align = 'center', 
+                      fig.show='hold')
+# load("sample.metdata.final.RData")
+```
+
+### Identify differentially expressed genes
+
+```{r eval=FALSE, echo=FALSE}
+
+# Apply sample grouping based on Tissue from which the sample was derived
+design <- model.matrix(~0+sample.metadata$Tissue+sample.metadata$Batch)
+#colnames(design) <- levels(sample.metadata$Tissue)
+colnames(design) <- c("MG","PV","SG","Batch")
+
+# Estimate dispersions for tags
+filtered.counts.dge <- estimateDisp(filtered.counts, design, robust = TRUE)
+
+# Fit a generalized likelihood model to the DGELIST using sample grouping
+fit <- glmFit(filtered.counts.dge,design)
+
+#################################################################
+# code in this section adapted from https://github.com/iscb-dc-rsg/2016-summer-workshop
+# generate a list of all possible pairwise contrasts
+condition_pairs <- t(combn(levels(sample.metadata$Tissue), 2))
+
+comparisons <- list()
+for (i in 1:nrow(condition_pairs)) {
+  comparisons[[i]] <- as.character(condition_pairs[i,])
+}
+
+# remove MG to SG comparison
+comparisons[[2]] <- NULL
+
+# vector to store differentially expressed genes
+sig_genes <- c()
+
+# iterate over the contrasts, and perform a differential expression test for
+# each pair
+for (conds in comparisons) {
+    # generate string contrast formula
+    contrast_formula <- paste(conds, collapse=' - ')
+
+    contrast_mat <- makeContrasts(contrasts=contrast_formula, levels=design)
+    contrast_lrt <- glmLRT(fit, contrast=contrast_mat)
+    topGenes <- topTags(contrast_lrt, n=Inf, p.value=0.05, adjust.method = "BH")
+    
+    # Grab highly ranked genes
+    sig_genes <- union(sig_genes, rownames(topGenes$table))
+}
+
+# Filter out genes which were not differentially expressed for any contrast
+de.genes <- filtered.counts.dge[rownames(filtered.counts.dge) %in% sig_genes,]
+dim(de.genes$counts)
+#3934   15
+################################################################
+
+# Obtain the counts of genes expressed for each contrast individually
+# This aims to obtain the number of genes differentially expressed between 
+# the 3 stages of development i.e. MG -> PV, PV -> SG
+
+# Likelihood ratio test to identify DEGs
+# SG compared to PV
+  SG_vs_PV_lrt <- glmLRT(fit, contrast=c(0,-1,1,0))
+
+# PV compared to MG
+PV_vs_MG_lrt <- glmLRT(fit, contrast = c(-1,1,0,0))
+
+
+# Genes with most significant differences (using topTags)
+# SG compared to PV
+topGenes_SG <- topTags(SG_vs_PV_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
+dim(topGenes_SG)
+#3166    5
+
+# PV compared to MG
+topGenes_PV <- topTags(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05, n=Inf)
+dim(topGenes_PV)
+#1908    5
+
+#Total number of genes: 5074
+#######################################################################################
+# DE genes at 5% FDR (using decideTestsDGE function)
+#
+# SG compared to PV
+SG_vs_PV_de.genes <- decideTestsDGE(SG_vs_PV_lrt, adjust.method = "BH", p.value = 0.05)
+
+# get summary
+summary(SG_vs_PV_de.genes)
+#       -1*PV 1*SG
+#Down         1463
+#NotSig       4224
+#Up           1703
+
+# PV compared to MG
+PV_vs_MG_de.genes <- decideTestsDGE(PV_vs_MG_lrt, adjust.method = "BH", p.value = 0.05)
+
+# summary
+summary(PV_vs_MG_de.genes)
+#       -1*MG 1*PV
+#Down         987
+#NotSig       5482
+#Up           921
+
+# DE genes in the PV that are common in both comparisons
+de.common <- which(PV_vs_MG_de.genes[,1]!=0 & SG_vs_PV_de.genes[,1]!=0)
+length(de.common)
+#1140 
+
+de.common.df <- as.data.frame(de.common)
+de.common.df <- tibble::rownames_to_column(de.common.df, var = "gene_id")
+
+# create a dataframe with data on PV and SG differential gene expression
+PV_data <- topGenes_PV$table
+SG_data <- topGenes_SG$table
+
+PV_data <- tibble::rownames_to_column(PV_data, var = "gene_id")
+SG_data <- tibble::rownames_to_column(SG_data, var = "gene_id")
+
+# obtain the common genes for each comparison
+PV_data_common_de_genes <- PV_data %>% filter(gene_id %in% de.common.df$gene_id)
+SG_data_common_de_genes <- SG_data %>% filter(gene_id %in% de.common.df$gene_id)
+
+PV_data_common_de_genes <- PV_data_common_de_genes[order(PV_data_common_de_genes$logFC, 
+                                                         decreasing = TRUE),]
+SG_data_common_de_genes <- SG_data_common_de_genes[order(SG_data_common_de_genes$logFC, 
+                                                         decreasing = TRUE),]
+
+# write out to excel upregulated and downregulated genes and the commmon genes between contrasts
+PV_vs_MG <- PV_data[order(PV_data$logFC, decreasing = TRUE),]
+SG_vs_PV <- SG_data[order(SG_data$logFC, decreasing = TRUE),]
+
+write.xlsx(PV_vs_MG, file = "../results/differentially_expressed_genes.xlsx",
+           sheetName = "MG vs PV", row.names = FALSE)
+write.xlsx(SG_vs_PV, file = "../results/differentially_expressed_genes.xlsx",
+           sheetName = "PV vs SG", append = TRUE, row.names = FALSE)
+
+write.xlsx(PV_data_common_de_genes, 
+           file = "../results/differentially_expressed_genes_common_in_contrasts.xlsx",
+           sheetName = "MG vs PV Common genes", append = TRUE, row.names = FALSE)
+write.xlsx(SG_data_common_de_genes, 
+           file = "../results/differentially_expressed_genes_common_in_contrasts.xlsx",
+           sheetName = "PV vs SG Common genes", append = TRUE, row.names = FALSE)
+
+PV_contrast_common_de_genes_logFC <- PV_data_common_de_genes %>% select(gene_id, logFC_MGvsPV=logFC)
+
+SG_contrast_common_de_genes_logFC <- SG_data_common_de_genes %>% select(gene_id, logFC_PVvsSG=logFC)
+
+contrast_common_de_genes_logFC <- merge(PV_contrast_common_de_genes_logFC, 
+                                        SG_contrast_common_de_genes_logFC, by="gene_id")
+
+write.xlsx(contrast_common_de_genes_logFC, 
+           file = "../results/differentially_expressed_genes_common_in_contrasts_logFC_comparison.xlsx",
+           sheetName = "Common DEGs LogFC Comparisons", row.names = FALSE)
+
+```
+
+
+
+```{r, eval=FALSE, echo=FALSE}
+# Plotting to visually inspect differential gene expression results.
+
+# Differential expression analysis - plots
+#
+# Volcano plots
+SG_DEGs <- topGenes_SG$table
+
+SG_DEGs <- tibble::rownames_to_column(SG_DEGs, var = "gene_id")
+
+SG_DEGs = mutate(SG_DEGs, sig=ifelse(SG_DEGs$FDR <0.05 & abs(logFC)>1, "FDR<0.05", "Not Sig"))
+
+#png("../figures/ggplot_SG-PV_DEG_volcanoplot.png", res =1200, type = "cairo", units = 'in',
+#    width = 6, height = 6, pointsize = 4)
+ggplot(SG_DEGs, 
+  aes(logFC, -log10(PValue))) +
+  geom_point(aes(col=sig),size = 1) + 
+  theme_bw(base_size = 9) + 
+    #coord_cartesian(ylim=c(0,300))+ 
+  coord_cartesian(xlim=c(-10,13)) +
+  scale_color_manual(values=c("red","black")) +
+  ggtitle("SG vs PV differentially expressed genes") +
+  geom_text_repel(data=filter(SG_DEGs, logFC>4.5 | logFC< -3.7),
+                  #family = "Times New Roman", 
+                  aes(label=gene_id),
+                  #size = 2, 
+                  arrow = arrow(length = unit(0.01, 'npc')), 
+                  force = 7,box.padding = unit(0.4, "lines"), 
+                  point.padding = unit(0.3, "lines"))
+ggsave("../figures/SG-PV_DEG_volcanoplot.png", device = "png")
+
+#dev.off()
+###################################
+PV_DEGs <- topGenes_PV$table
+
+PV_DEGs <- tibble::rownames_to_column(PV_DEGs, var = "gene_id")
+
+PV_DEGs = mutate(PV_DEGs, sig=ifelse(PV_DEGs$FDR <0.05 & abs(logFC)>1, "FDR<0.05", "Not Sig"))
+
+ggplot(PV_DEGs, 
+       aes(logFC, -log10(PValue))) +
+  geom_point(aes(col=sig),size = 1) + 
+  theme_bw(base_size = 9) + 
+  #coord_cartesian(ylim=c(0,300))+ 
+  coord_cartesian(xlim=c(-12,7)) +
+  scale_color_manual(values=c("red","black")) +
+  ggtitle("PV vs MG differentially expressed genes") +
+  geom_text_repel(data=filter(PV_DEGs, abs(logFC)>3.2),
+                  #family = "Times New Roman", 
+                  aes(label=gene_id),
+                  #size = 2, 
+                  arrow = arrow(length = unit(0.01, 'npc')), 
+                  force = 7,box.padding = unit(0.4, "lines"), 
+                  point.padding = unit(0.3, "lines"))
+ggsave("../figures/PV-MG_DEG_volcanoplot.png", device = "png")
+
+#####################################
+# create a venn diagram to show distribution of the number DEGs between stages
+PV_data_tmp <- PV_data %>% tibble::column_to_rownames("gene_id")
+SG_data_tmp <- SG_data %>% tibble::column_to_rownames("gene_id")
+
+png(filename = "../figures/venn_de_genes.png", res =1200, type = "cairo", units = 'in',
+    width = 5, height = 4, pointsize = 10)
+vd <- venn.diagram(x = list("MG vs PV" = rownames(PV_data_tmp),
+                            "SG vs PV" = rownames(SG_data_tmp)),
+                   fill = brewer.pal(3, "Set2")[1:2], filename = NULL)
+grid.draw(vd)
+dev.off()
+
+# clean up
+rm(PV_data_tmp, SG_data_tmp)
+```
+
+```{r, fig.cap="Venn diagram showing differentially expressed genes", echo=FALSE, out.width='75%', eval=FALSE}
+# venn diagram
+include_graphics("../figures/venn_de_genes.png")
+```
+\newpage
+```{r, fig.cap="Differentially expressed genes in the proventriculus compared to midgut", echo=FALSE, out.width='75%', eval=FALSE}
+# Genes differentially expressed in proventriculus compared to midgut (above p<0.05)
+include_graphics("../figures/PV-MG_DEG_volcanoplot.png")
+```
+
+```{r, fig.cap="Differentially expressed genes in the salivary gland compared to proventriculus", echo=FALSE, out.width='75%', eval=FALSE}
+# Genes differentially expressed in salivary gland compared to proventriculus (above p<0.05)
+include_graphics("../figures/SG-PV_DEG_volcanoplot.png")
+```
