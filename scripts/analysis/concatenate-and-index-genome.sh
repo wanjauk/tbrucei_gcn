@@ -1,16 +1,24 @@
-#!/bin/bash
+# #!/bin/bash
 
-# make a directory to store the concatenated genomes
- mkdir -p ../data/brucei-morsitans
+# USAGE: 
+# ./concatenate-and-index-genome.sh \
+# ../../data/scratch/concatenated_genomes/brucei-morsitans_genomes.fasta \
+# ../../data/scratch/indexed_genome
 
-# copy the genome files to the created directory and concatenate them
-cp ../data/glossina_genome_scaffolds/glossina-* ../data/brucei-morsitans/
-cp ../data/tbrucei_genome/*.fasta ../data/brucei-morsitans/
-cat ../data/brucei-morsitans/*.fa* > ../data/brucei-morsitans/brucei-morsitans_genomes.fasta
+# make a directory to store the concatenated and indexed genomes
+ mkdir -p ../../data/scratch/concatenated_genomes
+ mkdir -p ../../data/scratch/indexed_genome
+
+# concatenate the genome files
+cat ../../data/scratch/tbrucei/TriTrypDB-43_TbruceiTREU927_Genome.fasta \
+../../data/scratch/glossina/Glossina-morsitans-Yale_SCAFFOLDS_GmorY1.fa \
+> ../../data/scratch/concatenated_genomes/brucei-morsitans_genomes.fasta
 
 #
 #index genome using HISAT2
 #
 GENOME_FILE=$1
 
-hisat2-build ${GENOME_FILE} bru-mor_genome_index_hisat2
+INDEX_DIR=$2
+
+hisat2-build ${GENOME_FILE} ${INDEX_DIR}/bru-mor_genome_index_hisat2
