@@ -217,9 +217,9 @@ Before loading the data into R, filter out the non-protein coding genes which in
 
 ### Importing samples count data into R
 
-For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source(here::here("scripts","11_import-read-counts-into-r.R")` on the R console and hit enter.
+For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source(here::here("scripts","import-read-counts-into-r.R")` on the R console and hit enter.
 
-```{r, code = readLines(here::here("scripts","11_import-read-counts-into-r.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","import-read-counts-into-r.R")), eval=FALSE}
 
 ```
 
@@ -228,7 +228,7 @@ For further analysis, samples read counts are read into R. To read the sample co
 
 The quality of the samples is checked before further analysis to check for outlier and batch effects.
 
-```{r, code = readLines(here::here("scripts","12_sample-preprocessing-and-quality-check.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","sample-preprocessing-and-quality-check.R")), eval=FALSE}
 
 ```
 
