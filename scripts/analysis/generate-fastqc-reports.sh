@@ -1,6 +1,6 @@
 # #!/bin/bash
 #
-#Script to run FastQC reports using the FastQC tool
+#Script to generate FastQC reports using the FastQC tool
 #
 # USAGE:
 # bash generate-fastqc-reports.sh ../../results/figures/fastqc_reports/savage ../../data/raw/savage 

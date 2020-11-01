@@ -1,39 +1,40 @@
-#!/bin/bash
+# #!/bin/bash
 #
 #Script to counts the number of reads aligned to T. brucei genome using HTSeq.
 #Resource: HTSeq documentation https://htseq.readthedocs.io/en/latest/count.html
 #
-module load htseq/0.11.2
+# module load htseq/0.11.2
 
-#create output directory if it doesn't exist
-mkdir -p ../results/brucei_HTSeq_count_results
+# USAGE:
+# ./reads-quantification.sh \
+# ../../data/scratch/sam-to-bam-output/savage \
+# ../../data/scratch/tbrucei/TriTrypDB-43_TbruceiTREU927.gff \
+# ../../data/intermediate/tbrucei_read_counts/savage
 
-GFF_FILE=$1
 
-for bam_file in ../data/processed_data/bru-mor_bam/*.bam; do
-    bam_file_name=$(basename "$bam_file" .bam)
+# make directory for reads count output from htseq
+mkdir -p ../../data/intermediate/tbrucei_read_counts/savage
+
+# path to bam files
+BAM_DIR=$1
+
+# T. brucei genome annotation file.
+GFF_FILE=$2
+
+# read counts path
+READ_COUNTS_DIR=$3
+
+# reads counting
+for bam_file in ${BAM_DIR}/*.sorted.bam; do
+    bam_file_name=$(basename "$bam_file" .sorted.bam)
     
-        python /opt/apps/htseq/0.11.2/bin/htseq-count \
+        htseq-count \
             -f bam \
             -s no \
             -t exon \
             -i Parent \
+            -n 6 \
             $bam_file \
             $GFF_FILE \
-            > ../results/brucei_HTSeq_count_results/${bam_file_name}.counts.txt
+            > ${READ_COUNTS_DIR}/${bam_file_name}.counts.txt
 done
-
-
-
-## Generating MultiQC report
-
-#MultiQC aggregates results from FASTQC, HISAT2 and HTSeq analysis into an HTML formatted single report for better visualization.
-#change directory to results
-cd ../results
-
-#Run multiqc
-multiqc .
-
-# create a directory for the multiQC report and move the output there.
-mkdir -p brucei_multiqc_report
-mv multiqc* brucei_multiqc_report/

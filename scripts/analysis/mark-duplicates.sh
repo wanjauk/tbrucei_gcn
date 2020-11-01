@@ -1,12 +1,26 @@
-#!/bin/bash
+# #!/bin/bash
 #
 #Script to mark duplicates in BAM files using picard
 #
-for bam_file in ../data/processed_data/bru-mor_bam/*.sorted.bam; do
+# USAGE:
+# ./mark-duplicates.sh \
+# ../../data/scratch/sam-to-bam-output/savage \
+# ../../data/scratch/mark-duplicates-output/savage
+
+# crate a directory for mark duplicates output
+mkdir -p ../../data/scratch/mark-duplicates-output/savage
+
+# sorted bam files directory
+SORTED_BAM_DIR=$1
+
+# mark duplicates output
+MARK_DUPES_OUT=$2
+
+for bam_file in ${SORTED_BAM_DIR}/*.sorted.bam; do
     bam_file_name=$(basename "$bam_file" .sorted.bam)
 
-		/opt/apps/picard-tools/1.119/bin/MarkDuplicates \
+        picard MarkDuplicates \
 			I=$bam_file \
-			O=${bam_file_name}.dupMarked.bam \
-			M=${bam_file_name}.dupMetrics.txt
+			O=${MARK_DUPES_OUT}/${bam_file_name}.dupMarked.bam \
+			M=${MARK_DUPES_OUT}/${bam_file_name}.dupMetrics.txt
 done

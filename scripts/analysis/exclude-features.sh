@@ -1,11 +1,26 @@
-#!/bin/bash
+# #!/bin/bash
 # script to exclude gene features from reads counts 
 
-# create directory for the filtered counts
-mkdir -p ../results/brucei_HTSeq_count_results_mRNA
+# USAGE:
+# ./exclude-features.sh \
+# ../../data/intermediate/tbrucei_read_counts/savage \
+# ../../data/intermediate/excluded_features.txt \
+# ../../data/intermediate/tbrucei_read_counts_mRNA-only/savage
 
-for file in ../results/brucei_HTSeq_count_results/*.counts.txt; do
+# create directory for the filtered counts
+mkdir -p ../../data/intermediate/tbrucei_read_counts_mRNA-only/savage
+
+# reads counts directory
+READ_COUNTS_DIR=$1
+
+# excludes features file
+EXCLUDED_FEAT=$2
+
+# mRNA only output directory
+COUNTS_OUT=$3
+
+for file in ${READ_COUNTS_DIR}/*.counts.txt; do
   counts_file=$(basename "$file" .counts.txt)
-		grep -v -f ../results/excluded_features.txt ${file} > \
-			../results/brucei_HTSeq_count_results_mRNA/"${counts_file}".counts.txt
+		grep -v -f ${EXCLUDED_FEAT} ${file} > \
+			${COUNTS_OUT}/${counts_file}.counts.txt
 done
