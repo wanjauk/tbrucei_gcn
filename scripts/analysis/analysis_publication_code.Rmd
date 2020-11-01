@@ -90,7 +90,7 @@ include_graphics("../figures/fastqc_sequence_duplication_levels_plot.png")
 Alignment of the reads to the chimeric genome. The output is SAM files.
 
 
-```{bash, code = readLines(here::here("scripts","analysis","read-alignment.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","reads-alignment.sh")), eval=FALSE}
 
 ```
  
