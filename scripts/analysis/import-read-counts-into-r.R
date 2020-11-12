@@ -4,6 +4,9 @@
 
 #Adapted from: https://wiki.bits.vib.be/index.php/NGS_RNASeq_DE_Exercise.4
 
+# required packages
+library(tibble)
+
 # # where are we?
 cntdir <- here::here("data", "intermediate", "brucei_HTSeq_count_results_mRNA")
 pat <- ".counts.txt"
@@ -79,8 +82,10 @@ reads_count <- tbrucei_reads_count_raw[grep("^Tb|^tmp", rownames(tbrucei_reads_c
 # inspect final merged table
 #head(reads_count, 3)
 
-# write data to file
-# write.table(reads_count, file = "brucei_htseq_counts_all.txt", quote = FALSE, sep = "\t")
+# write data to files
+saveRDS(reads_count, file = here::here("data", "intermediate", "tbrucei_reads_count.RDS"))
+
+reads_count <- rownames_to_column(reads_count,"transcript_id")
 write.csv(reads_count, 
           file = here::here("data", "intermediate", "tbrucei_reads_count.csv"), 
           row.names = FALSE)

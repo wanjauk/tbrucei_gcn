@@ -1,6 +1,7 @@
 # load required packages and data
 source(here::here("scripts","analysis","libraries.R"))
 load(file = here::here("data","raw","sample.metdata.final.RData"))
+reads_count <- readRDS(file = here::here("data", "intermediate", "tbrucei_reads_count.RDS"))
 
 # Create a DGEList object
 counts <- DGEList(reads_count, group = sample.metadata$Tissue)

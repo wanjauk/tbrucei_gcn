@@ -1,3 +1,10 @@
+source(here::here("scripts","analysis","libraries.R"))
+source(here::here("scripts","analysis","settings.R"))
+logcpm.norm.counts.combat <- readRDS(here::here("data","intermediate","logcpm.norm.counts.combat.RDS"))
+
+########################################################################
+## Constructing the network
+########################################################################
 
 # obtain the required counts data (WGCNA input)
 # WGCNA requires genes to be in columns
@@ -10,33 +17,28 @@ sft <- pickSoftThreshold(network.counts, powerVector = powers, verbose = 5)
 # Plot to determine the soft thresholding power to use.
 
 # Scale-free topology fit index as a function of the soft-thresholding power
-png(filename = "../figures/figure05_soft-thresholding-power.png", res =1200, type = "cairo", units = 'in',
+png(filename = here::here("results","figures","soft-thresholding-power.png"), res =1200, type = "cairo", units = 'in',
     width = 4, height = 4, pointsize = 10)
 plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], 
      xlab="Soft Threshold (power)", 
      ylab="Scale Free Topology Model Fit,signed R^2",type="n", 
      main = paste("Scale independence"));
 text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
-     labels=powers,cex=cex1,col="red");
+     labels=powers,cex=0.9,col="red");
 
 # The red line corresponds to using an R^2 cut-off of h
 abline(h=0.80,col="red")
 dev.off()
 
 # Mean connectivity as a function of the soft-thresholding power
-png(filename = "../figures/figure05_mean-connectivity.png", res =1200, type = "cairo", units = 'in',
+png(filename = here::here("results","figures","mean-connectivity.png"), res =1200, type = "cairo", units = 'in',
     width = 4, height = 5, pointsize = 10)
 plot(sft$fitIndices[,1], sft$fitIndices[,5], 
      xlab="Soft Threshold (power)", 
      ylab="Mean Connectivity", type="n", 
      main = paste("Mean connectivity"))
-text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=0.9,col="red")
 dev.off()
-
-
-########################################################################
-## Constructing the network
-########################################################################
 
 # construct adjacency matrix
 softpower <- 14
@@ -55,7 +57,7 @@ diag(adjacency.matrix) <- NA
 # Adjacency matrix heatmap plot / network heatmap of selected genes
 heatmap_indices <- sample(nrow(adjacency.matrix), 500) # sub-sample for visualization purposes
 
-png(filename = "../figures/figure06_adjacency-matrix-heatmap.png", res =1200, type = "cairo", units = 'in',
+png(filename = here::here("results","figures","adjacency-matrix-heatmap.png"), res =1200, type = "cairo", units = 'in',
     width = 5, height = 5, pointsize = 10)
 heatmap.2(t(adjacency.matrix[heatmap_indices, heatmap_indices]),
           col=redgreen(75),
@@ -82,7 +84,7 @@ gc()
 gene.tree <- flashClust(as.dist(dissTOM), method = "average")
 
 # plot the gene tree
-png(filename = "../figures/figure07_gene-tree.png", res =1200, type = "cairo", units = 'in',
+png(filename = here::here("results","figures","gene-tree.png"), res =1200, type = "cairo", units = 'in',
     width = 7, height = 8, pointsize = 10)
 #sizeGrWindow(12,9) #open graphical window
 plot(gene.tree, xlab="", sub="", main = "Gene clustering based on TOM dissimilarity", 
@@ -121,7 +123,7 @@ table(module.colours)
 # if necessary, raise dissTOM to a power to make moderately strong connection more visible in heatmap
 diag(dissTOM) <- NA
 
-png(filename = "../figures/figure08_gene_tree_and_dissTOM.png", res =1200, type = "cairo", units = 'in',
+png(filename = here::here("results","figures","gene-tree-and-dissTOM.png"), res =1200, type = "cairo", units = 'in',
     width = 5, height = 6, pointsize = 10)
 TOMplot(dissTOM, gene.tree, as.character(module.colours))
 dev.off()
@@ -132,7 +134,7 @@ gc()
 
 
 # plot gene dendrogram
-png(filename = "../figures/figure09_gene-tree-and-colours.png", res =1200, type = "cairo", units = 'in',
+png(filename = here::here("results","figures","gene-tree-and-colours.png"), res =1200, type = "cairo", units = 'in',
     width = 6, height = 6, pointsize = 10)
 #sizeGrWindow(8,6) #open graphical window
 plotDendroAndColors(gene.tree, module.colours, "Dynamic Tree Cut", dendroLabels = FALSE,
@@ -146,6 +148,7 @@ module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours,
                                              power = 4,type = "signed")
 
 # # A list of module hub genes
+module.hub.genes
 # black             blue            brown             cyan 
 # "Tb927.7.1790"   "Tb927.8.3620"  "Tb927.11.1570"   "Tb927.2.5530" 
 # darkgreen         darkgrey       darkorange          darkred 
@@ -167,7 +170,7 @@ module.hub.genes <- chooseTopHubInEachModule(network.counts, module.colours,
 ##############################################################################
 
 # select modules of interest
-interesting.modules <- c('black', 'cyan', 'grey','brown',
+all.modules <- c('black', 'cyan', 'grey','brown',
                          'midnightblue','blue','darkgreen','tan', 'darkgrey','darkorange',
                          'darkred','darkturquoise','green','greenyellow','grey60','lightcyan',
                          'lightgreen','lightyellow','magenta','orange','pink','purple','red',
@@ -181,8 +184,7 @@ enriched.modules <- c("black","tan","brown","blue","turquoise","magenta","darktu
 gene.ids <- rownames(logcpm.norm.counts.combat)
 
 # select module genes
-inModules <- is.finite(match(module.colours, interesting.modules)) # whole network modules
-
+inModules <- is.finite(match(module.colours, all.modules)) # whole network modules
 #inModules <- is.finite(match(module.colours, enriched.modules)) # enriched modules
 
 modGenes <- gene.ids[inModules]
@@ -193,20 +195,22 @@ dimnames(modTOM) <- list(modGenes, modGenes)
 
 # Export the network into edge and node list files Cytoscape can read
 exportNetworkToCytoscape(modTOM,
-                         edgeFile = "../results/cytoscape_input_files/CytoscapeInput-edges_whole_network_thresh0.3.txt",
-                         nodeFile = "../results/cytoscape_input_files/CytoscapeInput-nodes_whole_network_thresh0.3.txt",
+                         edgeFile = here::here("data","intermediate","cytoscape_input_files",
+                                               "CytoscapeInput-edges_whole_network_thresh0.3.txt"),
+                         nodeFile = here::here("data","intermediate","cytoscape_input_files",
+                                               "CytoscapeInput-nodes_whole_network_thresh0.3.txt"),
+
                          weighted = TRUE,
                          threshold = 0.3,
                          nodeNames = modGenes,
                          nodeAttr = module.colours[inModules]);
 
-
 # network modules
 # create a dataframe with node attributes
 enriched.module.colours <- module.colours[inModules] #get enriched module colours from module.colours
-node.attributes <- cbind(modGenes, module=enriched.module.colours) # node atrr. for enriched modules
+node.attributes <- cbind(modGenes, module=module.colours) # get node attr. for whole network
+# node.attributes <- cbind(modGenes, module=enriched.module.colours) # node atrr. for enriched modules
 
-#node.attributes <- cbind(modGenes, module=module.colours) # get node attr. for whole network
 node.attributes <- as.data.frame(node.attributes)
 
 # Add RGB versions of colour modules
@@ -214,8 +218,12 @@ node.attributes$colourRGB <- col2hex(node.attributes$module)
 
 # write out a node attributes files with hexadecimal colour names for module genes
 write.table(node.attributes, 
-            file = "../results/cytoscape_input_files/Cytoscape_node_attributes_enriched_modules_midnightblue_lightcyan.txt",
+            file = here::here("data","intermediate","cytoscape_input_files",
+                              "Cytoscape_node_attributes_whole_network_thresh0.3.txt"),
             row.names = FALSE, 
             quote = FALSE, sep = "\t")
 
 
+saveRDS(gene.tree, file = here::here("data","intermediate","gene.tree.RDS"))
+saveRDS(all.modules, file = here::here("data","intermediate","all.modules.RDS"))
+saveRDS(module.colours, file = here::here("data","intermediate","module.colours.RDS"))

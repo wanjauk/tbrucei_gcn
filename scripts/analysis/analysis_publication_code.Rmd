@@ -264,7 +264,7 @@ include_graphics("../figures/norm_sample_boxplot.png")
 
 ### Weighted gene co-expression analysis
 
-```{r, code = readLines(here::here("scripts","13_coexpression-network-construction.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","coexpression-network-construction.R")), eval=FALSE}
 
 ```
 
@@ -303,7 +303,7 @@ Code used in finctional analysis was adopted from https://github.com/elsayed-lab
 
 ### Loading annotations from the packages
 
-```{r, code = readLines(here::here("scripts","14_functional-analysis.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","functional-analysis.R")), eval=FALSE}
 
 ```
 
@@ -317,6 +317,6 @@ include_graphics("../figures/gene_tree_and_module_enrichment_status.png")
 ## FIRE (Finding Informative Regulatory Elements)
 Module genes and their module labels are required as input by FIRE (Finding Informative Regulatory Elements). Hence we write out text files with this input. Motif prediction was performed online at https://tavazoielab.c2b2.columbia.edu/FIRE/
 
-```{r, code = readLines(here::here("scripts","15_FIRE-input.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","FIRE-input.R")), eval=FALSE}
 
 ```

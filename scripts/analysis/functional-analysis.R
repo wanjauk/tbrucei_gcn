@@ -1,3 +1,13 @@
+source(here::here("scripts","analysis","libraries.R"))
+source(here::here("scripts","utils","enrichment_analysis.R"))
+source(here::here("scripts","utils","annotations.R"))
+source(here::here("scripts","utils","wgcna.R"))
+source(here::here("scripts","utils","util.R"))
+logcpm.norm.counts.combat <- readRDS(here::here("data","intermediate","logcpm.norm.counts.combat.RDS"))
+gene.tree <- readRDS(file = here::here("data","intermediate","gene.tree.RDS"))
+all.modules <- readRDS(file = here::here("data","intermediate","all.modules.RDS"))
+module.colours <- readRDS(file = here::here("data","intermediate","module.colours.RDS"))
+
 #################################################################
 # load gene annotations from packages
 #################################################################
@@ -16,17 +26,20 @@ transcript_lengths <- transcriptLengths(txdb)
 transcript_lengths <- transcript_lengths[transcript_lengths$gene_id %in%
                                            gene_info$gene_id,]
 
-gene_info[match(transcript_lengths$gene_id, gene_info$gene_id), 
-          'transcript_length'] <- transcript_lengths$tx_len
-gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
+# gene_info[match(transcript_lengths$gene_id, gene_info$gene_id), 
+#           'transcript_length'] <- transcript_lengths$tx_len
+# gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
+
+
+gene_info <- merge(gene_info, unique(transcript_lengths[, c('gene_id','tx_len')]), all.x=TRUE, by='gene_id')
 
 # A gene was excluded in the annotation database as a result of an orphan transcript.
 #Add its placeholder.
 ## ---not run---
-gene_info <- rbind(gene_info, data.frame(gene_id='Tb927.4.4663',
-                                         chromosome='4',
-                                         description=NA, strand=NA, type=NA,
-                                         transcript_length=NA))
+# gene_info <- rbind(gene_info, data.frame(gene_id='Tb927.4.4663',
+#                                          chromosome='4',
+#                                          description=NA, strand=NA, type=NA,
+#                                          transcript_length=NA))
 
 
 # Keep only the feature information remaining genes
@@ -85,23 +98,18 @@ kegg_pathways <- unique(kegg_pathways)
 # GO Enrichment
 ################################################
 
-
-# save required variables obtained earlier in analysis with variable names of the code below
-module_colors <- module.colours
-gene_tree <-gene.tree
-wgcna_input <- logcpm.norm.counts.combat
-modules_of_interest <- interesting.modules
-num_modules <- length(unique(module_colors))
+# get the number of modules
+num_modules <- length(unique(module.colours))
 
 # save the module sizes 
 # Data frame of module sizes
 module_counts <- c()
-for (color in unique(module_colors)) {
-  module_counts <- append(module_counts, sum(module_colors == color))
+for (color in unique(module.colours)) {
+  module_counts <- append(module_counts, sum(module.colours == color))
 }
 
 # create a mapping from module id to number of genes for later use
-module_sizes <- data.frame(module_id=unique(module_colors),
+module_sizes <- data.frame(module_id=unique(module.colours),
                            num_genes=module_counts)
 
 # Initialize parallelization
@@ -110,12 +118,12 @@ registerDoParallel(cl)
 message("Performing GO enrichment")
 
 # Check each module for enrichment in GO terms and save result in a list
-module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+module_go_enrichment <- foreach(color=unique(module.colours), .packages=c('goseq')) %dopar% {
   set.seed(1)
   # Measure GO enrichment for module
   enriched <- tryCatch({
     # module gene ids
-    in_module_geneids <- gene_ids[module_colors == color]
+    in_module_geneids <- gene_ids[module.colours == color]
     message(sprintf("[GO enrichment] %s", color))
     
     # T. brucei GO enrichment
@@ -136,7 +144,7 @@ module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq'
   })
   enriched
 }
-names(module_go_enrichment) <- unique(module_colors)
+names(module_go_enrichment) <- unique(module.colours)
 
 # remove any null/empty entries from the results
 module_go_enrichment <- module_go_enrichment[!sapply(module_go_enrichment, is.null)]
@@ -145,7 +153,7 @@ module_go_enrichment <- module_go_enrichment[!sapply(module_go_enrichment, is.nu
 stopCluster(cl)
 
 #------------------------------------
-# Print enrichment results
+# Print GO enrichment results
 #------------------------------------
 # temporarily repeat the gene / go term mapping to add 'term' column
 gene_go_mapping_tmp <- as.data.frame(unique(go_terms %>% select(GID, GO, TERM, ONTOLOGY)))
@@ -155,9 +163,9 @@ gene_info_tmp <- gene_info %>% select(-chromosome, -strand,
                                       - type, -transcript_length)
 colnames(gene_info_tmp) <- c("gene","description")
 
-tmp <- cbind(gene_info_tmp, color=module_colors)
+tmp <- cbind(gene_info_tmp, color=module.colours)
 
-#tmp <- cbind(gene=gene_ids, color=module_colors)
+#tmp <- cbind(gene=gene_ids, color=module.colours)
 gene_mapping <- merge(gene_go_mapping_tmp, tmp, by='gene')
 cat(sprintf('- Total enriched modules: %d\n', 
             sum(sapply(module_go_enrichment, nrow) > 0)))
@@ -172,7 +180,7 @@ print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
 enriched_colors_go <- get_enriched_modules(module_go_enrichment)
 
 # Module enrichment status (used in dendrogram plots)
-go_enrichment_status   <- as.numeric(module_colors %in% enriched_colors_go)
+go_enrichment_status   <- as.numeric(module.colours %in% enriched_colors_go)
 
 
 
@@ -188,12 +196,12 @@ registerDoParallel(cl)
 message("Performing KEGG enrichment")
 
 # Check each module for enrichment in GO terms and save result in a list
-module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+module_kegg_enrichment <- foreach(color=unique(module.colours), .packages=c('goseq')) %dopar% {
   set.seed(1)
   
   # Measure KEGG enrichment for module
   enriched <- tryCatch({
-    in_module_geneids <- gene_ids[module_colors == color]
+    in_module_geneids <- gene_ids[module.colours == color]
     enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
                                      gene_kegg_mapping, gene_lengths)
     
@@ -207,7 +215,7 @@ module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('gose
   enriched
 }
 
-names(module_kegg_enrichment) <- unique(module_colors)
+names(module_kegg_enrichment) <- unique(module.colours)
 
 # remove any null/empty entries from the results
 module_kegg_enrichment <- module_kegg_enrichment[!sapply(module_kegg_enrichment, is.null)]
@@ -215,6 +223,9 @@ module_kegg_enrichment <- module_kegg_enrichment[!sapply(module_kegg_enrichment,
 # unregister cpus
 stopCluster(cl)
 
+#------------------------------------
+# Print KEGG enrichment results
+#------------------------------------
 
 cat(sprintf('- Total enriched modules: %d\n', 
             sum(sapply(module_kegg_enrichment, nrow) > 0)))
@@ -229,17 +240,17 @@ enriched_colors_kegg <- get_enriched_modules(module_kegg_enrichment)
 
 
 # Module enrichment status (used in dendrogram plots)
-kegg_enrichment_status <- as.numeric(module_colors %in% enriched_colors_kegg)
+kegg_enrichment_status <- as.numeric(module.colours %in% enriched_colors_kegg)
 
 
 cat('\n### Dendrogram with annotated modules\n')
 
-unassigned_modules <- as.numeric(module_colors == 'grey')
+unassigned_modules <- as.numeric(module.colours == 'grey')
 
 png(filename = "../figures/figure10_gene-tree-and-module-enrichment-status.png", res =1200, 
     type = "cairo", units = 'in', width = 6, height = 6, pointsize = 10)
-WGCNA::plotDendroAndColors(gene_tree,
-                           cbind(module_colors, go_enrichment_status,
+WGCNA::plotDendroAndColors(gene.tree,
+                           cbind(module.colours, go_enrichment_status,
                                  kegg_enrichment_status, unassigned_modules),
                            groupLabels=c(sprintf("Modules\n(n=%s)", num_modules),
                                          #sprintf("Red = upregulated at %s", CONFIG$de_cond2),
@@ -253,11 +264,11 @@ dev.off()
 
 
 ### Module labels mappings
-module_label_mapping <- rbind(cbind(modules_of_interest,
-                                    seq_along(modules_of_interest)),
+module_label_mapping <- rbind(cbind(all.modules,
+                                    seq_along(all.modules)),
                               cbind(remaining_modules, #remaining modules variable?
                                     seq_along(remaining_modules) +
-                                      length(modules_of_interest)))
+                                      length(all.modules)))
 
 module_label_mapping <- as.data.frame(module_label_mapping)
 colnames(module_label_mapping) <- c('color', 'number')
@@ -285,7 +296,7 @@ output_module_enrichment_results(module_kegg_enrichment, module_output_dir,
 
 #################################################################################
 # Create result data frame
-result <- cbind(gene_info, color=module_colors)
+result <- cbind(gene_info, color=module.colours)
 
 # drop unneeded columns
 keep_cols <- intersect(c('gene_id', 'color', 'description', 'chromosome',
@@ -293,11 +304,11 @@ keep_cols <- intersect(c('gene_id', 'color', 'description', 'chromosome',
 result <- tbl_df(result[,keep_cols])
 
 # add expression-related fields
-result$expr_variance <- apply(wgcna_input, 1, var)
-result$expr_mean <- apply(wgcna_input, 1, mean)
+result$expr_variance <- apply(logcpm.norm.counts.combat, 1, var)
+result$expr_mean <- apply(logcpm.norm.counts.combat, 1, mean)
 
 # replace colors with numbers
-#module_colors <- module_label_mapping$number[match(module_colors, module_label_mapping$color)]
+#module.colours <- module_label_mapping$number[match(module.colours, module_label_mapping$color)]
 
 #result$color <- module_label_mapping$number[match(result$color, module_label_mapping$color)]
 
@@ -314,7 +325,7 @@ correlation_matrix <- cor(network.counts) # check this further to determine whet
 # "de_comparisons"
 #--this code did not work--
 module_stats <- create_module_stats_df(result, correlation_matrix, 
-                                       wgcna_input,main_contrast)
+                                       logcpm.norm.counts.combat,main_contrast)
 
 # Write module stats to a file
 write.csv(module_stats, file="../results/module_stats.csv",row.names=FALSE, quote=FALSE)
