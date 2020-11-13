@@ -7,10 +7,10 @@
 # ./reads-alignment.sh \
 # ../../data/raw/savage \
 # ../../data/scratch/indexed_genome \
-# ../../data/scratch/reads-alignment-ouput/savage
+# ../../data/scratch/reads-alignment-output/savage
 
 # create alignment output directory
-mkdir -p ../../data/scratch/reads-alignment-ouput/savage
+mkdir -p ../../data/scratch/reads-alignment-output/savage
 
 # Fastq directory
 FASTQ_DIR=$1

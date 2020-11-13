@@ -35,6 +35,11 @@ wget https://vectorbase.org/common/downloads/Pre-VEuPathDB%20VectorBase%20files/
 # unzip Glossina genome file
 gunzip ../../data/scratch/glossina/Glossina-morsitans-Yale_SCAFFOLDS_GmorY1.fa.gz
 
+# unzip Glossina annotation file file
+gunzip ../../data/scratch/glossina/Glossina-morsitans-Yale_BASEFEATURES_GmorY1.9.gtf.gz
+
+
+
 
 
 

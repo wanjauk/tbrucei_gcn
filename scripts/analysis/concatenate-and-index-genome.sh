@@ -14,6 +14,11 @@ cat ../../data/scratch/tbrucei/TriTrypDB-43_TbruceiTREU927_Genome.fasta \
 ../../data/scratch/glossina/Glossina-morsitans-Yale_SCAFFOLDS_GmorY1.fa \
 > ../../data/scratch/concatenated_genomes/brucei-morsitans_genomes.fasta
 
+# concatenate the gtf annotation files
+cat ../../data/scratch/tbrucei/TriTrypDB-43_TbruceiTREU927.gtf \
+../../data/scratch/glossina/Glossina-morsitans-Yale_BASEFEATURES_GmorY1.9.gtf \
+> ../../data/scratch/concatenated_genomes/brucei-morsitans_annotations.gtf
+
 #
 #index genome using HISAT2
 #

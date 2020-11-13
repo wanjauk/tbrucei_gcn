@@ -1,0 +1,196 @@
+[2020-11-11 11:31:54,073] multiqc                                            [DEBUG  ]  No MultiQC config found: /home/user/anaconda3/lib/python3.7/site-packages/multiqc_config.yaml
+[2020-11-11 11:31:54,073] multiqc                                            [DEBUG  ]  No MultiQC config found: /home/user/.multiqc_config.yaml
+[2020-11-11 11:31:54,073] multiqc                                            [DEBUG  ]  No MultiQC config found: multiqc_config.yaml
+[2020-11-11 11:31:54,073] multiqc                                            [DEBUG  ]  Command used: /home/user/anaconda3/bin/multiqc ../../results/figures/fastqc_reports/savage/SRR039378_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039381_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039453_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039454_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039455_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039456_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039457_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039937_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039938_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039939_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039940_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039948_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039949_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039950_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039951_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039952_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR042429_fastqc.zip ../../data/scratch/reads-alignment-output/savage/SRR039378.txt ../../data/scratch/reads-alignment-output/savage/SRR039381.txt ../../data/scratch/reads-alignment-output/savage/SRR039453.txt ../../data/scratch/reads-alignment-output/savage/SRR039454.txt ../../data/scratch/reads-alignment-output/savage/SRR039455.txt ../../data/scratch/reads-alignment-output/savage/SRR039456.txt ../../data/scratch/reads-alignment-output/savage/SRR039457.txt ../../data/scratch/reads-alignment-output/savage/SRR039937.txt ../../data/scratch/reads-alignment-output/savage/SRR039938.txt ../../data/scratch/reads-alignment-output/savage/SRR039939.txt ../../data/scratch/reads-alignment-output/savage/SRR039940.txt ../../data/scratch/reads-alignment-output/savage/SRR039948.txt ../../data/scratch/reads-alignment-output/savage/SRR039949.txt ../../data/scratch/reads-alignment-output/savage/SRR039950.txt ../../data/scratch/reads-alignment-output/savage/SRR039951.txt ../../data/scratch/reads-alignment-output/savage/SRR039952.txt ../../data/scratch/reads-alignment-output/savage/SRR042429.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039378.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039381.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039453.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039454.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039455.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039456.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039457.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039937.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039938.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039939.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039940.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039948.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039949.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039950.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039951.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039952.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR042429.counts.txt --outdir ../../results/figures/multiqc_reports/savage
+[2020-11-11 11:31:56,219] multiqc                                            [DEBUG  ]  Latest MultiQC version is v1.9
+[2020-11-11 11:31:56,220] multiqc                                            [INFO   ]  This is MultiQC v1.9
+[2020-11-11 11:31:56,220] multiqc                                            [DEBUG  ]  Command     : /home/user/anaconda3/bin/multiqc ../../results/figures/fastqc_reports/savage/SRR039378_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039381_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039453_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039454_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039455_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039456_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039457_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039937_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039938_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039939_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039940_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039948_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039949_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039950_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039951_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR039952_fastqc.zip ../../results/figures/fastqc_reports/savage/SRR042429_fastqc.zip ../../data/scratch/reads-alignment-output/savage/SRR039378.txt ../../data/scratch/reads-alignment-output/savage/SRR039381.txt ../../data/scratch/reads-alignment-output/savage/SRR039453.txt ../../data/scratch/reads-alignment-output/savage/SRR039454.txt ../../data/scratch/reads-alignment-output/savage/SRR039455.txt ../../data/scratch/reads-alignment-output/savage/SRR039456.txt ../../data/scratch/reads-alignment-output/savage/SRR039457.txt ../../data/scratch/reads-alignment-output/savage/SRR039937.txt ../../data/scratch/reads-alignment-output/savage/SRR039938.txt ../../data/scratch/reads-alignment-output/savage/SRR039939.txt ../../data/scratch/reads-alignment-output/savage/SRR039940.txt ../../data/scratch/reads-alignment-output/savage/SRR039948.txt ../../data/scratch/reads-alignment-output/savage/SRR039949.txt ../../data/scratch/reads-alignment-output/savage/SRR039950.txt ../../data/scratch/reads-alignment-output/savage/SRR039951.txt ../../data/scratch/reads-alignment-output/savage/SRR039952.txt ../../data/scratch/reads-alignment-output/savage/SRR042429.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039378.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039381.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039453.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039454.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039455.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039456.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039457.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039937.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039938.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039939.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039940.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039948.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039949.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039950.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039951.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR039952.counts.txt ../../data/intermediate/tbrucei_read_counts/savage/SRR042429.counts.txt --outdir ../../results/figures/multiqc_reports/savage
+[2020-11-11 11:31:56,220] multiqc                                            [DEBUG  ]  Working dir : /home/user/workspace/tbrucei_gcn/scripts/analysis
+[2020-11-11 11:31:56,220] multiqc                                            [INFO   ]  Template    : default
+[2020-11-11 11:31:56,221] multiqc                                            [DEBUG  ]  Running Python 3.7.4 (default, Aug 13 2019, 20:35:49)  [GCC 7.3.0]
+[2020-11-11 11:31:56,222] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039378_fastqc.zip
+[2020-11-11 11:31:56,222] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039381_fastqc.zip
+[2020-11-11 11:31:56,223] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039453_fastqc.zip
+[2020-11-11 11:31:56,224] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039454_fastqc.zip
+[2020-11-11 11:31:56,225] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039455_fastqc.zip
+[2020-11-11 11:31:56,225] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039456_fastqc.zip
+[2020-11-11 11:31:56,225] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039457_fastqc.zip
+[2020-11-11 11:31:56,226] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039937_fastqc.zip
+[2020-11-11 11:31:56,226] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039938_fastqc.zip
+[2020-11-11 11:31:56,227] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039939_fastqc.zip
+[2020-11-11 11:31:56,227] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039940_fastqc.zip
+[2020-11-11 11:31:56,227] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039948_fastqc.zip
+[2020-11-11 11:31:56,227] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039949_fastqc.zip
+[2020-11-11 11:31:56,228] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039950_fastqc.zip
+[2020-11-11 11:31:56,228] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039951_fastqc.zip
+[2020-11-11 11:31:56,228] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR039952_fastqc.zip
+[2020-11-11 11:31:56,228] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/savage/SRR042429_fastqc.zip
+[2020-11-11 11:31:56,229] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039378.txt
+[2020-11-11 11:31:56,229] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039381.txt
+[2020-11-11 11:31:56,229] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039453.txt
+[2020-11-11 11:31:56,230] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039454.txt
+[2020-11-11 11:31:56,230] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039455.txt
+[2020-11-11 11:31:56,231] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039456.txt
+[2020-11-11 11:31:56,231] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039457.txt
+[2020-11-11 11:31:56,232] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039937.txt
+[2020-11-11 11:31:56,232] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039938.txt
+[2020-11-11 11:31:56,232] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039939.txt
+[2020-11-11 11:31:56,233] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039940.txt
+[2020-11-11 11:31:56,233] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039948.txt
+[2020-11-11 11:31:56,234] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039949.txt
+[2020-11-11 11:31:56,235] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039950.txt
+[2020-11-11 11:31:56,235] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039951.txt
+[2020-11-11 11:31:56,235] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR039952.txt
+[2020-11-11 11:31:56,236] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/savage/SRR042429.txt
+[2020-11-11 11:31:56,236] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039378.counts.txt
+[2020-11-11 11:31:56,236] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039381.counts.txt
+[2020-11-11 11:31:56,236] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039453.counts.txt
+[2020-11-11 11:31:56,236] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039454.counts.txt
+[2020-11-11 11:31:56,237] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039455.counts.txt
+[2020-11-11 11:31:56,237] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039456.counts.txt
+[2020-11-11 11:31:56,237] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039457.counts.txt
+[2020-11-11 11:31:56,237] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039937.counts.txt
+[2020-11-11 11:31:56,238] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039938.counts.txt
+[2020-11-11 11:31:56,238] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039939.counts.txt
+[2020-11-11 11:31:56,238] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039940.counts.txt
+[2020-11-11 11:31:56,238] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039948.counts.txt
+[2020-11-11 11:31:56,238] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039949.counts.txt
+[2020-11-11 11:31:56,239] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039950.counts.txt
+[2020-11-11 11:31:56,239] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039951.counts.txt
+[2020-11-11 11:31:56,239] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR039952.counts.txt
+[2020-11-11 11:31:56,239] multiqc                                            [INFO   ]  Searching   : /home/user/workspace/tbrucei_gcn/data/intermediate/tbrucei_read_counts/savage/SRR042429.counts.txt
+[2020-11-11 11:31:56,240] multiqc                                            [DEBUG  ]  Analysing modules: custom_content, conpair, peddy, somalier, methylQA, mosdepth, phantompeakqualtools, qualimap, preseq, quast, qorts, rna_seqc, rockhopper, rsem, rseqc, busco, goleft_indexcov, disambiguate, supernova, deeptools, sargasso, verifybamid, mirtrace, happy, mirtop, homer, macs2, theta2, snpeff, gatk, htseq, bcftools, featureCounts, fgbio, dragen, dedup, damageprofiler, biobambam2, mtnucratio, picard, prokka, samblaster, samtools, sexdeterrmine, bamtools, jellyfish, vcftools, longranger, stacks, varscan2, bbmap, bismark, biscuit, hicexplorer, hicup, hicpro, salmon, kallisto, slamdunk, star, hisat2, tophat, bowtie2, bowtie1, snpsplit, kat, leehom, adapterRemoval, clipandmerge, cutadapt, flexbar, kaiju, kraken, malt, trimmomatic, sickle, skewer, sortmerna, biobloomtools, fastq_screen, afterqc, fastp, fastqc, pycoqc, minionqc, multivcfanalyzer, clusterflow, bcl2fastq, interop, ivar, flash, seqyclean
+[2020-11-11 11:31:56,240] multiqc                                            [DEBUG  ]  Using temporary directory for creating report: /tmp/tmppqn6ylb3
+[2020-11-11 11:31:58,210] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039378.counts.txt
+[2020-11-11 11:31:58,212] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039378.counts.txt
+[2020-11-11 11:31:58,282] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039381.counts.txt
+[2020-11-11 11:31:58,283] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039381.counts.txt
+[2020-11-11 11:31:58,349] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039453.counts.txt
+[2020-11-11 11:31:58,350] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039453.counts.txt
+[2020-11-11 11:31:58,413] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039454.counts.txt
+[2020-11-11 11:31:58,414] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039454.counts.txt
+[2020-11-11 11:31:58,476] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039455.counts.txt
+[2020-11-11 11:31:58,477] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039455.counts.txt
+[2020-11-11 11:31:58,537] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039456.counts.txt
+[2020-11-11 11:31:58,538] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039456.counts.txt
+[2020-11-11 11:31:58,600] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039457.counts.txt
+[2020-11-11 11:31:58,601] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039457.counts.txt
+[2020-11-11 11:31:58,666] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039937.counts.txt
+[2020-11-11 11:31:58,668] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039937.counts.txt
+[2020-11-11 11:31:58,740] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039938.counts.txt
+[2020-11-11 11:31:58,741] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039938.counts.txt
+[2020-11-11 11:31:58,813] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039939.counts.txt
+[2020-11-11 11:31:58,814] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039939.counts.txt
+[2020-11-11 11:31:58,883] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039940.counts.txt
+[2020-11-11 11:31:58,885] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039940.counts.txt
+[2020-11-11 11:31:58,959] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039948.counts.txt
+[2020-11-11 11:31:58,961] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039948.counts.txt
+[2020-11-11 11:31:59,035] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039949.counts.txt
+[2020-11-11 11:31:59,036] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039949.counts.txt
+[2020-11-11 11:31:59,105] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039950.counts.txt
+[2020-11-11 11:31:59,106] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039950.counts.txt
+[2020-11-11 11:31:59,176] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039951.counts.txt
+[2020-11-11 11:31:59,177] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039951.counts.txt
+[2020-11-11 11:31:59,245] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR039952.counts.txt
+[2020-11-11 11:31:59,246] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR039952.counts.txt
+[2020-11-11 11:31:59,318] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: SRR042429.counts.txt
+[2020-11-11 11:31:59,319] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: SRR042429.counts.txt
+[2020-11-11 11:32:04,161] multiqc.plots.bargraph                             [DEBUG  ]  Using matplotlib version 3.1.3
+[2020-11-11 11:32:04,166] multiqc.plots.linegraph                            [DEBUG  ]  Using matplotlib version 3.1.3
+[2020-11-11 11:32:04,192] multiqc                                            [DEBUG  ]  No samples found: custom_content
+[2020-11-11 11:32:04,236] multiqc                                            [DEBUG  ]  No samples found: conpair
+[2020-11-11 11:32:04,371] multiqc                                            [DEBUG  ]  No samples found: peddy
+[2020-11-11 11:32:04,431] multiqc                                            [DEBUG  ]  No samples found: somalier
+[2020-11-11 11:32:04,474] multiqc                                            [DEBUG  ]  No samples found: methylQA
+[2020-11-11 11:32:04,507] multiqc                                            [DEBUG  ]  No samples found: mosdepth
+[2020-11-11 11:32:04,527] multiqc                                            [DEBUG  ]  No samples found: phantompeakqualtools
+[2020-11-11 11:32:04,534] multiqc                                            [DEBUG  ]  No samples found: qualimap
+[2020-11-11 11:32:04,544] multiqc                                            [DEBUG  ]  No samples found: preseq
+[2020-11-11 11:32:04,557] multiqc                                            [DEBUG  ]  No samples found: quast
+[2020-11-11 11:32:04,590] multiqc                                            [DEBUG  ]  No samples found: qorts
+[2020-11-11 11:32:04,601] multiqc                                            [DEBUG  ]  No samples found: rna_seqc
+[2020-11-11 11:32:04,610] multiqc                                            [DEBUG  ]  No samples found: rockhopper
+[2020-11-11 11:32:04,628] multiqc                                            [DEBUG  ]  No samples found: rsem
+[2020-11-11 11:32:04,663] multiqc                                            [DEBUG  ]  No samples found: rseqc
+[2020-11-11 11:32:04,699] multiqc                                            [DEBUG  ]  No samples found: busco
+[2020-11-11 11:32:04,712] multiqc                                            [DEBUG  ]  No samples found: goleft_indexcov
+[2020-11-11 11:32:04,722] multiqc                                            [DEBUG  ]  No samples found: disambiguate
+[2020-11-11 11:32:04,743] multiqc                                            [DEBUG  ]  No samples found: supernova
+[2020-11-11 11:32:04,804] multiqc                                            [DEBUG  ]  No samples found: deeptools
+[2020-11-11 11:32:04,828] multiqc                                            [DEBUG  ]  No samples found: sargasso
+[2020-11-11 11:32:04,846] multiqc                                            [DEBUG  ]  No samples found: verifybamid
+[2020-11-11 11:32:04,863] multiqc                                            [DEBUG  ]  No samples found: mirtrace
+[2020-11-11 11:32:04,876] multiqc                                            [DEBUG  ]  No samples found: happy
+[2020-11-11 11:32:04,910] multiqc                                            [DEBUG  ]  No samples found: mirtop
+[2020-11-11 11:32:05,083] multiqc                                            [DEBUG  ]  No samples found: homer
+[2020-11-11 11:32:05,148] multiqc                                            [DEBUG  ]  No samples found: macs2
+[2020-11-11 11:32:05,167] multiqc                                            [DEBUG  ]  No samples found: theta2
+[2020-11-11 11:32:05,177] multiqc                                            [DEBUG  ]  No samples found: snpeff
+[2020-11-11 11:32:05,290] multiqc                                            [DEBUG  ]  No samples found: gatk
+[2020-11-11 11:32:05,567] multiqc.modules.htseq.htseq                        [INFO   ]  Found 17 reports
+[2020-11-11 11:32:05,644] multiqc                                            [DEBUG  ]  No samples found: bcftools
+[2020-11-11 11:32:05,685] multiqc                                            [DEBUG  ]  No samples found: featureCounts
+[2020-11-11 11:32:05,707] multiqc                                            [DEBUG  ]  No samples found: fgbio
+[2020-11-11 11:32:05,740] multiqc                                            [DEBUG  ]  No samples found: dragen
+[2020-11-11 11:32:05,751] multiqc                                            [DEBUG  ]  No samples found: dedup
+[2020-11-11 11:32:05,777] multiqc                                            [DEBUG  ]  No samples found: damageprofiler
+[2020-11-11 11:32:05,941] multiqc                                            [DEBUG  ]  No samples found: biobambam2
+[2020-11-11 11:32:05,951] multiqc                                            [DEBUG  ]  No samples found: mtnucratio
+[2020-11-11 11:32:05,956] multiqc                                            [DEBUG  ]  No samples found: picard
+[2020-11-11 11:32:06,008] multiqc                                            [DEBUG  ]  No samples found: prokka
+[2020-11-11 11:32:06,017] multiqc                                            [DEBUG  ]  No samples found: samblaster
+[2020-11-11 11:32:06,039] multiqc                                            [DEBUG  ]  No samples found: samtools
+[2020-11-11 11:32:06,050] multiqc                                            [DEBUG  ]  No samples found: sexdeterrmine
+[2020-11-11 11:32:06,060] multiqc                                            [DEBUG  ]  No samples found: bamtools
+[2020-11-11 11:32:06,071] multiqc                                            [DEBUG  ]  No samples found: jellyfish
+[2020-11-11 11:32:06,188] multiqc                                            [DEBUG  ]  No samples found: vcftools
+[2020-11-11 11:32:06,207] multiqc                                            [DEBUG  ]  No samples found: longranger
+[2020-11-11 11:32:06,217] multiqc                                            [DEBUG  ]  No samples found: stacks
+[2020-11-11 11:32:06,288] multiqc                                            [DEBUG  ]  No samples found: varscan2
+[2020-11-11 11:32:06,544] multiqc                                            [DEBUG  ]  No samples found: bbmap
+[2020-11-11 11:32:06,559] multiqc                                            [DEBUG  ]  No samples found: bismark
+[2020-11-11 11:32:06,573] multiqc                                            [DEBUG  ]  No samples found: biscuit
+[2020-11-11 11:32:06,623] multiqc                                            [DEBUG  ]  No samples found: hicexplorer
+[2020-11-11 11:32:06,639] multiqc                                            [DEBUG  ]  No samples found: hicup
+[2020-11-11 11:32:06,660] multiqc                                            [DEBUG  ]  No samples found: hicpro
+[2020-11-11 11:32:06,697] multiqc                                            [DEBUG  ]  No samples found: salmon
+[2020-11-11 11:32:06,718] multiqc                                            [DEBUG  ]  No samples found: kallisto
+[2020-11-11 11:32:06,731] multiqc                                            [DEBUG  ]  No samples found: slamdunk
+[2020-11-11 11:32:06,742] multiqc                                            [DEBUG  ]  No samples found: star
+[2020-11-11 11:32:06,758] multiqc.modules.hisat2.hisat2                      [INFO   ]  Found 17 reports
+[2020-11-11 11:32:06,767] multiqc                                            [DEBUG  ]  No samples found: tophat
+[2020-11-11 11:32:06,796] multiqc                                            [DEBUG  ]  No samples found: bowtie2
+[2020-11-11 11:32:06,808] multiqc                                            [DEBUG  ]  No samples found: bowtie1
+[2020-11-11 11:32:06,818] multiqc                                            [DEBUG  ]  No samples found: snpsplit
+[2020-11-11 11:32:06,827] multiqc                                            [DEBUG  ]  No samples found: kat
+[2020-11-11 11:32:06,840] multiqc                                            [DEBUG  ]  No samples found: leehom
+[2020-11-11 11:32:06,851] multiqc                                            [DEBUG  ]  No samples found: adapterRemoval
+[2020-11-11 11:32:06,877] multiqc                                            [DEBUG  ]  No samples found: clipandmerge
+[2020-11-11 11:32:06,890] multiqc                                            [DEBUG  ]  No samples found: cutadapt
+[2020-11-11 11:32:06,901] multiqc                                            [DEBUG  ]  No samples found: flexbar
+[2020-11-11 11:32:06,958] multiqc                                            [DEBUG  ]  No samples found: kaiju
+[2020-11-11 11:32:06,972] multiqc                                            [DEBUG  ]  No samples found: kraken
+[2020-11-11 11:32:06,979] multiqc                                            [DEBUG  ]  No samples found: malt
+[2020-11-11 11:32:06,988] multiqc                                            [DEBUG  ]  No samples found: trimmomatic
+[2020-11-11 11:32:06,998] multiqc                                            [DEBUG  ]  No samples found: sickle
+[2020-11-11 11:32:07,007] multiqc                                            [DEBUG  ]  No samples found: skewer
+[2020-11-11 11:32:07,023] multiqc                                            [DEBUG  ]  No samples found: sortmerna
+[2020-11-11 11:32:07,033] multiqc                                            [DEBUG  ]  No samples found: biobloomtools
+[2020-11-11 11:32:07,043] multiqc                                            [DEBUG  ]  No samples found: fastq_screen
+[2020-11-11 11:32:07,053] multiqc                                            [DEBUG  ]  No samples found: afterqc
+[2020-11-11 11:32:07,070] multiqc                                            [DEBUG  ]  No samples found: fastp
+[2020-11-11 11:32:10,150] multiqc.modules.fastqc.fastqc                      [INFO   ]  Found 17 reports
+[2020-11-11 11:32:10,626] multiqc                                            [DEBUG  ]  No samples found: pycoqc
+[2020-11-11 11:32:10,642] multiqc                                            [DEBUG  ]  No samples found: minionqc
+[2020-11-11 11:32:10,680] multiqc                                            [DEBUG  ]  No samples found: multivcfanalyzer
+[2020-11-11 11:32:10,694] multiqc                                            [DEBUG  ]  No samples found: clusterflow
+[2020-11-11 11:32:10,704] multiqc                                            [DEBUG  ]  No samples found: bcl2fastq
+[2020-11-11 11:32:10,748] multiqc                                            [DEBUG  ]  No samples found: interop
+[2020-11-11 11:32:10,762] multiqc                                            [DEBUG  ]  No samples found: ivar
+[2020-11-11 11:32:10,781] multiqc                                            [DEBUG  ]  No samples found: flash
+[2020-11-11 11:32:10,805] multiqc                                            [DEBUG  ]  No samples found: seqyclean
+[2020-11-11 11:32:10,843] multiqc                                            [INFO   ]  Compressing plot data
+[2020-11-11 11:32:11,214] multiqc                                            [INFO   ]  Report      : ../../results/figures/multiqc_reports/savage/multiqc_report.html
+[2020-11-11 11:32:11,215] multiqc                                            [INFO   ]  Data        : ../../results/figures/multiqc_reports/savage/multiqc_data
+[2020-11-11 11:32:11,215] multiqc                                            [DEBUG  ]  Moving data file from '/tmp/tmppqn6ylb3/multiqc_data' to '../../results/figures/multiqc_reports/savage/multiqc_data'
+[2020-11-11 11:32:11,846] multiqc                                            [INFO   ]  MultiQC complete

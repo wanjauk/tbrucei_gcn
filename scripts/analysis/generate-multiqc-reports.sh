@@ -26,4 +26,8 @@ HTSEQ_DIR=$3
 OUT_DIR=$4
 
 # run mutiqc
-multiqc ${FASTQC_DIR}/*.fastqc.zip ${HISAT2_DIR}/*.txt ${HTSEQ_DIR}/*.counts.txt --outdir ${OUT_DIR}
+multiqc ${FASTQC_DIR}/*_fastqc.zip ${HISAT2_DIR}/*.txt ${HTSEQ_DIR}/*.counts.txt --outdir ${OUT_DIR}
+
+
+
+
