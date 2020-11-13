@@ -1,2 +1,0 @@
-category	pvalue_adj	num_in_subset	num_total	name	class	direction
-path:tbr00230	0.00904216560142653	12	82	Purine metabolism	Metabolism; Nucleotide metabolism	over-represented

@@ -1,0 +1,14 @@
+category,pvalue_adj,num_in_subset,num_total,term,ontology,direction
+GO:0009986,0.000284486211891586,15,30,cell surface,CC,over-represented
+GO:0016020,0.000284486211891586,121,812,membrane,CC,over-represented
+GO:0016021,0.0169209758005785,60,394,integral component of membrane,CC,over-represented
+GO:0031224,0.0169209758005785,60,394,intrinsic component of membrane,CC,over-represented
+GO:0045121,0.000284486211891586,9,11,membrane raft,CC,over-represented
+GO:0098589,0.000284486211891586,9,11,membrane region,CC,over-represented
+GO:0098857,0.000284486211891586,9,11,membrane microdomain,CC,over-represented
+GO:0003735,0.0498993422015866,6,161,structural constituent of ribosome,MF,under-represented
+GO:0005198,0.0498993422015866,8,190,structural molecule activity,MF,under-represented
+GO:0005730,0.0384649508592009,13,307,nucleolus,CC,under-represented
+GO:0009987,0.0498993422015866,179,2338,cellular process,BP,under-represented
+GO:0043228,0,66,1305,non-membrane-bounded organelle,CC,under-represented
+GO:0043232,0,66,1305,intracellular non-membrane-bounded organelle,CC,under-represented

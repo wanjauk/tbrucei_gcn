@@ -1,0 +1,14 @@
+category,pvalue_adj,num_in_subset,num_total,term,ontology,direction
+GO:0000313,0.0122947750513782,17,120,organellar ribosome,CC,over-represented
+GO:0000315,0.0193209330339288,12,72,organellar large ribosomal subunit,CC,over-represented
+GO:0003735,0.0192636336266441,21,161,structural constituent of ribosome,MF,over-represented
+GO:0005739,0.0193209330339288,81,1359,mitochondrion,CC,over-represented
+GO:0005743,0.0122947750513782,17,120,mitochondrial inner membrane,CC,over-represented
+GO:0005759,0.0192636336266441,17,136,mitochondrial matrix,CC,over-represented
+GO:0005761,0.0132365783618261,16,114,mitochondrial ribosome,CC,over-represented
+GO:0005762,0.0192636336266441,12,70,mitochondrial large ribosomal subunit,CC,over-represented
+GO:0005840,0.000193873368398723,33,260,ribosome,CC,over-represented
+GO:0019866,0.0122947750513782,17,120,organelle inner membrane,CC,over-represented
+GO:0044391,0.0192636336266441,18,142,ribosomal subunit,CC,over-represented
+GO:0098798,7.58446590067165e-07,34,240,mitochondrial protein complex,CC,over-represented
+GO:1990904,0.0193209330339288,21,192,ribonucleoprotein complex,CC,over-represented

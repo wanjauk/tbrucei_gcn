@@ -1,2 +1,0 @@
-category	pvalue_adj	num_in_subset	num_total	name	class	direction
-path:tbr03010	0.0145768864543296	1	134	Ribosome	Genetic Information Processing; Translation	under-represented

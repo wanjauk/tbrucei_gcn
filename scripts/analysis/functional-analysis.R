@@ -1,12 +1,15 @@
 source(here::here("scripts","analysis","libraries.R"))
+source(here::here("scripts","analysis","settings.R"))
 source(here::here("scripts","utils","enrichment_analysis.R"))
 source(here::here("scripts","utils","annotations.R"))
 source(here::here("scripts","utils","wgcna.R"))
 source(here::here("scripts","utils","util.R"))
 logcpm.norm.counts.combat <- readRDS(here::here("data","intermediate","logcpm.norm.counts.combat.RDS"))
+gene_and_transcript_id <- readRDS(here::here("data","intermediate","gene_and_transcript_id.RDS"))
 gene.tree <- readRDS(file = here::here("data","intermediate","gene.tree.RDS"))
 all.modules <- readRDS(file = here::here("data","intermediate","all.modules.RDS"))
 module.colours <- readRDS(file = here::here("data","intermediate","module.colours.RDS"))
+module.hub.genes <- readRDS(here::here("data","intermediate","module.hub.genes"))
 
 #################################################################
 # load gene annotations from packages
@@ -20,18 +23,20 @@ assign('get',    base::get, envir=.GlobalEnv)
 gene_info <- load_parasite_annotations(orgdb, rownames(logcpm.norm.counts.combat),
                                        keytype="GID")
 
+# add the transcript id column to the gene_info
+gene_info$transcript_id <- gene_and_transcript_id$transcript_id[match(gene_info$gene_id,
+                                                                    gene_and_transcript_id$gene_id)]
+
 # Get transcript lengths (sum of all exon lengths for each gene)
 txdb <- orgdb@txdbSlot
 transcript_lengths <- transcriptLengths(txdb)
-transcript_lengths <- transcript_lengths[transcript_lengths$gene_id %in%
-                                           gene_info$gene_id,]
+transcript_lengths <- transcript_lengths[transcript_lengths$tx_name %in%
+                                           gene_info$transcript_id,]
 
-# gene_info[match(transcript_lengths$gene_id, gene_info$gene_id), 
-#           'transcript_length'] <- transcript_lengths$tx_len
-# gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
-
-
-gene_info <- merge(gene_info, unique(transcript_lengths[, c('gene_id','tx_len')]), all.x=TRUE, by='gene_id')
+# add the transcript lengths to gene_info
+gene_info[match(transcript_lengths$tx_name, gene_info$transcript_id),
+          'transcript_length'] <- transcript_lengths$tx_len
+gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
 
 # A gene was excluded in the annotation database as a result of an orphan transcript.
 #Add its placeholder.
@@ -55,15 +60,16 @@ gene_ids <- rownames(logcpm.norm.counts.combat)
 kable(head(gene_info), caption='Preview of gene annotations.')
 
 #########################################################################################
-# load GO terms associated with each parasite gene that were downloaded from Tritrypdb
+# load GO terms associated with each parasite gene
 #########################################################################################
-# T. brucei go term annotations file path
-#go_term_mapping <- "~/tbrucei_annotation_package/build/3.6.0/TriTrypDB-43_TbruceiTREU927_go_table.txt"
-#go_terms <- read.table(go_term_mapping, header = TRUE)
 
-# load go terms from annotation package instead
-go_terms <- load_go_terms(orgdb, rownames(logcpm.norm.counts.combat), 
-                          keytype='GID')
+# # load go terms from annotation package
+# go_terms <- load_go_terms(orgdb, rownames(logcpm.norm.counts.combat),
+#                           keytype='GID')
+# 
+# # this take time to run, so save it to avoid re-running.
+# saveRDS(go_terms, file = here::here("data","intermediate","go_terms.RDS"))
+go_terms <- readRDS(file = here::here("data","intermediate","go_terms.RDS"))
 
 # Exclude genes not found in count table --not run--
 #go_terms <- go_terms[go_terms$GID %in% rownames(logcpm.norm.counts.combat),]
@@ -100,6 +106,10 @@ kegg_pathways <- unique(kegg_pathways)
 
 # get the number of modules
 num_modules <- length(unique(module.colours))
+
+# Create gene lengths vector
+gene_lengths <- gene_info$transcript_length
+names(gene_lengths) <- gene_info$gene_id
 
 # save the module sizes 
 # Data frame of module sizes
@@ -172,8 +182,8 @@ cat(sprintf('- Total enriched modules: %d\n',
 
 # create tables of the results in this document
 print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
-                         #NULL, gene_mapping, output_dir='../results/printed_enrichment_results', 
                          NULL, gene_mapping, 
+                         output_dir=here::here("results","tables"),
                          enrichment_type='go',
                          include_gene_lists=FALSE)
 
@@ -183,11 +193,9 @@ enriched_colors_go <- get_enriched_modules(module_go_enrichment)
 go_enrichment_status   <- as.numeric(module.colours %in% enriched_colors_go)
 
 
-
 ################################################
 # KEGG Enrichment
 ################################################
-
 
 # Check each module for enrichment in KEGG terms and save result in a list
 cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
@@ -230,11 +238,11 @@ stopCluster(cl)
 cat(sprintf('- Total enriched modules: %d\n', 
             sum(sapply(module_kegg_enrichment, nrow) > 0)))
 
-# create tables of the results in this document
-print_enrichment_results(module_kegg_enrichment, module_sizes, 
-                         'KEGG pathway',
-                         #output_dir='../results/printed_enrichment_results',
-                         enrichment_type='kegg')
+# create tables of the results in this document --function has bugs for kegg enrichment type--
+# print_enrichment_results(module_kegg_enrichment, module_sizes, 
+#                          'KEGG pathway',
+#                          output_dir= here::here("results","tables"),
+#                          enrichment_type='kegg')
 
 enriched_colors_kegg <- get_enriched_modules(module_kegg_enrichment)
 
@@ -243,11 +251,10 @@ enriched_colors_kegg <- get_enriched_modules(module_kegg_enrichment)
 kegg_enrichment_status <- as.numeric(module.colours %in% enriched_colors_kegg)
 
 
-cat('\n### Dendrogram with annotated modules\n')
-
+# add enrichment information to the Dendrogram
 unassigned_modules <- as.numeric(module.colours == 'grey')
 
-png(filename = "../figures/figure10_gene-tree-and-module-enrichment-status.png", res =1200, 
+png(filename = here::here("results","figures","gene-tree-and-module-enrichment-status.png"), res =1200, 
     type = "cairo", units = 'in', width = 6, height = 6, pointsize = 10)
 WGCNA::plotDendroAndColors(gene.tree,
                            cbind(module.colours, go_enrichment_status,
@@ -263,25 +270,12 @@ WGCNA::plotDendroAndColors(gene.tree,
 dev.off()
 
 
-### Module labels mappings
-module_label_mapping <- rbind(cbind(all.modules,
-                                    seq_along(all.modules)),
-                              cbind(remaining_modules, #remaining modules variable?
-                                    seq_along(remaining_modules) +
-                                      length(all.modules)))
-
-module_label_mapping <- as.data.frame(module_label_mapping)
-colnames(module_label_mapping) <- c('color', 'number')
-
-
-###############################
+###############################################################
 ### Save results
-###############################
-## Save results
+###############################################################
 
-###############################################################################
-# Save enrichment results as text files
-module_output_dir <- "../results/enrichment_results"
+# Save each module's enrichment results as csv files
+module_output_dir <- here::here("results","tables","enrichment_results")
 if (!dir.exists(module_output_dir)) {
   dir.create(module_output_dir, recursive=TRUE)
 }
@@ -295,7 +289,26 @@ output_module_enrichment_results(module_kegg_enrichment, module_output_dir,
                                  'kegg', kegg_pathways %>% select(-description))
 
 #################################################################################
-# Create result data frame
+# Save GO enrichment results
+
+# get only the enriched go modules
+enriched_module_go_enrichment <- module_go_enrichment[names(module_go_enrichment) %in% enriched_colors_go]
+
+write.xlsx(enriched_module_go_enrichment, 
+           file = here::here("results","tables","modules_go_enrichment_results.xlsx"))
+
+####################################################################################
+#save KEGG enrichment results
+
+# get only the enriched kegg modules
+enriched_module_kegg_enrichment <- module_kegg_enrichment[names(module_kegg_enrichment) %in% enriched_colors_kegg]
+
+write.xlsx(enriched_module_kegg_enrichment, 
+           file = here::here("results","tables","modules_kegg_enrichment_results.xlsx"))
+
+
+#################################################################################
+# Create co-expression results data frame
 result <- cbind(gene_info, color=module.colours)
 
 # drop unneeded columns
@@ -313,71 +326,14 @@ result$expr_mean <- apply(logcpm.norm.counts.combat, 1, mean)
 #result$color <- module_label_mapping$number[match(result$color, module_label_mapping$color)]
 
 # Write out an excel/csv file for the result dataframe
-write.table(result, file="../results/coexpression_network_genes.txt", quote = FALSE, sep = "\t")
+openxlsx::write.xlsx(result, file=here::here("results","tables","coexpression_network_genes.xlsx"))
 
-write.xlsx(result, file="../results/coexpression_network_genes.xlsx")
-
-#################################################################################
-correlation_matrix <- cor(network.counts) # check this further to determine whether relationship is correct
-
-# Module Stats
-# main_contrast: variable useful if 'result' variable has Differential expression column specified
-# "de_comparisons"
-#--this code did not work--
-module_stats <- create_module_stats_df(result, correlation_matrix, 
-                                       logcpm.norm.counts.combat,main_contrast)
-
-# Write module stats to a file
-write.csv(module_stats, file="../results/module_stats.csv",row.names=FALSE, quote=FALSE)
-#################################################################################
-# Save module enrichment results in a dataframe and write out to excel
-black <- module_go_enrichment$black
-tan <- module_go_enrichment$tan    
-brown <- module_go_enrichment$brown
-blue <- module_go_enrichment$blue  
-turquoise <- module_go_enrichment$turquoise
-magenta <- module_go_enrichment$magenta    
-darkturquoise <- module_go_enrichment$darkturquoise
-green <- module_go_enrichment$green                
-red <- module_go_enrichment$red    
-pink <- module_go_enrichment$pink
-salmon <- module_go_enrichment$salmon
-lightyellow <- module_go_enrichment$lightyellow
-greenyellow <- module_go_enrichment$greenyellow
-purple <- module_go_enrichment$purple
-
-go_enrichment_df_list <- c("black","tan","brown","blue","turquoise","magenta","darkturquoise",
-                           "green","red","pink","salmon","lightyellow","greenyellow","purple")
-
-for(name in go_enrichment_df_list){
-  write.xlsx(x = get(name), 
-             file = "../results/Module_go_enrichment_results.xlsx", 
-             sheetName = name, append=TRUE, row.names = FALSE)
-}
-
-####################################################################################
-#save KEGG enrichment results
-
-red <- module_kegg_enrichment$red    
-pink <- module_kegg_enrichment$pink
-lightyellow <- module_kegg_enrichment$lightyellow
-blue <- module_kegg_enrichment$blue
-yellow <- module_kegg_enrichment$yellow
-lightcyan <- module_kegg_enrichment$lightcyan
-magenta <- module_kegg_enrichment$magenta
-
-
-kegg_enrichment_df_list <- c("blue","magenta","red","pink","lightyellow","yellow","lightcyan")
-
-for(name in kegg_enrichment_df_list){
-  write.xlsx(x = get(name), 
-             file = "../results/Module_kegg_enrichment_results.xlsx", 
-             sheetName = name, append=TRUE, row.names = FALSE)
-}
 
 ######################################################################################
 # save module hub genes domain description
-module_hub_genes_description <- gene_info %>% filter(gene_id %in% as.data.frame(module.hub.genes)$module.hub.genes) %>% select(gene_id, description)
+module_hub_genes_description <- gene_info %>% 
+                filter(gene_id %in% as.data.frame(module.hub.genes)$module.hub.genes) %>% 
+                select(gene_id, description)
 
 module_hub_genes_df <- as.data.frame(module.hub.genes)
 
@@ -392,51 +348,23 @@ module_hub_genes_domain_description <- module_hub_genes_domain_description[,c(2,
 module_hub_genes_domain_description <- module_hub_genes_domain_description %>%
   dplyr::rename(hub_gene=module.hub.genes)
 
-write.xlsx(module_hub_genes_domain_description,
-           file = "../results/hub_genes.xlsx",
-           #append = TRUE,
-           row.names = FALSE)
+openxlsx::write.xlsx(module_hub_genes_domain_description,
+           file = here::here("results","tables","hub_genes.xlsx"))
 
 #########################################################################################
 # Add hub genes and description to top GO terms in each module
 
-modules_top_over_represented_go_terms <-readxl::read_excel('../results/modules_top_over_represented_go_terms.xlsx')
+modules_top_over_represented_go_terms <-readxl::read_excel(here::here("results",
+                                                                      "tables",
+                                                                      "modules_top_over_represented_go_terms.xlsx"))
 
-enriched_modules_hub_genes <- module_hub_genes_domain_description %>% filter(module %in% modules_top_over_represented_go_terms$module)
+enriched_modules_hub_genes <- module_hub_genes_domain_description %>% 
+              filter(module %in% modules_top_over_represented_go_terms$module)
 
 modules_top_over_represented_go_terms_and_hub_genes <- merge(modules_top_over_represented_go_terms,
                                                              enriched_modules_hub_genes, by="module")
 
-write.xlsx(modules_top_over_represented_go_terms_and_hub_genes,
-           file = "../results/modules_top_over_represented_go_terms_and_hub_genes.xlsx",
-           #append = TRUE,
-           row.names = FALSE)
-
-######################################################################################
-# write to excel DE hub genes expressed through out life cycle stages and their different LogFC in contrasts
-
-contrast_common_de_genes_logFC_hub_genes <- contrast_common_de_genes_logFC %>% filter(gene_id %in% modules_top_over_represented_go_terms_and_hub_genes$hub_genes)
-
-modules_top_over_represented_go_terms_and_hub_genes_logFC <- merge(modules_top_over_represented_go_terms_and_hub_genes,
-                                                                   contrast_common_de_genes_logFC_hub_genes,
-                                                                   by.x="hub_genes", by.y = "gene_id")
-
-modules_top_over_represented_go_terms_and_hub_genes_logFC <- modules_top_over_represented_go_terms_and_hub_genes_logFC %>% select(-num_total, -num_in_subset)
-
-# reorder columns
-modules_top_over_represented_go_terms_and_hub_genes_logFC <- modules_top_over_represented_go_terms_and_hub_genes_logFC[,c(2:6,1,7:9)]
-
-# write output to excel
-write.xlsx(modules_top_over_represented_go_terms_and_hub_genes_logFC,
-           file = "../results/common_differentially_expressed_hub_genes_logFC_comparison.xlsx",
-           #append = TRUE,
-           row.names = FALSE)
-
-#######################################################################################
-# write hub genes and common DEG across contrasts to output text files for cytoscape analysis
-
-#hub genes
-write.table(module_hub_genes_domain_description$hub_genes, file="../results/hub_genes.txt", quote = FALSE, row.names = FALSE)
-
-#common DEGs
-write.table(contrast_common_de_genes_logFC$gene_id, file="../results/common_DEG_across_contrasts.txt", quote = FALSE, row.names = FALSE)
+openxlsx::write.xlsx(modules_top_over_represented_go_terms_and_hub_genes,
+           file = here::here("results",
+                             "tables",
+                             "modules_top_over_represented_go_terms_and_hub_genes.xlsx"))

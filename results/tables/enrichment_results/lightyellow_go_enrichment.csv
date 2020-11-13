@@ -1,0 +1,29 @@
+category,pvalue_adj,num_in_subset,num_total,term,ontology,direction
+GO:0003735,6.00740518428302e-11,27,161,structural constituent of ribosome,MF,over-represented
+GO:0005198,6.72572403447084e-10,27,190,structural molecule activity,MF,over-represented
+GO:0005840,1.54244533631326e-09,30,260,ribosome,CC,over-represented
+GO:0006091,0.0207512742980998,7,60,generation of precursor metabolites and energy,BP,over-represented
+GO:0006412,3.1119549874988e-09,28,243,translation,BP,over-represented
+GO:0006518,5.12464859784939e-09,28,252,peptide metabolic process,BP,over-represented
+GO:0008152,0.0226993674301319,61,2137,metabolic process,BP,over-represented
+GO:0009058,1.02834203400273e-07,40,673,biosynthetic process,BP,over-represented
+GO:0009059,3.80350796759866e-06,30,438,macromolecule biosynthetic process,BP,over-represented
+GO:0010467,0.0207512742980998,35,891,gene expression,BP,over-represented
+GO:0015934,0.00410448266221699,10,82,large ribosomal subunit,CC,over-represented
+GO:0019538,0.0119541197426113,31,763,protein metabolic process,BP,over-represented
+GO:0019843,0.0207512742980998,4,11,rRNA binding,MF,over-represented
+GO:0034641,0.00183974868973001,39,963,cellular nitrogen compound metabolic process,BP,over-represented
+GO:0034645,3.36859411927656e-06,30,433,cellular macromolecule biosynthetic process,BP,over-represented
+GO:0043043,3.1119549874988e-09,28,245,peptide biosynthetic process,BP,over-represented
+GO:0043603,1.25728636392004e-08,28,268,cellular amide metabolic process,BP,over-represented
+GO:0043604,6.48439080643594e-09,28,259,amide biosynthetic process,BP,over-represented
+GO:0044237,0.00457763995670785,52,1593,cellular metabolic process,BP,over-represented
+GO:0044238,0.0462492904373475,48,1594,primary metabolic process,BP,over-represented
+GO:0044249,4.85525095308155e-07,38,648,cellular biosynthetic process,BP,over-represented
+GO:0044267,0.0122761851078773,29,673,cellular protein metabolic process,BP,over-represented
+GO:0044271,1.04465944366953e-06,32,476,cellular nitrogen compound biosynthetic process,BP,over-represented
+GO:0044391,0.000222609686164135,15,142,ribosomal subunit,CC,over-represented
+GO:1901564,0.00184142206646631,37,903,organonitrogen compound metabolic process,BP,over-represented
+GO:1901566,1.4773140371353e-07,31,381,organonitrogen compound biosynthetic process,BP,over-represented
+GO:1901576,1.50823432755678e-06,37,651,organic substance biosynthetic process,BP,over-represented
+GO:1990904,0.00164985731001369,16,192,ribonucleoprotein complex,CC,over-represented

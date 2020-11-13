@@ -1,0 +1,4 @@
+category,pvalue_adj,num_in_subset,num_total,term,ontology,direction
+GO:0003676,0.0266021811397018,45,674,nucleic acid binding,MF,over-represented
+GO:0003723,0.00204165304922022,33,392,RNA binding,MF,over-represented
+GO:0016070,0.0266021811397018,31,423,RNA metabolic process,BP,over-represented

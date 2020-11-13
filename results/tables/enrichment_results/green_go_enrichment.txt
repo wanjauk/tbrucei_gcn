@@ -1,3 +1,0 @@
-category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
-GO:0043228	0.0090653642642776	56	1289	non-membrane-bounded organelle	CC	under-represented
-GO:0043232	0.0090653642642776	56	1289	intracellular non-membrane-bounded organelle	CC	under-represented

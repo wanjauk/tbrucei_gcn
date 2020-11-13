@@ -1,0 +1,61 @@
+category,pvalue_adj,num_in_subset,num_total,term,ontology,direction
+GO:0003674,0.0405788207255586,233,3374,molecular_function,MF,over-represented
+GO:0003735,0.000289635858782296,30,161,structural constituent of ribosome,MF,over-represented
+GO:0004016,0.00210995507744965,11,43,adenylate cyclase activity,MF,over-represented
+GO:0005198,0.00292407977515467,30,190,structural molecule activity,MF,over-represented
+GO:0005740,0.00015869353429293,34,216,mitochondrial envelope,CC,over-represented
+GO:0005742,0.0388542460054415,4,7,mitochondrial outer membrane translocase complex,CC,over-represented
+GO:0005743,0.00626210171007517,20,120,mitochondrial inner membrane,CC,over-represented
+GO:0005777,0.00292407977515467,24,158,peroxisome,CC,over-represented
+GO:0005832,0.00359975342531653,5,8,chaperonin-containing T-complex,CC,over-represented
+GO:0006412,8.76533910476323e-06,41,243,translation,BP,over-represented
+GO:0006457,0.0405788207255586,16,103,protein folding,BP,over-represented
+GO:0006518,8.76533910476323e-06,42,252,peptide metabolic process,BP,over-represented
+GO:0006753,0.0251277838835841,17,116,nucleoside phosphate metabolic process,BP,over-represented
+GO:0006793,0.0496206757382037,42,439,phosphorus metabolic process,BP,over-represented
+GO:0006807,0.00884549164278619,122,1491,nitrogen compound metabolic process,BP,over-represented
+GO:0008150,0.00576677239202213,216,2959,biological_process,BP,over-represented
+GO:0008152,0.00220176174372327,168,2137,metabolic process,BP,over-represented
+GO:0009058,1.07819581762541e-06,81,673,biosynthetic process,BP,over-represented
+GO:0009059,0.0069397824096503,49,438,macromolecule biosynthetic process,BP,over-represented
+GO:0009117,0.0407646533442028,16,111,nucleotide metabolic process,BP,over-represented
+GO:0009165,0.0251277838835841,14,86,nucleotide biosynthetic process,BP,over-represented
+GO:0009187,0.0022011151281894,12,52,cyclic nucleotide metabolic process,BP,over-represented
+GO:0009190,0.0022011151281894,12,52,cyclic nucleotide biosynthetic process,BP,over-represented
+GO:0009975,0.00210995507744965,11,43,cyclase activity,MF,over-represented
+GO:0009987,0.0357270297780648,173,2338,cellular process,BP,over-represented
+GO:0016020,4.47715648684296e-07,92,812,membrane,CC,over-represented
+GO:0016021,0.000494587008603856,47,394,integral component of membrane,CC,over-represented
+GO:0016829,0.0081097522006166,15,87,lyase activity,MF,over-represented
+GO:0016849,0.00252432145919365,12,53,phosphorus-oxygen lyase activity,MF,over-represented
+GO:0019538,0.00169041717106205,76,763,protein metabolic process,BP,over-represented
+GO:0019866,0.00626210171007517,20,120,organelle inner membrane,CC,over-represented
+GO:0020015,0.00516376550479842,23,154,glycosome,CC,over-represented
+GO:0020022,0.0459293886575601,9,43,acidocalcisome,CC,over-represented
+GO:0031090,0.00442872598878887,38,309,organelle membrane,CC,over-represented
+GO:0031224,0.000494587008603856,47,394,intrinsic component of membrane,CC,over-represented
+GO:0031966,0.000103305662675867,34,212,mitochondrial membrane,CC,over-represented
+GO:0034641,0.0137447052841804,86,963,cellular nitrogen compound metabolic process,BP,over-represented
+GO:0034645,0.00594358281332212,49,433,cellular macromolecule biosynthetic process,BP,over-represented
+GO:0042579,0.00292407977515467,24,158,microbody,CC,over-represented
+GO:0043043,5.88485897212859e-06,42,245,peptide biosynthetic process,BP,over-represented
+GO:0043603,1.23624695723899e-05,43,268,cellular amide metabolic process,BP,over-represented
+GO:0043604,7.28901036002433e-06,43,259,amide biosynthetic process,BP,over-represented
+GO:0044237,0.00626210171007517,130,1593,cellular metabolic process,BP,over-represented
+GO:0044238,0.00551081393522097,130,1594,primary metabolic process,BP,over-represented
+GO:0044249,2.04780159487101e-06,78,648,cellular biosynthetic process,BP,over-represented
+GO:0044267,0.0022011151281894,69,673,cellular protein metabolic process,BP,over-represented
+GO:0044271,1.87150937199116e-07,68,476,cellular nitrogen compound biosynthetic process,BP,over-represented
+GO:0044281,0.0022011151281894,35,280,small molecule metabolic process,BP,over-represented
+GO:0051082,0.0468482062082242,12,68,unfolded protein binding,MF,over-represented
+GO:0055085,0.00576677239202213,19,118,transmembrane transport,BP,over-represented
+GO:0055086,0.00824570973809371,21,145,nucleobase-containing small molecule metabolic process,BP,over-represented
+GO:0071704,0.0120220320410582,149,1919,organic substance metabolic process,BP,over-represented
+GO:0098799,0.0388542460054415,4,7,outer mitochondrial membrane protein complex,CC,over-represented
+GO:0101031,0.000516875382611858,6,9,chaperone complex,CC,over-represented
+GO:1901293,0.0120262850440783,15,90,nucleoside phosphate biosynthetic process,BP,over-represented
+GO:1901564,0.000229491425125254,89,903,organonitrogen compound metabolic process,BP,over-represented
+GO:1901566,8.43543112304278e-06,54,381,organonitrogen compound biosynthetic process,BP,over-represented
+GO:1901576,6.8519534581816e-07,80,651,organic substance biosynthetic process,BP,over-represented
+GO:0005856,0.000696877751352027,14,693,cytoskeleton,CC,under-represented
+GO:0015630,0.00191836504402946,3,344,microtubule cytoskeleton,CC,under-represented

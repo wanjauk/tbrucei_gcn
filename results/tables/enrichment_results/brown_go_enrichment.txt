@@ -1,6 +1,0 @@
-category	pvalue_adj	num_in_subset	num_total	term	ontology	direction
-GO:0004016	0.0115137876566676	10	43	adenylate cyclase activity	MF	over-represented
-GO:0009187	0.030818900066953	10	52	cyclic nucleotide metabolic process	BP	over-represented
-GO:0009190	0.030818900066953	10	52	cyclic nucleotide biosynthetic process	BP	over-represented
-GO:0009975	0.0115137876566676	10	43	cyclase activity	MF	over-represented
-GO:0016849	0.0326296438030208	10	53	phosphorus-oxygen lyase activity	MF	over-represented

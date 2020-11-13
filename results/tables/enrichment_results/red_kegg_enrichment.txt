@@ -1,2 +1,0 @@
-category	pvalue_adj	num_in_subset	num_total	name	class	direction
-path:tbr03440	0.0147775597923692	6	14	Homologous recombination	Genetic Information Processing; Replication and repair	over-represented

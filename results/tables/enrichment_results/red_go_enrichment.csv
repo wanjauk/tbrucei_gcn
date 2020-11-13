@@ -1,0 +1,8 @@
+category,pvalue_adj,num_in_subset,num_total,term,ontology,direction
+GO:0005815,0.0492541998830396,31,231,microtubule organizing center,CC,over-represented
+GO:0005856,0.0113032299441086,74,693,cytoskeleton,CC,over-represented
+GO:0005929,0.0492541998830396,127,1558,cilium,CC,over-represented
+GO:0006260,0.0284429895474855,14,57,DNA replication,BP,over-represented
+GO:0042995,0.0492541998830396,127,1558,cell projection,CC,over-represented
+GO:0051276,0.0492541998830396,15,74,chromosome organization,BP,over-represented
+GO:0120025,0.0492541998830396,127,1558,plasma membrane bounded cell projection,CC,over-represented

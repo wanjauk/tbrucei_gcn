@@ -15,20 +15,20 @@ table(rowSums(counts$counts==0)==15)
 keep.exprs <- filterByExpr(counts, group=sample.metadata$Sample_Name)
 filtered.counts <- counts[keep.exprs,, keep.lib.sizes=FALSE]
 
-# change transcript ids to corresponding gene ids -----------------------------------------
+# # change transcript ids to corresponding gene ids -----------------------------------------
 gtf_file <- import(here::here("data","scratch","tbrucei","TriTrypDB-43_TbruceiTREU927.gtf"))
 gene_and_transcript_id <- mcols(gtf_file)[,c("gene_id","transcript_id")]
 gene_and_transcript_id <- unique(gene_and_transcript_id)
 
 
-# replace transcript ids with gene ids as rownames 
+# replace transcript ids with gene ids as rownames
 filtered.counts.tmp <- tibble::rownames_to_column(as.data.frame(filtered.counts$counts),
                                                   "transcript_id")
 
 filtered.counts.tmp$gene_id <- gene_and_transcript_id$gene_id[match(filtered.counts.tmp$transcript_id,
                                                                     gene_and_transcript_id$transcript_id)]
 
-filtered.counts.tmp <- as.data.frame(filtered.counts.tmp) %>% remove_rownames %>% 
+filtered.counts.tmp <- as.data.frame(filtered.counts.tmp) %>% remove_rownames %>%
   column_to_rownames(var = "gene_id")
 
 filtered.counts.tmp$transcript_id <- NULL
@@ -53,7 +53,8 @@ logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = sample.metad
 saveRDS(logcpm.unnorm.counts, here::here("data","intermediate","logcpm.unnorm.counts.RDS"))
 saveRDS(logcpm.norm.counts, here::here("data","intermediate","logcpm.norm.counts.RDS"))
 saveRDS(logcpm.norm.counts.combat, here::here("data","intermediate","logcpm.norm.counts.combat.RDS"))
+saveRDS(gene_and_transcript_id, here::here("data","intermediate","gene_and_transcript_id.RDS"))
 
 # clean up the environment
-rm(gtf_file, gene_and_transcript_id, filtered.counts.tmp)
+rm(gtf_file, filtered.counts.tmp)
 

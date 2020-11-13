@@ -1,2 +1,0 @@
-category	pvalue_adj	num_in_subset	num_total	name	class	direction
-path:tbr01100	0.00742623494324559	2	378	Metabolic pathways		under-represented

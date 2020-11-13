@@ -227,3 +227,4 @@ write.table(node.attributes,
 saveRDS(gene.tree, file = here::here("data","intermediate","gene.tree.RDS"))
 saveRDS(all.modules, file = here::here("data","intermediate","all.modules.RDS"))
 saveRDS(module.colours, file = here::here("data","intermediate","module.colours.RDS"))
+saveRDS(module.hub.genes, file = here::here("data","intermediate","module.hub.genes"))

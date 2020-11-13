@@ -1,0 +1,10 @@
+category,pvalue_adj,num_in_subset,num_total,term,ontology,direction
+GO:0004054,0.0265476745678388,3,3,arginine kinase activity,MF,over-represented
+GO:0005856,0.000406883134840654,54,693,cytoskeleton,CC,over-represented
+GO:0005929,0.00235483820641343,89,1558,cilium,CC,over-represented
+GO:0005930,0.000406883134840654,31,293,axoneme,CC,over-represented
+GO:0016775,0.0265476745678388,3,3,phosphotransferase activity, nitrogenous group as acceptor,MF,over-represented
+GO:0042995,0.00235483820641343,89,1558,cell projection,CC,over-represented
+GO:0043228,0.0265476745678388,72,1305,non-membrane-bounded organelle,CC,over-represented
+GO:0043232,0.0265476745678388,72,1305,intracellular non-membrane-bounded organelle,CC,over-represented
+GO:0120025,0.00235483820641343,89,1558,plasma membrane bounded cell projection,CC,over-represented
