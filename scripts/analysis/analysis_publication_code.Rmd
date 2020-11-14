@@ -123,7 +123,7 @@ Before this quality control can be performed, we need to verify whether the read
 First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_experiment.py` to verify strandedness using a few samples.
 
 
-```{bash, code = readLines(here::here("scripts","analysis","strandedness.sh")), eval=FALSE}
+```{bash, code = readLines(here::here("scripts","analysis","check-reads-strandedness.sh")), eval=FALSE}
 
 ```
 
@@ -239,7 +239,7 @@ include_graphics("../figures/norm_sample_boxplot.png")
 
 ### Weighted gene co-expression analysis
 
-```{r, code = readLines(here::here("scripts","analysis","coexpression-network-construction.R")), eval=FALSE}
+```{r, code = readLines(here::here("scripts","analysis","construct-coexpression-network.R")), eval=FALSE}
 
 ```
 
