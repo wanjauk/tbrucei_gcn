@@ -1,10 +1,10 @@
 # load required packages and data
 source(here::here("scripts","analysis","libraries.R"))
-load(file = here::here("data","raw","sample.metdata.final.RData"))
+samples.metadata.clean <- readRDS(here::here("data","raw","samples.metadata.clean.RDS"))
 reads_count <- readRDS(file = here::here("data", "intermediate", "tbrucei_reads_count.RDS"))
 
 # Create a DGEList object
-counts <- DGEList(reads_count, group = sample.metadata$Tissue)
+counts <- DGEList(reads_count, group = samples.metadata.clean$Tissue)
 
 # check the number of genes with no expression in all samples
 table(rowSums(counts$counts==0)==15)
@@ -12,7 +12,7 @@ table(rowSums(counts$counts==0)==15)
 # 9184   792
 
 # Filtering non-expressed and lowly-expressed genes.
-keep.exprs <- filterByExpr(counts, group=sample.metadata$Sample_Name)
+keep.exprs <- filterByExpr(counts, group=samples.metadata.clean$Sample_Name)
 filtered.counts <- counts[keep.exprs,, keep.lib.sizes=FALSE]
 
 # # change transcript ids to corresponding gene ids -----------------------------------------
@@ -45,8 +45,8 @@ filtered.counts <- calcNormFactors(filtered.counts, method = 'TMM')
 logcpm.norm.counts <- cpm(filtered.counts, log = TRUE, prior.count = 2, normalized.lib.sizes = TRUE)
 
 # use ComBat to remove batch effects
-modcombat <- model.matrix(~Tissue, data=sample.metadata)
-logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = sample.metadata$Batch, 
+modcombat <- model.matrix(~Tissue, data=samples.metadata.clean)
+logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = samples.metadata.clean$Batch, 
                                     mod = modcombat)
 
 # save outputs for later analysis
