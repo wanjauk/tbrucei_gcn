@@ -7,6 +7,17 @@
 # accession numbers from Savage et al and Telleria et al the studies
 accessions <- c("SRP002243","SRR965341")
 
+# create directories to store the files if they don't exist.
+telleria_dir <- here::here("data", "raw", "telleria")
+if (!dir.exists(telleria_dir)) {
+  dir.create(telleria_dir, recursive=TRUE)
+}
+
+savage_dir <- here::here("data", "raw", "savage")
+if (!dir.exists(savage_dir)) {
+  dir.create(savage_dir, recursive=TRUE)
+}
+
 for (accession_num in accessions) {
   
   # these samples from Savage et al are single-end reads.
@@ -29,7 +40,7 @@ for (accession_num in accessions) {
     fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
     
     # create a text file with urls to fastq files in ENA database
-    write.table(fastq.urls, here::here("data", "raw", "savage", "savage.fastq.urls.txt"), 
+    write.table(fastq.urls, here::here(savage_dir, "savage.fastq.urls.txt"), 
                 eol = "\n", 
                 quote = FALSE,
                 col.names = FALSE,
@@ -59,7 +70,7 @@ for (accession_num in accessions) {
     fastq.urls <- ENA.metadata[grepl("fastq_ftp", names(ENA.metadata))]
     
     # create a text file with urls to fastq files in ENA database
-    write.table(fastq.urls, here::here("data", "raw", "telleria", "telleria.fastq.urls.txt"), 
+    write.table(fastq.urls, here::here(telleria_dir, "telleria.fastq.urls.txt"), 
                 eol = "\n", 
                 quote = FALSE,
                 col.names = FALSE,

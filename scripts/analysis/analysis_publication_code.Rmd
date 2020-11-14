@@ -15,7 +15,9 @@ opts_chunk$set(echo = TRUE,
                       fig.pos = 'h', 
                       fig.align = 'center', 
                       fig.show='hold')
-load("sample.metdata.final.RData")
+
+# load the samples metadata while knitting document
+samples.metadata <- readRDS(file = here::here("data","raw","samples.metadata.RDS"))
 ```
 ## Introduction
 This document contains the workflow used in the analysis of *T. brucei* gene co-expression network analysis. It contains code used in each step of the analysis. The code and output files are archived at https://github.com/wanjauk/tbrucei_gcn
@@ -39,13 +41,14 @@ First, metadata for the data is obtained from EBI as follows:
 
 ```
 
+Prepare the samples metadata.
 ```{r, code = readLines(here::here("scripts","analysis","prepare-samples-metadata.R")), eval=FALSE}
 
 ```
 
 ```{r, eval=TRUE, echo=TRUE}
 # print out the sample metadata table
-sample.metadata
+samples.metadata
 ```
 
 
@@ -114,35 +117,20 @@ Next, duplicates are marked in the BAM files using Picard.
 
 ```
 
-```{r echo=FALSE, eval=FALSE}
-
-Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_experiment.py` module is used in this case. RSeQC documentation and tutorial can be found [here](http://rseqc.sourceforge.net/).
+## Assessing the strandedness of the reads
+Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_experiment.py` module is used in this case. RSeQC documentation and tutorial can be found [here](http://rseqc.sourceforge.net/).  
 
 First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_experiment.py` to verify strandedness using a few samples.
 
-#```{bash, eval=FALSE, engine="sh"}
-# convert GTF genome annotation to BED format using a custom script from:
-#https://github.com/ExpressionAnalysis/ea-utils/tree/master/clipper
 
-../scripts/gtf2bed.pl ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.gtf > \
-../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
-
-infer_experiment.py -i ../data/processed_data/bru-mor_bam/SRR039381.bam \
--r ../data/tbrucei_genome_annotations_GTF/TriTrypDB-43_TbruceiTREU927.bed
-
-# output
-#This is SingleEnd Data
-#Fraction of reads failed to determine: 0.0008
-#Fraction of reads explained by "++,--": 0.3832
-#Fraction of reads explained by "+-,-+": 0.6161
-#```
-
-The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not strand specific. Tutorial for the tool can be found [here](https://bioconductor.riken.jp/packages/3.5/bioc/vignettes/dupRadar/inst/doc/dupRadar.html)
+```{bash, code = readLines(here::here("scripts","analysis","strandedness.sh")), eval=FALSE}
 
 ```
 
 
-For each of the 18 samples, dupRadar tool is used to perform quality control in R.
+The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not strand specific. Tutorial for the tool can be found [here](https://bioconductor.riken.jp/packages/3.5/bioc/vignettes/dupRadar/inst/doc/dupRadar.html)  
+
+For each of the 18 samples, dupRadar tool is used to perform quality control in R. Samples that had technical duplicates were excluded from sample metadata and further analysis.
 
 ```{r, code = readLines(here::here("scripts","analysis","run-dupRadar.R")), eval=FALSE}
 
@@ -152,25 +140,12 @@ For each of the 18 samples, dupRadar tool is used to perform quality control in 
 ```{r fig.cap="Sample without PCR duplicates", echo=FALSE, out.width='80%', eval=FALSE}
 #Below are representative plots of samples with PCR duplicates and without PCR duplicates. Samples with PCR duplicates are removed from the analysis before counts data are read into R.
 
-include_graphics("../figures/duplication_rate/SRR039378.png")
+include_graphics(here::here("results","figures","duplication_rate","SRR039378.png"))
 ```
 
 
 ```{r fig.cap="Sample with PCR duplicates", echo=FALSE, out.width='80%', eval=FALSE}
-include_graphics("../figures/duplication_rate/SRR039937.png")
-```
-
-Samples that had technical duplicates were excluded from sample metadata and further analysis.
-
-```{r, eval=FALSE, echo=FALSE}
-
-# Exclusion of the following samples was done after analysis showed they
-# failed quality control.
-
-# remove 3 samples that have technical duplicates (SRR039951, SRR039937, SRR039938)
-sample.metadata <- sample.metadata[-15,]
-sample.metadata <- sample.metadata[-9,]
-sample.metadata <- sample.metadata[-8,]
+include_graphics(here::here("results","figures","duplication_rate","SRR039937.png"))
 ```
 
 ## Reads quantification
@@ -205,7 +180,7 @@ Before loading the data into R, filter out the non-protein coding genes which in
 
 ### Importing samples count data into R
 
-For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source(here::here("scripts","import-read-counts-into-r.R")` on the R console and hit enter.
+For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source(here::here("scripts","analysis","import-read-counts-into-r.R")` on the R console and hit enter.
 
 ```{r, code = readLines(here::here("scripts","analysis","import-read-counts-into-r.R")), eval=FALSE}
 
