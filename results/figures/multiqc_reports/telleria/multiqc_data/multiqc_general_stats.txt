@@ -1,0 +1,4 @@
+Sample	HTSeq Count_mqc-generalstats-htseq_count-percent_assigned	HTSeq Count_mqc-generalstats-htseq_count-assigned	HISAT2_mqc-generalstats-hisat2-overall_alignment_rate	FastQC_mqc-generalstats-fastqc-percent_duplicates	FastQC_mqc-generalstats-fastqc-percent_gc	FastQC_mqc-generalstats-fastqc-avg_sequence_length	FastQC_mqc-generalstats-fastqc-percent_fails	FastQC_mqc-generalstats-fastqc-total_sequences
+SRR965341	24.390417936492963	10435853	90.44					
+SRR965341_1				61.57676700534036	43.0	76.0	25.0	42778772.0
+SRR965341_2				61.02361798980894	43.0	76.0	25.0	42778772.0

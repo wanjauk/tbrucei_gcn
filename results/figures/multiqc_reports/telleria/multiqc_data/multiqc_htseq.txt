@@ -1,0 +1,2 @@
+Sample	no_feature	ambiguous	too_low_aQual	not_aligned	alignment_not_unique	assigned	total_count	percent_assigned
+SRR965341	19713175	1059281	4190882	1772159	5615342	10435853	42786692	24.390417936492963

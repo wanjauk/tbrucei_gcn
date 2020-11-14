@@ -9,9 +9,15 @@
 # ../../data/intermediate/tbrucei_read_counts/savage \
 # ../../results/figures/multiqc_reports/savage
 
+# bash generate-multiqc-reports.sh \
+# ../../results/figures/fastqc_reports/telleria \
+# ../../data/scratch/reads-alignment-output/telleria \
+# ../../data/intermediate/tbrucei_read_counts/telleria \
+# ../../results/figures/multiqc_reports/telleria
+
 # make directory to store the results
 mkdir -p ../../results/figures/multiqc_reports/savage/ 
-# mkdir -p ../../results/figures/multiqc_reports/telleria/
+mkdir -p ../../results/figures/multiqc_reports/telleria/
 
 # fastqc directory
 FASTQC_DIR=$1

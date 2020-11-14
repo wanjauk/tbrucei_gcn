@@ -1,0 +1,4 @@
+Module	Section	Sample Name	Source
+HISAT2	all_sections	SRR965341	/home/user/workspace/tbrucei_gcn/data/scratch/reads-alignment-output/telleria/SRR965341.txt
+FastQC	all_sections	SRR965341_1	/home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/telleria/SRR965341_1_fastqc.zip
+FastQC	all_sections	SRR965341_2	/home/user/workspace/tbrucei_gcn/results/figures/fastqc_reports/telleria/SRR965341_2_fastqc.zip

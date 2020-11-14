@@ -9,11 +9,13 @@
 # ./reads-quantification.sh \
 # ../../data/scratch/sam-to-bam-output/savage \
 # ../../data/scratch/tbrucei/TriTrypDB-43_TbruceiTREU927.gff \
-# ../../data/intermediate/tbrucei_read_counts/savage
-
+# ../../data/intermediate/tbrucei_read_counts/savage \
+# ../../data/scratch/sam-to-bam-output/telleria/SRR965341.sorted.bam \
+# ../../data/intermediate/tbrucei_read_counts/telleria
 
 # make directory for reads count output from htseq
 mkdir -p ../../data/intermediate/tbrucei_read_counts/savage
+mkdir -p ../../data/intermediate/tbrucei_read_counts/telleria
 
 # path to bam files
 BAM_DIR=$1
@@ -24,7 +26,11 @@ GFF_FILE=$2
 # read counts path
 READ_COUNTS_DIR=$3
 
-# reads counting
+# telleria data and output dir
+TELLERIA_BAM=$4
+TELLERIA_OUT=$5
+
+# reads counting (Savage single-end reads)
 for bam_file in ${BAM_DIR}/*.sorted.bam; do
     bam_file_name=$(basename "$bam_file" .sorted.bam)
     
@@ -33,8 +39,25 @@ for bam_file in ${BAM_DIR}/*.sorted.bam; do
             -s no \
             -t exon \
             -i Parent \
-            -n 6 \
             $bam_file \
             $GFF_FILE \
             > ${READ_COUNTS_DIR}/${bam_file_name}.counts.txt
 done
+
+
+# process Telleria's paired-end data
+telleria_bam_file_name=$(basename "$TELLERIA_BAM" .sorted.bam)
+
+        htseq-count \
+            -f bam \
+            -r pos \
+            -s no \
+            -t exon \
+            -i Parent \
+            $TELLERIA_BAM \
+            $GFF_FILE \
+            > ${TELLERIA_OUT}/${telleria_bam_file_name}.counts.txt
+            
+ 
+ 
+

@@ -7,8 +7,13 @@
 # ../../data/scratch/sam-to-bam-output/savage \
 # ../../data/scratch/mark-duplicates-output/savage
 
+# ./mark-duplicates.sh \
+# ../../data/scratch/sam-to-bam-output/telleria \
+# ../../data/scratch/mark-duplicates-output/telleria
+
 # crate a directory for mark duplicates output
 mkdir -p ../../data/scratch/mark-duplicates-output/savage
+mkdir -p ../../data/scratch/mark-duplicates-output/telleria
 
 # sorted bam files directory
 SORTED_BAM_DIR=$1

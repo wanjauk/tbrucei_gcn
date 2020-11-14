@@ -1,0 +1,2 @@
+Sample	paired_total	paired_aligned_none	paired_aligned_one	paired_aligned_multi	paired_aligned_discord_one	unpaired_total	unpaired_aligned_none	unpaired_aligned_one	unpaired_aligned_multi	overall_alignment_rate
+SRR965341	42778772	6842481	30689160	4910501	336630	13684962	8180512	4330404	1174046	90.44

@@ -8,7 +8,8 @@
 library(tibble)
 
 # # where are we?
-cntdir <- here::here("data", "intermediate", "brucei_HTSeq_count_results_mRNA")
+cntdir <- here::here("data", "intermediate", "tbrucei_read_counts_mRNA-only",
+                    "savage-telleria_tbrucei_read_counts_mRNA-only")
 pat <- ".counts.txt"
 hisat2.all <- list.files(path = cntdir,
                          pattern = pat,
