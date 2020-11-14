@@ -1,23 +1,24 @@
-load(file = here::here("data","raw","sample.metdata.final.RData"))
+samples.metadata <- readRDS(file = here::here("data","raw","samples.metadata.RDS"))
 source(here::here("scripts","analysis","libraries.R"))
 source(here::here("scripts","analysis","settings.R"))
 
 # Parameters
-gtf_file <- here::here("data","scratch","concatenated_genomes","brucei-morsitans_annotations.gtf")
+gtf_file <- here::here("data","scratch","concatenated_genomes",
+                       "brucei-morsitans_annotations.gtf")
 stranded <- 0
 paired <- FALSE
-threads <- 20
+threads <- 10
 
 # path to bam files data
-bam_file <- list.files(here::here("data","scratch","mark-duplicates-output"),
+bam_file <- list.files(here::here("data","scratch","mark-duplicates-output","savage"),
                        pattern = ".bam",
                        full.names = TRUE)
 
 for (file in bam_file){
-  
+      
   #get the file name
-  file_name <- gsub(pattern = "\\.bam$", "", file)
-  
+  file_name <- gsub(pattern = "\\.dupMarked.bam$", "", basename(file))
+
   # Duplication rate analysis
   dm <- analyzeDuprates(file, gtf_file, stranded, paired, threads)
   
@@ -32,15 +33,14 @@ for (file in bam_file){
   
 }
 
-
-
 # Exclusion of the following samples was done after analysis showed they
 # failed quality control.
 
 # remove 3 samples that have technical duplicates (SRR039951, SRR039937, SRR039938)
-# sample.metadata <- sample.metadata[-15,]
-# sample.metadata <- sample.metadata[-9,]
-# sample.metadata <- sample.metadata[-8,]
-# 
-saveRDS(sample.metadata, here::here("data","raw","sample.metadata.RDS"))
+samples.metadata <- samples.metadata[-15,]
+samples.metadata <- samples.metadata[-9,]
+samples.metadata <- samples.metadata[-8,]
+
+# save the samples metadata
+saveRDS(samples.metadata, here::here("data","raw","samples.metadata.clean.RDS"))
 
