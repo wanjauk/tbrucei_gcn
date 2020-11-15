@@ -2,10 +2,10 @@
 title: "Module GO Enrichment"
 output: pdf_document
 classoption: landscape
-knit: (function(inputFile, encoding) { 
+knit: (function(inputFile, encoding) {
       out_dir <- "../../results/tables";
       rmarkdown::render(inputFile,
-                        encoding=encoding, 
+                        encoding=encoding,
                         output_file=file.path(dirname(inputFile), out_dir, 'module_go_enrichment_results.pdf')) })
 ---
 
@@ -22,7 +22,7 @@ gene_mapping <- readRDS(file = here::here("data","intermediate","gene_mapping.RD
 
 # source(here::here("scripts","analysis","libraries.R"))
 # source(here::here("scripts","analysis","settings.R"))
-source(here::here("scripts","utils","enrichment_analysis.R"))
+source(here::here("scripts","utils","print_go_enrichment.R"))
 source(here::here("scripts","utils","util.R"))
 
 # save the module sizes 
@@ -39,7 +39,7 @@ module_sizes <- data.frame(module_id=unique(module.colours),
 ```
 
 ```{r, eval=TRUE, echo=FALSE, results='asis'}
-print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
+print_go_enrichment(module_go_enrichment, module_sizes, 'GO terms',
                              #NULL, gene_mapping, 'output/modules', 
                              NULL, gene_mapping, 
                              enrichment_type='go',

@@ -175,7 +175,7 @@ colnames(gene_go_mapping_tmp) <- c('gene', 'category', 'term', 'ontology')
 
 gene_info_tmp <- gene_info %>% select(-chromosome, -strand,
                                       - type, -transcript_length)
-colnames(gene_info_tmp) <- c("gene","description")
+colnames(gene_info_tmp) <- c("gene","description","transcript_id")
 
 tmp <- cbind(gene_info_tmp, color=module.colours)
 

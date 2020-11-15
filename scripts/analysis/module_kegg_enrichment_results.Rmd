@@ -16,13 +16,13 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = FALSE,
                       message = FALSE)
 
-module_go_enrichment <- readRDS(file = here::here("data","intermediate","module_go_enrichment.RDS"))
+module_kegg_enrichment <- readRDS(file = here::here("data","intermediate","module_kegg_enrichment.RDS"))
 module.colours <- readRDS(file = here::here("data","intermediate","module.colours.RDS"))
 gene_mapping <- readRDS(file = here::here("data","intermediate","gene_mapping.RDS"))
 
 # source(here::here("scripts","analysis","libraries.R"))
 # source(here::here("scripts","analysis","settings.R"))
-source(here::here("scripts","utils","enrichment_analysis.R"))
+source(here::here("scripts","utils","print_kegg_enrichment.R"))
 source(here::here("scripts","utils","util.R"))
 
 # save the module sizes 
@@ -39,7 +39,7 @@ module_sizes <- data.frame(module_id=unique(module.colours),
 ```
 
 ```{r eval=TRUE, echo=FALSE, results='asis'}
-print_enrichment_results(module_kegg_enrichment, module_sizes, 
+print_kegg_enrichment(module_kegg_enrichment, module_sizes, 
                              'KEGG pathway',
                              #output_dir='output/modules',
                              enrichment_type='kegg',

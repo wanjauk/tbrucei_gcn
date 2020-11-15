@@ -255,14 +255,14 @@ print_enrichment_results <- function(results, subset_sizes,
             cat(sprintf("\n**Over-represented %s:**\n", annotation_name))
 
             # print
-            print(xkable(out %>% dplyr::rename(adj_pval=over_represented_pvalue_adj,
-                                               term=term.y,
-                                               ontology=ontology.y), 
-                         str_max_width=str_max_width, row.names=FALSE))
-            cat('\n')
+            # print(xkable(out %>% dplyr::rename(adj_pval=over_represented_pvalue_adj,
+            #                                    term=term.y,
+            #                                    ontology=ontology.y), 
+            #              str_max_width=str_max_width, row.names=FALSE))
+            # cat('\n')
 
             # Add adjusted pvalues to vector for averaging purposes
-            pvalues <- append(pvalues, over_rep$over_represented_pvalue_adj)
+            # pvalues <- append(pvalues, over_rep$over_represented_pvalue_adj)
             
             # write out output sorted based on adjusted p-value
             # added by Kennedy Mwangi
@@ -286,32 +286,32 @@ print_enrichment_results <- function(results, subset_sizes,
                 print(xkable(gene_list, str_max_width=str_max_width, row.names=FALSE))
                 cat('\n')
             
-            # }  else {
-            #     # else block added Aug 20, 2019 by Kennedy Mwangi
-            #     # Purpose: write out genes responsible for enrichment
-            #     # Not good practice to write code this way. This is just a quick workaround
-            #     if (!sum(out$num_in_subset) == 0){
-            #         
-            #         gene_list <- gene_mapping %>% filter(category %in% out$category & 
-            #                                                  color==result_name)
-            #         gene_list <- gene_list[!duplicated(gene_list),]
-            #         
-            #         # enrich_output_dir <- "../results/genes_responsible_for_enrichment"
-            #         
-            #         if (!dir.exists(output_dir)) {
-            #             dir.create(output_dir, recursive=TRUE)
-            #         }
-            #         
-            #         enrich_output_filename <- "go_genes_responsible_for_enrichment_over-represented.xlsx"
-            #         
-            #         # openxlsx::write.xlsx(gene_list,
-            #         #                  file = file.path(enrich_output_dir, enrich_output_filename),
-            #         #                  sheetName = result_name, 
-            #         #                  append = TRUE,
-            #         #                  row.names = FALSE)
-            #         openxlsx::write.xlsx(gene_list,
-            #                              file = file.path(output_dir, enrich_output_filename))
-            #     }
+            }  else {
+                # else block added Aug 20, 2019 by Kennedy Mwangi
+                # Purpose: write out genes responsible for enrichment
+                # Not good practice to write code this way. This is just a quick workaround
+                if (!sum(out$num_in_subset) == 0){
+
+                    gene_list <- gene_mapping %>% filter(category %in% out$category &
+                                                             color==result_name)
+                    gene_list <- gene_list[!duplicated(gene_list),]
+
+                    # enrich_output_dir <- "../results/genes_responsible_for_enrichment"
+
+                    if (!dir.exists(output_dir)) {
+                        dir.create(output_dir, recursive=TRUE)
+                    }
+
+                    enrich_output_filename <- "go_genes_responsible_for_enrichment_over-represented.xlsx"
+
+                    # openxlsx::write.xlsx(gene_list,
+                    #                  file = file.path(enrich_output_dir, enrich_output_filename),
+                    #                  sheetName = result_name,
+                    #                  append = TRUE,
+                    #                  row.names = FALSE)
+                    openxlsx::write.xlsx(gene_list,
+                                         file = file.path(output_dir, enrich_output_filename))
+                }
             }
         }
 
@@ -326,18 +326,18 @@ print_enrichment_results <- function(results, subset_sizes,
             
             # sort output by adjusted pvalue
             # added by Kennedy Mwangi
-            out <- out[order(out$under_represented_pvalue_adj),]
+            # out <- out[order(out$under_represented_pvalue_adj),]
 
-            cat(sprintf("\n**Under-represented %s:**\n", annotation_name))
-
-            print(xkable(out %>% dplyr::rename(adj_pval=under_represented_pvalue_adj,
-                                               term=term.y,
-                                               ontology=ontology.y),
-                         str_max_width=str_max_width, row.names=FALSE))
-            cat('\n')
+            # cat(sprintf("\n**Under-represented %s:**\n", annotation_name))
+            # 
+            # print(xkable(out %>% dplyr::rename(adj_pval=under_represented_pvalue_adj,
+            #                                    term=term.y,
+            #                                    ontology=ontology.y),
+            #              str_max_width=str_max_width, row.names=FALSE))
+            # cat('\n')
 
             # Add adjusted pvalues to vector for averaging purposes
-            pvalues <- append(pvalues, under_rep$under_represented_pvalue_adj)
+            # pvalues <- append(pvalues, under_rep$under_represented_pvalue_adj)
 
             # write out output sorted based on adjusted p-value
             # added by Kennedy Mwangi
@@ -361,35 +361,35 @@ print_enrichment_results <- function(results, subset_sizes,
                                          
                 print(xkable(gene_list, str_max_width=str_max_width, row.names=FALSE))
                 cat('\n')
-            # } else {
-            #     # else  and if blocks added Aug 20, 2019 by Kennedy Mwangi
-            #     # Purpose: write out genes responsible for enrichment
-            #     # Not good practice to write code this way. This is just a quick workaround
-            #     
-            #     if (!sum(out$num_in_subset) == 0){
-            #         # this if block ensures error related to writing out zero 
-            #         # enriched genes is avoided
-            #         
-            #         gene_list <- gene_mapping %>% filter(category %in% out$category & 
-            #                                                  color==result_name)
-            #         gene_list <- gene_list[!duplicated(gene_list),]
-            #         
-            #         # enrich_output_dir <- "../results/genes_responsible_for_enrichment"
-            #         
-            #         if (!dir.exists(output_dir)) {
-            #             dir.create(output_dir, recursive=TRUE)
-            #         }
-            #         
-            #         enrich_output_filename <- "go_genes_responsible_for_enrichment_under-represented.xlsx"
-            #         
-            #         # xlsx::write.xlsx(gene_list, 
-            #         #                  file = file.path(enrich_output_dir, enrich_output_filename),
-            #         #                  sheetName = result_name, 
-            #         #                  append = TRUE,
-            #         #                  row.names = FALSE)
-            #         openxlsx::write.xlsx(gene_list, 
-            #                          file = file.path(output_dir, enrich_output_filename))
-            #     }
+            } else {
+                # else  and if blocks added Aug 20, 2019 by Kennedy Mwangi
+                # Purpose: write out genes responsible for enrichment
+                # Not good practice to write code this way. This is just a quick workaround
+
+                if (!sum(out$num_in_subset) == 0){
+                    # this if block ensures error related to writing out zero
+                    # enriched genes is avoided
+
+                    gene_list <- gene_mapping %>% filter(category %in% out$category &
+                                                             color==result_name)
+                    gene_list <- gene_list[!duplicated(gene_list),]
+
+                    # enrich_output_dir <- "../results/genes_responsible_for_enrichment"
+
+                    if (!dir.exists(output_dir)) {
+                        dir.create(output_dir, recursive=TRUE)
+                    }
+
+                    enrich_output_filename <- "go_genes_responsible_for_enrichment_under-represented.xlsx"
+
+                    # xlsx::write.xlsx(gene_list,
+                    #                  file = file.path(enrich_output_dir, enrich_output_filename),
+                    #                  sheetName = result_name,
+                    #                  append = TRUE,
+                    #                  row.names = FALSE)
+                    openxlsx::write.xlsx(gene_list,
+                                     file = file.path(output_dir, enrich_output_filename))
+                }
             }
         }
     }
