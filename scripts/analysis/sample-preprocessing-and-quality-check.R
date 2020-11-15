@@ -50,6 +50,7 @@ logcpm.norm.counts.combat <- ComBat(dat=logcpm.norm.counts, batch = samples.meta
                                     mod = modcombat)
 
 # save outputs for later analysis
+saveRDS(filtered.counts, here::here("data","intermediate","filtered.counts.RDS"))
 saveRDS(logcpm.unnorm.counts, here::here("data","intermediate","logcpm.unnorm.counts.RDS"))
 saveRDS(logcpm.norm.counts, here::here("data","intermediate","logcpm.norm.counts.RDS"))
 saveRDS(logcpm.norm.counts.combat, here::here("data","intermediate","logcpm.norm.counts.combat.RDS"))

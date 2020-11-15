@@ -1,0 +1,299 @@
+---
+title: "*Trypanosoma brucei* co-expression network analysis"
+author: "Kennedy Mwangi"
+date: "September 13, 2020"
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r include=FALSE}
+library("knitr")
+opts_chunk$set(echo = TRUE, 
+                      fig.pos = 'h', 
+                      fig.align = 'center', 
+                      fig.show='hold')
+
+# load the samples metadata while knitting document
+samples.metadata <- readRDS(file = here::here("data","raw","samples.metadata.RDS"))
+
+# include figs during knitting?
+CONFIG <- list(include_fig = FALSE)
+```
+## Introduction
+This document contains the workflow used in the analysis of *T. brucei* gene co-expression network analysis. It contains code used in each step of the analysis. The code and output files are archived at https://github.com/wanjauk/tbrucei_gcn
+
+### Setting up R for the analysis
+
+```{r, code = readLines(here::here("scripts","analysis","libraries.R")), eval=FALSE}
+
+```
+
+```{r, code = readLines(here::here("scripts","analysis","settings.R")), eval=FALSE}
+
+```
+
+## Data acquisition
+Data used in this study is obtained from European Nucleotide Archive under accession number SRP002243 and SRR965341.
+
+First, metadata for the data is obtained from EBI as follows:
+
+```{r, code = readLines(here::here("scripts","analysis","get-fastq-files-urls.R")), eval=FALSE}
+
+```
+
+Prepare the samples metadata.
+```{r, code = readLines(here::here("scripts","analysis","prepare-samples-metadata.R")), eval=FALSE}
+
+```
+
+```{r, eval=TRUE, echo=TRUE}
+# print out the sample metadata table
+samples.metadata
+```
+
+
+Next, RNASeq data is downloaded from EBI database's FTP site. Some of the downstream tools require that FASTQ files that were downloaded in zipped form are unzipped.
+
+```{bash, code = readLines(here::here("scripts","analysis","download-fastq-files.sh")), eval=FALSE}
+
+```
+
+## Downloading *T. brucei* and *G. morsitans* genome and annotation files
+
+Genomes are obtained from their respective databases before alignment. The genome and annotation files are downloaded from the TriTrypDB and vectorbase databases as follows:
+
+```{bash, code = readLines(here::here("scripts","analysis","download-genome-and-annotation-files.sh")), eval=FALSE}
+
+```
+
+## Data quality assessment
+After downloading the RNASeq data, its quality is checked through the FASTQC tool whose output is a report in HTML format.
+
+```{bash, code = readLines(here::here("scripts","analysis","generate-fastqc-reports.sh")), eval=FALSE}
+
+```
+
+Following the high rate of duplicate reads after FASTQC analysis, further analysis is done to ascertain their cause. Duplicate reads are assessed whether they arise from artifacts in PCR (PCR duplicates) or from biological causes (highly expressed genes). This is done later in the analysis after read mapping. 
+
+```{r echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","fastqc_sequence_duplication_levels_plot.png"))
+```
+
+### Concatenate and index the *T. brucei* and *G. morsitans* genome files
+
+*T. brucei* and *G. morsitans* genome files are concatenated into a single fasta file which is used during the alignment of the reads. This ensures no cross-mapping of reads take place during alignment with HISAT2. The next step is indexing the genome using HISAT2.
+
+```{bash, code = readLines(here::here("scripts","analysis","concatenate-and-index-genome.sh")), eval=FALSE}
+
+```
+
+
+### Aligning the reads to the genome (Read Mapping)
+
+Alignment of the reads to the chimeric genome. The output is SAM files.
+
+
+```{bash, code = readLines(here::here("scripts","analysis","reads-alignment.sh")), eval=FALSE}
+
+```
+ 
+
+```{r echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+#Below is the alignment results from HISAT2 alignment tool.
+include_graphics(here::here("results","figures","hisat2_se_plot.png"))
+```
+
+## Assessment of the duplication rate
+At this point, quality control to assess the duplication rate can be performed.
+First, the SAM files are converted to sorted BAM files required by dupRadar tool. The BAM files are then sorted using samtools
+
+```{bash, code = readLines(here::here("scripts","analysis","convert-sam-to-bam.sh")), eval=FALSE}
+
+```
+
+Next, duplicates are marked in the BAM files using Picard.
+
+```{bash, code = readLines(here::here("scripts","analysis","mark-duplicates.sh")), eval=FALSE}
+
+```
+
+## Assessing the strandedness of the reads
+Before this quality control can be performed, we need to verify whether the reads are stranded or not as this is a required parameter for dupRadar as well as HTSeq tool later in the analysis. This can be done using RSeQC package - An RNA-seq Quality Control Package. `infer_experiment.py` module is used in this case. RSeQC documentation and tutorial can be found [here](http://rseqc.sourceforge.net/).  
+
+First we convert *T. brucei* genome annotation GTF file into `bed` format required by RSeQC package. Then we use `infer_experiment.py` to verify strandedness using a few samples.
+
+
+```{bash, code = readLines(here::here("scripts","analysis","check-reads-strandedness.sh")), eval=FALSE}
+
+```
+
+
+The next step is to run the dupRadar quality control analysis setting the `stranded` parameter as `FALSE` as the reads are not strand specific. Tutorial for the tool can be found [here](https://bioconductor.riken.jp/packages/3.5/bioc/vignettes/dupRadar/inst/doc/dupRadar.html)  
+
+For each of the 18 samples, dupRadar tool is used to perform quality control in R. Samples that had technical duplicates were excluded from sample metadata and further analysis.
+
+```{r, code = readLines(here::here("scripts","analysis","run-dupRadar.R")), eval=FALSE}
+
+```
+
+
+```{r fig.cap="Sample without PCR duplicates", echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+#Below are representative plots of samples with PCR duplicates and without PCR duplicates. Samples with PCR duplicates are removed from the analysis before counts data are read into R.
+
+include_graphics(here::here("results","figures","duplication_rate","SRR039378.png"))
+```
+
+
+```{r fig.cap="Sample with PCR duplicates", echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","duplication_rate","SRR039937.png"))
+```
+
+## Reads quantification
+
+HTSeq tool is used to count reads that aligned to the *T. brucei* genome. *T. brucei* annotation file is used and therefore HTSeq excludes counting *G. morsitans* reads that aligned to *Glossina* genome. The output is a text file for each sample that contains the number of reads that were counted for each gene.
+
+```{bash, code = readLines(here::here("scripts","analysis","reads-quantification.sh")), eval=FALSE}
+
+```
+
+
+```{r fig.cap="HTSeq reads assignment", echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+#Below is a graphical visualization of reads assignment by HTSeq.
+include_graphics(here::here("results","figures","htseq_assignment_plot_brucei_only.png"))
+```
+
+## Generating MultiQC report
+```{bash, code = readLines(here::here("scripts","analysis","generate-multiqc-reports.sh")), eval=FALSE}
+
+```
+
+## Filtering out non-protein coding genes
+
+Before loading the data into R, filter out the non-protein coding genes which include ncRNA, snRNA, snoRNA, pseudogenic transcripts, rRNA and tRNA.
+
+```{bash, code = readLines(here::here("scripts","analysis","exclude-features.sh")), eval=FALSE}
+
+```
+
+
+## Analysis in R
+
+### Importing samples count data into R
+
+For further analysis, samples read counts are read into R. To read the sample counts data into R using the script below, simply type `source(here::here("scripts","analysis","import-read-counts-into-r.R")` on the R console and hit enter.
+
+```{r, code = readLines(here::here("scripts","analysis","import-read-counts-into-r.R")), eval=FALSE}
+
+```
+
+
+### Sample quality check
+
+The quality of the samples is checked before further analysis to check for outlier and batch effects.
+
+```{r, code = readLines(here::here("scripts","analysis","sample-preprocessing-and-quality-check.R")), eval=FALSE}
+
+```
+
+```{r fig.cap="Raw Sample Heatmap", echo=FALSE, eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","raw-sample-heatmap.png"))
+```
+
+```{r fig.cap="Normalized Sample Heatmap", echo=FALSE, eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","norm-sample-heatmap.png"))
+```
+
+```{r fig.cap="Normalized and batch effect removed sample Heatmap", echo=FALSE, eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","combat-norm-sample-heatmap.png"))
+```
+
+```{r fig.cap="Raw sample density plot", echo=FALSE, out.width='90%', eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","raw-sample-density.png"))
+```
+
+```{r fig.cap="Normalized sample density plot", echo=FALSE, eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","normalized-sample-density.png"))
+```
+
+
+```{r fig.cap="Raw Sample PCA", echo=FALSE, eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","raw-samples-PCA.png"))
+```
+
+```{r fig.cap="Normalized sample PCA", echo=FALSE, eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","norm-sample-PCA.png"))
+```
+
+```{r fig.cap="Normalized and batch effect removed sample PCA", echo=FALSE, eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","combat-norm-sample-PCA.png"))
+```
+
+
+```{r fig.cap="Raw Sample boxplot", echo=FALSE, out.width='75%',eval=CONFIG$include_fig}
+include_graphics(here::here("results","figures","raw-sample-boxplot.png"))
+```
+
+```{r fig.cap="Normalized sample boxplot", echo=FALSE, out.width='75%', eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","normalized-sample-boxplot.png"))
+``` 
+
+
+
+### Weighted gene co-expression analysis
+We construct the network at this stage. Also, we write out module genes and their module labels which are required as input by FIRE (Finding Informative Regulatory Elements). Motif prediction was performed online at https://tavazoielab.c2b2.columbia.edu/FIRE/
+```{r, code = readLines(here::here("scripts","analysis","construct-coexpression-network.R")), eval=FALSE}
+
+```
+
+```{r echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","soft-thresholding-power.png"))
+```
+
+```{r echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","mean-connectivity.png"))
+```
+
+
+```{r fig.cap="Adjacency matrix heatmap (500 genes)", echo=FALSE, eval=CONFIG$include_fig, out.width='80%'}
+
+include_graphics(here::here("results","figures","adjacency-matrix-heatmap.png"))
+```
+
+
+
+```{r fig.cap="Gene tree and module colours", echo=FALSE, out.width='80%', eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","gene-tree-and-colours.png"))
+```
+
+
+```{r fig.cap="Co-expression subnetwork", echo=FALSE,out.width='99%', eval=CONFIG$include_fig}
+
+include_graphics(here::here("results","figures","tbrucei_network.png"))
+```
+
+## Functional Analysis
+
+Code used in functional analysis was adopted from https://github.com/elsayed-lab/manuscript-shared-rnaseq
+
+### Loading annotations from the packages
+
+```{r, code = readLines(here::here("scripts","analysis","functional-analysis.R")), eval=FALSE}
+
+```
+
+
+```{r fig.cap="Gene tree and module enrichment status", eval=CONFIG$include_fig, echo=FALSE, out.width='80%'}
+
+include_graphics(here::here("results","figures","gene-tree-and-module-enrichment-status.png"))
+```
+

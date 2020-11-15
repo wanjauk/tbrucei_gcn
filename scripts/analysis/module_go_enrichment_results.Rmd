@@ -1,0 +1,48 @@
+---
+title: "Module GO Enrichment"
+output: pdf_document
+classoption: landscape
+knit: (function(inputFile, encoding) { 
+      out_dir <- "../../results/tables";
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'module_go_enrichment_results.pdf')) })
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("dplyr")
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+
+module_go_enrichment <- readRDS(file = here::here("data","intermediate","module_go_enrichment.RDS"))
+module.colours <- readRDS(file = here::here("data","intermediate","module.colours.RDS"))
+gene_mapping <- readRDS(file = here::here("data","intermediate","gene_mapping.RDS"))
+
+# source(here::here("scripts","analysis","libraries.R"))
+# source(here::here("scripts","analysis","settings.R"))
+source(here::here("scripts","utils","enrichment_analysis.R"))
+source(here::here("scripts","utils","util.R"))
+
+# save the module sizes 
+# Data frame of module sizes
+module_counts <- c()
+for (color in unique(module.colours)) {
+  module_counts <- append(module_counts, sum(module.colours == color))
+}
+
+# create a mapping from module id to number of genes for later use
+module_sizes <- data.frame(module_id=unique(module.colours),
+                           num_genes=module_counts)
+
+```
+
+```{r, eval=TRUE, echo=FALSE, results='asis'}
+print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
+                             #NULL, gene_mapping, 'output/modules', 
+                             NULL, gene_mapping, 
+                             enrichment_type='go',
+                             include_gene_lists=FALSE)
+```
+

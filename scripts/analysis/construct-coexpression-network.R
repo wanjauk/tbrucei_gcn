@@ -223,8 +223,33 @@ write.table(node.attributes,
             row.names = FALSE, 
             quote = FALSE, sep = "\t")
 
+########################################
+## FIRE Motif Prediction Input
+########################################
+# write out cluster/module genes and their corresponding module labels for use by 
+# FIRE (Finding Informative Regulatory Elements)
+
+fire.clusters.colours <- data.frame(modGenes, module.labels[inModules], module.colours[inModules])
+
+# sort by module labels; FIRE input should start from 0 in module labels column.
+fire.clusters.colours <- fire.clusters.colours[order(fire.clusters.colours$module.labels.inModules.),
+                                               c(1,2,3)]
+
+# rename columns
+colnames(fire.clusters.colours) <- c("gene", "label","colour")
+
+write.table(as.data.frame(fire.clusters.colours), file = here::here("data","intermediate","tbrucei_FIRE_expression_clusters_and_colour.txt"), 
+            quote = FALSE, row.names = FALSE, sep = "\t")
+
+# Also, write out module genes in a text file.
+write.table(data.frame(modGenes), 
+            file = here::here("data","intermediate","tbrucei_module_genes.txt"),
+            row.names = FALSE, 
+            quote = FALSE, 
+            col.names = FALSE)
+
 
 saveRDS(gene.tree, file = here::here("data","intermediate","gene.tree.RDS"))
 saveRDS(all.modules, file = here::here("data","intermediate","all.modules.RDS"))
 saveRDS(module.colours, file = here::here("data","intermediate","module.colours.RDS"))
-saveRDS(module.hub.genes, file = here::here("data","intermediate","module.hub.genes"))
+saveRDS(module.hub.genes, file = here::here("data","intermediate","module.hub.genes.RDS"))

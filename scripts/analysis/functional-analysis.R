@@ -9,7 +9,7 @@ gene_and_transcript_id <- readRDS(here::here("data","intermediate","gene_and_tra
 gene.tree <- readRDS(file = here::here("data","intermediate","gene.tree.RDS"))
 all.modules <- readRDS(file = here::here("data","intermediate","all.modules.RDS"))
 module.colours <- readRDS(file = here::here("data","intermediate","module.colours.RDS"))
-module.hub.genes <- readRDS(here::here("data","intermediate","module.hub.genes"))
+module.hub.genes <- readRDS(here::here("data","intermediate","module.hub.genes.RDS"))
 
 #################################################################
 # load gene annotations from packages
@@ -162,6 +162,10 @@ module_go_enrichment <- module_go_enrichment[!sapply(module_go_enrichment, is.nu
 # unregister cpus
 stopCluster(cl)
 
+# save the GO enrichment results
+saveRDS(module_go_enrichment, file = here::here("data","intermediate","module_go_enrichment.RDS"))
+
+
 #------------------------------------
 # Print GO enrichment results
 #------------------------------------
@@ -192,6 +196,8 @@ enriched_colors_go <- get_enriched_modules(module_go_enrichment)
 # Module enrichment status (used in dendrogram plots)
 go_enrichment_status   <- as.numeric(module.colours %in% enriched_colors_go)
 
+
+saveRDS(gene_mapping, file = here::here("data","intermediate","gene_mapping.RDS"))
 
 ################################################
 # KEGG Enrichment
@@ -230,6 +236,10 @@ module_kegg_enrichment <- module_kegg_enrichment[!sapply(module_kegg_enrichment,
 
 # unregister cpus
 stopCluster(cl)
+
+# save the KEGG enrichment results
+saveRDS(module_kegg_enrichment, file = here::here("data","intermediate","module_kegg_enrichment.RDS"))
+
 
 #------------------------------------
 # Print KEGG enrichment results

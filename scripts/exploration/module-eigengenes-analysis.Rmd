@@ -18,12 +18,24 @@ opts_chunk$set(echo = TRUE,
                       fig.pos = 'h', 
                       fig.align = 'center', 
                       fig.show='hold')
-# load("sample.metdata.final.RData")
 ```
 
 ```{r, eval=FALSE, echo=FALSE}
 
-# --------------------------------------------------------------------------------------------
+# load data and set up the analysis
+logcpm.norm.counts.combat <- readRDS(here::here("data","intermediate","logcpm.norm.counts.combat.RDS"))
+module.colours <- readRDS(file = here::here("data","intermediate","module.colours.RDS"))
+gene.tree <- readRDS(file = here::here("data","intermediate","gene.tree.RDS"))
+
+source(here::here("scripts","analysis","libraries.R"))
+source(here::here("scripts","analysis","settings.R"))
+```
+
+```{r, eval=FALSE, echo=FALSE}
+
+# WGCNA requires genes to be in columns
+network.counts <- t(logcpm.norm.counts.combat)
+
 # merge modules with very similar expression profiles as their genes are highly co-expressed
 # get the module eigengenes
 module.eigengenes <- moduleEigengenes(network.counts, colors = module.colours)$eigengenes
@@ -38,13 +50,14 @@ module.eigengenes.tree <- flashClust(as.dist(module.eigengenes.diss), method = "
 module.eigengenes.thresh <- 0.25
 
 # create plots for the results
-png(filename = "../figures/module_eigengenes_cluster.png", res =1200, type = "cairo", units = 'in',
-    width = 5, height = 6, pointsize = 10)
-#sizeGrWindow(7, 6)
+# png(filename = "../figures/module_eigengenes_cluster.png", res =1200, type = "cairo", units = 'in',
+#     width = 5, height = 6, pointsize = 10)
+# #sizeGrWindow(7, 6)
+
 plot(module.eigengenes.tree, main = "Clustering of module eigengenes", xlab = "", sub = "")
 abline(h=module.eigengenes.thresh, col="red")
 
-dev.off()
+# dev.off()
 
 # merge the modules
 module.eigengenes.merge <- mergeCloseModules(network.counts, module.colours, 
@@ -53,6 +66,11 @@ module.eigengenes.merge <- mergeCloseModules(network.counts, module.colours,
 # merged module colours
 merged.module.colours <- module.eigengenes.merge$colors
 
+# eigengenes of new merged modules
+merged.module.eigengenes <- module.eigengenes.merge$newMEs
+
+```
+```{r, eval=FALSE, echo=FALSE}
 # view
 table(merged.module.colours)
 
@@ -65,34 +83,32 @@ greenyellow        grey  lightgreen         red      salmon       white
      yellow 
         539
 
-# eigengenes of new merged modules
-merged.module.eigengenes <- module.eigengenes.merge$newMEs
-
 ```
 
 ```{r, eval=FALSE, echo=FALSE}
 
 # plot the dendrogram with original and merged colours underneath
-#sizeGrWindow(12, 9)
-png(filename = "../figures/merged-original_colours-original_dendro.png", res =1200, type = "cairo", 
-    units = 'in', width = 6, height = 6, pointsize = 10)
+# #sizeGrWindow(12, 9)
+# png(filename = "../figures/merged-original_colours-original_dendro.png", res =1200, type = "cairo", 
+#     units = 'in', width = 6, height = 6, pointsize = 10)
+
 plotDendroAndColors(gene.tree, cbind(module.colours, merged.module.colours), 
                     c("Dynamic Tree Cut", "Merged dynamic"), 
                     dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
-dev.off()
+# dev.off()
 
-# plot heatmap of eigengenes (orginal before merge)
-png(filename = "../figures/eigengenes_heatmap.png", res =1200, type = "cairo", units = 'in',
-    width = 5, height = 6, pointsize = 10)
-plotEigengeneNetworks(module.eigengenes, "Eigengenes heatmap", marHeatmap = c(3,4,2,2),
-                      plotDendrograms = FALSE, xLabelsAngle = 90)
-dev.off()
 ```
 
+```{r, eval=FALSE, echo=FALSE}
+# # plot heatmap of eigengenes (orginal before merge)
+# png(filename = "../figures/eigengenes_heatmap.png", res =1200, type = "cairo", units = 'in',
+#     width = 5, height = 6, pointsize = 10)
 
-```{r fig.cap="Dendrogram with original and merged colours", echo=FALSE, out.width='80%', eval=FALSE}
+plotEigengeneNetworks(module.eigengenes, "Eigengenes heatmap", marHeatmap = c(3,4,2,2),
+                      plotDendrograms = FALSE, xLabelsAngle = 90)
 
-include_graphics("../figures/merged-original_colours-original_dendro.png")
+# dev.off()
+
 ```
 
 ```{r, eval=FALSE, echo=FALSE}
@@ -116,6 +132,7 @@ merged.module.hub.genes <- chooseTopHubInEachModule(network.counts,
                                                     power = 4,
                                                     type = "signed")
 
+merged.module.hub.genes
 # a list of merged module hub genes
            black             blue            brown         darkgrey 
   "Tb927.7.1790"   "Tb927.1.3130" "Tb927.11.14220"   "Tb927.11.760" 
