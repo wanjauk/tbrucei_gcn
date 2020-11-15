@@ -11,7 +11,7 @@ This repository contains data analysis procedure and results for *T. brucei* Gen
 |
 |-- data
 |    |-- intermediate: data generated during the intermediate steps of the
-|    |   analysis. This is output data of one steps that is used as input of
+|    |   analysis. This is output data of one step that is used as input of
 |    |   another step.
 |    |
 |    |-- raw: holds the raw data used in the analysis including metadata files,
@@ -31,5 +31,5 @@ This repository contains data analysis procedure and results for *T. brucei* Gen
      |
      |-- figures: code used to produce some of the figures in results/figures
      |
-     |-- utils: functions used in the analysis
+     |-- utils: custom functions used in the analysis
 ```
