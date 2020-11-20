@@ -1,6 +1,10 @@
 # *Trypanosoma brucei* gene co-expression network
 This repository contains data analysis procedure and results for *T. brucei* Gene Co-expression Network study.
 
+Preprint: https://doi.org/10.21203/rs.3.rs-78868/v1
+
+The analysis workflow is documented on [00-data_analysis_workflow.pdf](https://github.com/wanjauk/tbrucei_gcn/blob/master/scripts/analysis/00-data_analysis_workflow.pdf) in `scripts/analysis` directory.
+
 ## Project directory structure
 
 ```
